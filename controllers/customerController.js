@@ -1,9 +1,22 @@
 const customerModel = require('../models/customerModel');
-
+const {STRING_HIDDEN} = require('../utils/constants');
 // List customers
 async function listCustomers(req, res, next) {
     try {
-        const customers = await customerModel.getAllCustomers();
+        const hideSensitive = req.hideSensitive;
+        let customers = await customerModel.getAllCustomers();
+        if (hideSensitive) {
+            customers = customers.map(customer => ({
+                "CustomerId": customer.CustomerId,
+                "CustomerName": STRING_HIDDEN,
+                "CompanyName": STRING_HIDDEN,
+                "Address": STRING_HIDDEN,
+                "WhatsappNumber": STRING_HIDDEN,
+                "WhatsappSameAsMobile": STRING_HIDDEN,
+                "CreatedAt": STRING_HIDDEN,
+                "UpdatedAt": STRING_HIDDEN
+            }));
+        }
         res.json(customers);
     } catch (err) {
         next(err);
@@ -13,7 +26,20 @@ async function listCustomers(req, res, next) {
 // Get customer by ID
 async function getCustomer(req, res, next) {
     try {
-        const customer = await customerModel.getCustomerById(req.params.id);
+        const hideSensitive = req.hideSensitive;
+        let customer = await customerModel.getCustomerById(req.params.id);
+        if(hideSensitive){
+            customer = {
+                "CustomerId": customer.CustomerId,
+                "CustomerName": STRING_HIDDEN,
+                "CompanyName": STRING_HIDDEN,
+                "Address": STRING_HIDDEN,
+                "WhatsappNumber": STRING_HIDDEN,
+                "WhatsappSameAsMobile": STRING_HIDDEN,
+                "CreatedAt": STRING_HIDDEN,
+                "UpdatedAt": STRING_HIDDEN
+            };
+        }
         if (!customer) return res.status(404).json({ error: 'Customer not found' });
         res.json(customer);
     } catch (err) {

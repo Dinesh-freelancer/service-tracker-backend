@@ -1,5 +1,6 @@
 const windingModel = require('../models/windingDetailsModel');
 const { logAudit } = require('../utils/auditLogger');
+const { STRING_HIDDEN } = require('../utils/constants');
 
 async function createWindingDetail(req, res, next) {
     try {
@@ -17,7 +18,36 @@ async function createWindingDetail(req, res, next) {
 
 async function getAllWindingDetails(req, res, next) {
     try {
-        const rows = await windingModel.getAllWindingDetails();
+        const hideSensitive = req.hideSensitive;
+        let rows = await windingModel.getAllWindingDetails();
+        if (hideSensitive) {
+            rows = rows.map(item => ({
+                "id": item.id,
+                "jobNumber": STRING_HIDDEN,
+                "hp": STRING_HIDDEN,
+                "kw": STRING_HIDDEN,
+                "phase": STRING_HIDDEN,
+                "connection_type": STRING_HIDDEN,
+                "swg_run": STRING_HIDDEN,
+                "swg_start": STRING_HIDDEN,
+                "swg_3phase": STRING_HIDDEN,
+                "wire_id_run": STRING_HIDDEN,
+                "wire_od_run": STRING_HIDDEN,
+                "wire_id_start": STRING_HIDDEN,
+                "wire_od_start": STRING_HIDDEN,
+                "wire_id_3phase": STRING_HIDDEN,
+                "wire_od_3phase": STRING_HIDDEN,
+                "turns_run": STRING_HIDDEN,
+                "turns_start": STRING_HIDDEN,
+                "turns_3phase": STRING_HIDDEN,
+                "slot_turns_run": STRING_HIDDEN,
+                "slot_turns_start": STRING_HIDDEN,
+                "slot_turns_3phase": STRING_HIDDEN,
+                "notes": STRING_HIDDEN,
+                "created_at": STRING_HIDDEN,
+                "updated_at": STRING_HIDDEN
+            }));
+        }
         res.json(rows);
     } catch (err) {
         next(err);
@@ -26,7 +56,36 @@ async function getAllWindingDetails(req, res, next) {
 
 async function getByJobNumber(req, res, next) {
     try {
-        const records = await windingModel.getWindingDetailsByJobNumber(req.params.jobNumber);
+        const hideSensitive = req.hideSensitive;
+        let records = await windingModel.getWindingDetailsByJobNumber(req.params.jobNumber);
+        if (hideSensitive) {
+            records = records.map(item => ({
+                "id": item.id,
+                "jobNumber": STRING_HIDDEN,
+                "hp": STRING_HIDDEN,
+                "kw": STRING_HIDDEN,
+                "phase": STRING_HIDDEN,
+                "connection_type": STRING_HIDDEN,
+                "swg_run": STRING_HIDDEN,
+                "swg_start": STRING_HIDDEN,
+                "swg_3phase": STRING_HIDDEN,
+                "wire_id_run": STRING_HIDDEN,
+                "wire_od_run": STRING_HIDDEN,
+                "wire_id_start": STRING_HIDDEN,
+                "wire_od_start": STRING_HIDDEN,
+                "wire_id_3phase": STRING_HIDDEN,
+                "wire_od_3phase": STRING_HIDDEN,
+                "turns_run": STRING_HIDDEN,
+                "turns_start": STRING_HIDDEN,
+                "turns_3phase": STRING_HIDDEN,
+                "slot_turns_run": STRING_HIDDEN,
+                "slot_turns_start": STRING_HIDDEN,
+                "slot_turns_3phase": STRING_HIDDEN,
+                "notes": STRING_HIDDEN,
+                "created_at": STRING_HIDDEN,
+                "updated_at": STRING_HIDDEN
+            }));
+        }
         res.json(records);
     } catch (err) {
         next(err);

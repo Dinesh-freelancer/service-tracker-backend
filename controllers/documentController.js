@@ -1,12 +1,12 @@
 const documentModel = require('../models/documentModel');
 const { logAudit } = require('../utils/auditLogger');
+const { STRING_HIDDEN } = require('../utils/constants');
 
 async function createDocument(req, res, next) {
     try {
         const data = req.body;
         data.CreatedBy = req.user.UserId;
         const doc = await documentModel.addDocument(data);
-
         await logAudit({
             ActionType: 'Document Created',
             ChangedBy: req.user.UserId,
@@ -21,7 +21,20 @@ async function createDocument(req, res, next) {
 
 async function getDocumentsByJob(req, res, next) {
     try {
-        const docs = await documentModel.getDocumentsByJob(req.params.jobNumber);
+        const hideSensitive = req.hideSensitive;
+        let docs = await documentModel.getDocumentsByJob(req.params.jobNumber);
+        if (hideSensitive) {
+            docs = docs.map(doc => ({
+                "DocumentId": doc.DocumentId,
+                "JobNumber": doc.JobNumber,
+                "CustomerId": doc.CustomerId,
+                "DocumentType": STRING_HIDDEN,
+                "EmbedTag": STRING_HIDDEN,
+                "CreatedBy": STRING_HIDDEN,
+                "CreatedAt": STRING_HIDDEN,
+                "UpdatedAt": STRING_HIDDEN
+            }));
+        }
         res.json(docs);
     } catch (err) {
         next(err);

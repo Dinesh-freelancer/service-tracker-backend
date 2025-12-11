@@ -1,9 +1,17 @@
 const reportModel = require('../models/reportModel');
+const { STRING_HIDDEN } = require('../utils/constants');
 
 // Unfiltered job status summary
 async function jobStatusSummary(req, res, next) {
     try {
-        const summary = await reportModel.getJobStatusSummary();
+        const hideSensitive = req.hideSensitive;
+        let summary = await reportModel.getJobStatusSummary();
+        if (hideSensitive) {
+            summary = summary.map(item => ({
+                "Status": item.Status,
+                "count": STRING_HIDDEN
+            }));
+        }
         res.json(summary);
     } catch (err) {
         next(err);
@@ -17,7 +25,14 @@ async function jobStatusSummaryByDate(req, res, next) {
         if (!startDate || !endDate) {
             return res.status(400).json({ error: "startDate and endDate are required" });
         }
-        const summary = await reportModel.getJobStatusSummaryByDate(startDate, endDate);
+        const hideSensitive = req.hideSensitive;
+        let summary = await reportModel.getJobStatusSummaryByDate(startDate, endDate);
+        if(hideSensitive){
+            summary = summary.map(item => ({
+                "Status": item.Status,
+                "count": STRING_HIDDEN
+            }));
+        }
         res.json(summary);
     } catch (err) {
         next(err);

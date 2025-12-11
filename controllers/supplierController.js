@@ -1,10 +1,25 @@
 const supplierModel = require('../models/supplierModel');
 const { logAudit } = require('../utils/auditLogger');
+const { STRING_HIDDEN } = require('../utils/constants');
 
 // Get all suppliers
 async function getAllSuppliers(req, res, next) {
     try {
-        const suppliers = await supplierModel.getAllSuppliers();
+        const hideSensitive = req.hideSensitive;
+        let suppliers = await supplierModel.getAllSuppliers();
+        if (hideSensitive) {
+            suppliers = suppliers.map(item => ({
+                "SupplierId": item.SupplierId,
+                "SupplierName": STRING_HIDDEN,
+                "ContactName": STRING_HIDDEN,
+                "ContactPhone": STRING_HIDDEN,
+                "ContactEmail": STRING_HIDDEN,
+                "Address": STRING_HIDDEN,
+                "Notes": STRING_HIDDEN,
+                "CreatedAt": STRING_HIDDEN,
+                "UpdatedAt": STRING_HIDDEN
+            }));
+        }
         res.json(suppliers);
     } catch (err) {
         next(err);
@@ -14,9 +29,23 @@ async function getAllSuppliers(req, res, next) {
 // Get supplier by ID
 async function getSupplierById(req, res, next) {
     try {
-        const supplier = await supplierModel.getSupplierById(req.params.id);
+        const hideSensitive = req.hideSensitive;
+        let supplier = await supplierModel.getSupplierById(req.params.id);
         if (!supplier) {
             return res.status(404).json({ error: 'Supplier not found' });
+        }
+        if(hideSensitive){
+            supplier = {
+                "SupplierId": supplier.SupplierId,
+                "SupplierName": STRING_HIDDEN,
+                "ContactName": STRING_HIDDEN,
+                "ContactPhone": STRING_HIDDEN,
+                "ContactEmail": STRING_HIDDEN,
+                "Address": STRING_HIDDEN,
+                "Notes": STRING_HIDDEN,
+                "CreatedAt": STRING_HIDDEN,
+                "UpdatedAt": STRING_HIDDEN
+            }
         }
         res.json(supplier);
     } catch (err) {

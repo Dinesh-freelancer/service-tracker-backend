@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const supplierController = require('../controllers/supplierController');
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
-
+const constants = require('../utils/constants');
+const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+router.use(authenticateToken);
+router.use(sensitiveInfoToggle);
 // All routes protected, Admin and Owner only
-router.use(authenticateToken, authorize('Admin', 'Owner'));
+router.use(authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER));
 
 router.get('/', supplierController.getAllSuppliers);
 router.get('/:id', supplierController.getSupplierById);
