@@ -1,6 +1,6 @@
 const windingModel = require('../models/windingDetailsModel');
 const { logAudit } = require('../utils/auditLogger');
-const { STRING_HIDDEN } = require('../utils/constants');
+const { filterWindingDetailsList } = require('../utils/responseFilter');
 
 async function createWindingDetail(req, res, next) {
     try {
@@ -19,36 +19,21 @@ async function createWindingDetail(req, res, next) {
 async function getAllWindingDetails(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let rows = await windingModel.getAllWindingDetails();
-        if (hideSensitive) {
-            rows = rows.map(item => ({
-                "id": item.id,
-                "jobNumber": STRING_HIDDEN,
-                "hp": STRING_HIDDEN,
-                "kw": STRING_HIDDEN,
-                "phase": STRING_HIDDEN,
-                "connection_type": STRING_HIDDEN,
-                "swg_run": STRING_HIDDEN,
-                "swg_start": STRING_HIDDEN,
-                "swg_3phase": STRING_HIDDEN,
-                "wire_id_run": STRING_HIDDEN,
-                "wire_od_run": STRING_HIDDEN,
-                "wire_id_start": STRING_HIDDEN,
-                "wire_od_start": STRING_HIDDEN,
-                "wire_id_3phase": STRING_HIDDEN,
-                "wire_od_3phase": STRING_HIDDEN,
-                "turns_run": STRING_HIDDEN,
-                "turns_start": STRING_HIDDEN,
-                "turns_3phase": STRING_HIDDEN,
-                "slot_turns_run": STRING_HIDDEN,
-                "slot_turns_start": STRING_HIDDEN,
-                "slot_turns_3phase": STRING_HIDDEN,
-                "notes": STRING_HIDDEN,
-                "created_at": STRING_HIDDEN,
-                "updated_at": STRING_HIDDEN
-            }));
-        }
-        res.json(rows);
+
+        // Map over rows and filter each, passing the JobStatus we now fetch
+        const filtered = rows.map(item => {
+            // Note: filterWindingDetailsList helper could be used if we passed status separately,
+            // but here status is attached to each item.
+            // Wait, filterWindingDetailsList takes a single status arg for the whole list if used that way.
+            // But here each item has its own status.
+            // The filterWindingDetails function takes (detail, role, hideSensitive, jobStatus).
+            const { filterWindingDetails } = require('../utils/responseFilter');
+            return filterWindingDetails(item, role, hideSensitive, item.JobStatus);
+        });
+
+        res.json(filtered);
     } catch (err) {
         next(err);
     }
@@ -57,36 +42,15 @@ async function getAllWindingDetails(req, res, next) {
 async function getByJobNumber(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let records = await windingModel.getWindingDetailsByJobNumber(req.params.jobNumber);
-        if (hideSensitive) {
-            records = records.map(item => ({
-                "id": item.id,
-                "jobNumber": STRING_HIDDEN,
-                "hp": STRING_HIDDEN,
-                "kw": STRING_HIDDEN,
-                "phase": STRING_HIDDEN,
-                "connection_type": STRING_HIDDEN,
-                "swg_run": STRING_HIDDEN,
-                "swg_start": STRING_HIDDEN,
-                "swg_3phase": STRING_HIDDEN,
-                "wire_id_run": STRING_HIDDEN,
-                "wire_od_run": STRING_HIDDEN,
-                "wire_id_start": STRING_HIDDEN,
-                "wire_od_start": STRING_HIDDEN,
-                "wire_id_3phase": STRING_HIDDEN,
-                "wire_od_3phase": STRING_HIDDEN,
-                "turns_run": STRING_HIDDEN,
-                "turns_start": STRING_HIDDEN,
-                "turns_3phase": STRING_HIDDEN,
-                "slot_turns_run": STRING_HIDDEN,
-                "slot_turns_start": STRING_HIDDEN,
-                "slot_turns_3phase": STRING_HIDDEN,
-                "notes": STRING_HIDDEN,
-                "created_at": STRING_HIDDEN,
-                "updated_at": STRING_HIDDEN
-            }));
-        }
-        res.json(records);
+
+        const filtered = records.map(item => {
+             const { filterWindingDetails } = require('../utils/responseFilter');
+             return filterWindingDetails(item, role, hideSensitive, item.JobStatus);
+        });
+
+        res.json(filtered);
     } catch (err) {
         next(err);
     }

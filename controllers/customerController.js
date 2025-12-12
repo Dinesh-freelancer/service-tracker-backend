@@ -1,22 +1,15 @@
 const customerModel = require('../models/customerModel');
-const {STRING_HIDDEN} = require('../utils/constants');
+const { filterCustomer, filterCustomerList } = require('../utils/responseFilter');
+
 // List customers
 async function listCustomers(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let customers = await customerModel.getAllCustomers();
-        if (hideSensitive) {
-            customers = customers.map(customer => ({
-                "CustomerId": customer.CustomerId,
-                "CustomerName": STRING_HIDDEN,
-                "CompanyName": STRING_HIDDEN,
-                "Address": STRING_HIDDEN,
-                "WhatsappNumber": STRING_HIDDEN,
-                "WhatsappSameAsMobile": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            }));
-        }
+
+        customers = filterCustomerList(customers, role, hideSensitive);
+
         res.json(customers);
     } catch (err) {
         next(err);
@@ -27,22 +20,13 @@ async function listCustomers(req, res, next) {
 async function getCustomer(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let customer = await customerModel.getCustomerById(req.params.id);
 
         if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-        if(hideSensitive){
-            customer = {
-                "CustomerId": customer.CustomerId,
-                "CustomerName": STRING_HIDDEN,
-                "CompanyName": STRING_HIDDEN,
-                "Address": STRING_HIDDEN,
-                "WhatsappNumber": STRING_HIDDEN,
-                "WhatsappSameAsMobile": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            };
-        }
+        customer = filterCustomer(customer, role, hideSensitive);
+
         res.json(customer);
     } catch (err) {
         next(err);

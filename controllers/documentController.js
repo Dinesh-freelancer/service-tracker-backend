@@ -1,6 +1,6 @@
 const documentModel = require('../models/documentModel');
 const { logAudit } = require('../utils/auditLogger');
-const { STRING_HIDDEN } = require('../utils/constants');
+const { filterDocumentList } = require('../utils/responseFilter');
 
 async function createDocument(req, res, next) {
     try {
@@ -22,19 +22,11 @@ async function createDocument(req, res, next) {
 async function getDocumentsByJob(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let docs = await documentModel.getDocumentsByJob(req.params.jobNumber);
-        if (hideSensitive) {
-            docs = docs.map(doc => ({
-                "DocumentId": doc.DocumentId,
-                "JobNumber": doc.JobNumber,
-                "CustomerId": doc.CustomerId,
-                "DocumentType": STRING_HIDDEN,
-                "EmbedTag": STRING_HIDDEN,
-                "CreatedBy": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            }));
-        }
+
+        docs = filterDocumentList(docs, role, hideSensitive);
+
         res.json(docs);
     } catch (err) {
         next(err);
@@ -43,7 +35,16 @@ async function getDocumentsByJob(req, res, next) {
 
 async function getDocumentsByCustomer(req, res, next) {
     try {
-        const docs = await documentModel.getDocumentsByCustomer(req.params.customerId);
+        const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
+        let docs = await documentModel.getDocumentsByCustomer(req.params.customerId);
+
+        // Even for getDocumentsByCustomer, we should apply filtering if the requester is constrained
+        // (though usually this endpoint is for Admins or the Customer themselves).
+        // If it's the customer, filterDocumentList (via filterDocument) generally passes it through
+        // unless specific logic for Customers is added.
+        docs = filterDocumentList(docs, role, hideSensitive);
+
         res.json(docs);
     } catch (err) {
         next(err);
