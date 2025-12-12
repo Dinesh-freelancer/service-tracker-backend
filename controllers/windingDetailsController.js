@@ -16,6 +16,8 @@ async function createWindingDetail(req, res, next) {
     }
 }
 
+const { filterWindingDetails } = require('../utils/responseFilter');
+
 async function getAllWindingDetails(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -24,12 +26,6 @@ async function getAllWindingDetails(req, res, next) {
 
         // Map over rows and filter each, passing the JobStatus we now fetch
         const filtered = rows.map(item => {
-            // Note: filterWindingDetailsList helper could be used if we passed status separately,
-            // but here status is attached to each item.
-            // Wait, filterWindingDetailsList takes a single status arg for the whole list if used that way.
-            // But here each item has its own status.
-            // The filterWindingDetails function takes (detail, role, hideSensitive, jobStatus).
-            const { filterWindingDetails } = require('../utils/responseFilter');
             return filterWindingDetails(item, role, hideSensitive, item.JobStatus);
         });
 
@@ -46,7 +42,6 @@ async function getByJobNumber(req, res, next) {
         let records = await windingModel.getWindingDetailsByJobNumber(req.params.jobNumber);
 
         const filtered = records.map(item => {
-             const { filterWindingDetails } = require('../utils/responseFilter');
              return filterWindingDetails(item, role, hideSensitive, item.JobStatus);
         });
 
