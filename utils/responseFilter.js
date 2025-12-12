@@ -15,27 +15,27 @@ function filterServiceRequest(job, role, hideSensitive) {
     if (!hideSensitive) return job;
 
     if (role === AUTH_ROLE_WORKER) {
-        // Worker view: No customer info (except name if needed? Docs say "CustomerName: Hidden"), no costs.
-        // Needs: JobNumber, Motor details, Status, DateReceived (maybe), Notes (operational).
+        // Worker view: No customer info.
         return {
             JobNumber: job.JobNumber,
-            CustomerName: STRING_HIDDEN, // Explicitly hidden per docs
-            MotorBrand: job.MotorBrand,
-            MotorModel: job.MotorModel,
-            MotorSerialNo: job.MotorSerialNo,
+            CustomerId: STRING_HIDDEN,
+            CustomerName: STRING_HIDDEN,
+            PumpsetBrand: job.PumpsetBrand,
+            PumpsetModel: job.PumpsetModel,
+            SerialNumber: job.SerialNumber,
             HP: job.HP,
-            KW: job.KW,
-            Phase: job.Phase,
-            Poles: job.Poles,
+            // KW/Phase/Poles might not be in ServiceRequest model, but WindingDetails.
+            // We pass what's in the job object.
+            Warranty: job.Warranty,
             DateReceived: job.DateReceived,
             Status: job.Status,
-            Notes: job.Notes, // Workers might need notes? Docs say "Response for Worker ... no times/notes" for WorkLogs, but for Jobs: "Notes: Motor bearing replacement required" is shown in Admin view. Worker view example shows limited fields. Let's keep Notes visible if it's technical. Docs example for Worker doesn't show Notes. Let's be safe and hide if unsure, but usually workers need notes.
-            // Re-reading docs: Worker view example for GET /jobs/:id shows "MotorBrand", "HP", "Status", "WorkLogs" (limited), "PartsUsed": "Hidden".
-            // It does NOT show Notes in the Worker example.
+            Notes: job.Notes,
+            EstimationDate: STRING_HIDDEN,
+            EstimateLink: STRING_HIDDEN,
             EstimatedAmount: STRING_HIDDEN,
             BilledAmount: STRING_HIDDEN,
             WorkLogs: job.WorkLogs ? filterWorkLogList(job.WorkLogs, role, hideSensitive) : undefined,
-            PartsUsed: STRING_HIDDEN, // Docs example says "PartsUsed": "Hidden"
+            PartsUsed: STRING_HIDDEN,
             Payments: STRING_HIDDEN,
             WindingDetails: job.WindingDetails ? filterWindingDetailsList(job.WindingDetails, role, hideSensitive, job.Status) : undefined,
             Documents: job.Documents ? filterDocumentList(job.Documents, role, hideSensitive) : undefined
@@ -44,14 +44,15 @@ function filterServiceRequest(job, role, hideSensitive) {
         // Customer view: Own jobs only.
         return {
             JobNumber: job.JobNumber,
-            MotorBrand: job.MotorBrand,
-            MotorModel: job.MotorModel,
+            PumpsetBrand: job.PumpsetBrand,
+            PumpsetModel: job.PumpsetModel,
             Status: job.Status,
             DateReceived: job.DateReceived,
-            EstimatedAmount: job.EstimatedAmount, // Customer sees estimates
-            BilledAmount: job.BilledAmount, // Customer sees bill
-            // Hide internal technical details or specific worker notes if necessary
-            Notes: job.Notes // Customer probably sees notes related to the job status
+            EstimatedAmount: job.EstimatedAmount,
+            BilledAmount: job.BilledAmount,
+            Notes: job.Notes,
+            EstimationDate: job.EstimationDate,
+            EstimateLink: job.EstimateLink
         };
     }
 
@@ -71,10 +72,11 @@ function filterCustomer(customer, role, hideSensitive) {
             CustomerId: customer.CustomerId,
             CustomerName: STRING_HIDDEN,
             CompanyName: STRING_HIDDEN,
-            Phone1: STRING_HIDDEN,
-            Email: STRING_HIDDEN,
+            WhatsappNumber: STRING_HIDDEN,
+            WhatsappSameAsMobile: STRING_HIDDEN,
             Address: STRING_HIDDEN,
-            City: STRING_HIDDEN
+            CreatedAt: STRING_HIDDEN,
+            UpdatedAt: STRING_HIDDEN
         };
     }
     return customer;

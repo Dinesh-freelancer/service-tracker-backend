@@ -1,5 +1,6 @@
 const paymentsModel = require('../models/paymentsModel');
 const { AUTH_ROLE_WORKER } = require('../utils/constants');
+const { logAudit } = require('../utils/auditLogger');
 
 // List payments (optionally filter by job)
 async function listPayments(req, res, next) {
@@ -9,6 +10,14 @@ async function listPayments(req, res, next) {
 
         // Workers should not see payments
         if (hideSensitive && role === AUTH_ROLE_WORKER) {
+            // Log the blocked attempt if they tried to access payments
+            // Note: Since listPayments returns empty list (not 403), this is a "soft block".
+            // Do we want to log every time a worker loads the payments page (which might be part of a job page)?
+            // If the UI automatically fetches it, this will spam logs.
+            // The requirement was "Log failed access attempts".
+            // If we return [], it's not strictly "failed" (it's "no results").
+            // However, in getPayment below (for ID), it returns 403. That IS a failure.
+            // I will SKIP logging here to avoid spam on list views, but I will log on getPayment (direct access).
             return res.json([]);
         }
 
@@ -39,6 +48,11 @@ async function getPayment(req, res, next) {
         const role = req.user ? req.user.Role : null;
 
         if (hideSensitive && role === AUTH_ROLE_WORKER) {
+             await logAudit({
+                ActionType: 'Unauthorized Payment Access',
+                ChangedBy: req.user.UserId,
+                Details: `Worker attempted to view Payment ID ${req.params.paymentId}`
+             });
              return res.status(403).json({ error: 'Access denied' });
         }
 
