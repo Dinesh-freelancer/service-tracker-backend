@@ -1,6 +1,6 @@
 const windingModel = require('../models/windingDetailsModel');
 const { logAudit } = require('../utils/auditLogger');
-const { filterWindingDetailsList } = require('../utils/responseFilter');
+const { filterWindingDetails } = require('../utils/responseFilter');
 
 async function createWindingDetail(req, res, next) {
     try {
@@ -15,8 +15,6 @@ async function createWindingDetail(req, res, next) {
         next(err);
     }
 }
-
-const { filterWindingDetails } = require('../utils/responseFilter');
 
 async function getAllWindingDetails(req, res, next) {
     try {

@@ -23,6 +23,18 @@ async function getPaymentById(paymentId) {
     return rows[0];
 }
 
+// Get payments by CustomerId
+async function getPaymentsByCustomerId(customerId) {
+    const [rows] = await pool.query(`
+        SELECT p.*
+        FROM Payments p
+        JOIN ServiceRequest sr ON p.JobNumber = sr.JobNumber
+        WHERE sr.CustomerId = ?
+        ORDER BY p.PaymentDate DESC
+    `, [customerId]);
+    return rows;
+}
+
 // Create a payment
 async function addPayment(data) {
     const {
@@ -44,5 +56,6 @@ async function addPayment(data) {
 module.exports = {
     getAllPayments,
     getPaymentById,
+    getPaymentsByCustomerId,
     addPayment
 };
