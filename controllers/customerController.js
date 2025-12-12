@@ -28,6 +28,9 @@ async function getCustomer(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
         let customer = await customerModel.getCustomerById(req.params.id);
+
+        if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
         if(hideSensitive){
             customer = {
                 "CustomerId": customer.CustomerId,
@@ -40,7 +43,6 @@ async function getCustomer(req, res, next) {
                 "UpdatedAt": STRING_HIDDEN
             };
         }
-        if (!customer) return res.status(404).json({ error: 'Customer not found' });
         res.json(customer);
     } catch (err) {
         next(err);
