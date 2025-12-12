@@ -1,5 +1,6 @@
 const customerModel = require('../models/customerModel');
 const { filterCustomer, filterCustomerList } = require('../utils/responseFilter');
+const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
 
 // List customers
 async function listCustomers(req, res, next) {
@@ -7,6 +8,15 @@ async function listCustomers(req, res, next) {
         const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let customers = await customerModel.getAllCustomers();
+
+        // Security: If Customer, filter by ownership
+        if (role === AUTH_ROLE_CUSTOMER) {
+            if (!req.user.CustomerId) {
+                customers = [];
+            } else {
+                customers = customers.filter(c => c.CustomerId === req.user.CustomerId);
+            }
+        }
 
         customers = filterCustomerList(customers, role, hideSensitive);
 
@@ -24,6 +34,14 @@ async function getCustomer(req, res, next) {
         let customer = await customerModel.getCustomerById(req.params.id);
 
         if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
+        // Security: If Customer, verify ownership
+        if (role === AUTH_ROLE_CUSTOMER) {
+             // Params ID is string, CustomerId is int, use loose equality or parse
+            if (!req.user.CustomerId || customer.CustomerId != req.user.CustomerId) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+        }
 
         customer = filterCustomer(customer, role, hideSensitive);
 

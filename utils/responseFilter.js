@@ -14,33 +14,7 @@ const {
 function filterServiceRequest(job, role, hideSensitive) {
     if (!hideSensitive) return job;
 
-    if (role === AUTH_ROLE_WORKER) {
-        // Worker view: No customer info.
-        return {
-            JobNumber: job.JobNumber,
-            CustomerId: STRING_HIDDEN,
-            CustomerName: STRING_HIDDEN,
-            PumpsetBrand: job.PumpsetBrand,
-            PumpsetModel: job.PumpsetModel,
-            SerialNumber: job.SerialNumber,
-            HP: job.HP,
-            // KW/Phase/Poles might not be in ServiceRequest model, but WindingDetails.
-            // We pass what's in the job object.
-            Warranty: job.Warranty,
-            DateReceived: job.DateReceived,
-            Status: job.Status,
-            Notes: job.Notes,
-            EstimationDate: STRING_HIDDEN,
-            EstimateLink: STRING_HIDDEN,
-            EstimatedAmount: STRING_HIDDEN,
-            BilledAmount: STRING_HIDDEN,
-            WorkLogs: job.WorkLogs ? filterWorkLogList(job.WorkLogs, role, hideSensitive) : undefined,
-            PartsUsed: STRING_HIDDEN,
-            Payments: STRING_HIDDEN,
-            WindingDetails: job.WindingDetails ? filterWindingDetailsList(job.WindingDetails, role, hideSensitive, job.Status) : undefined,
-            Documents: job.Documents ? filterDocumentList(job.Documents, role, hideSensitive) : undefined
-        };
-    } else if (role === AUTH_ROLE_CUSTOMER) {
+    if (role === AUTH_ROLE_CUSTOMER) {
         // Customer view: Own jobs only.
         return {
             JobNumber: job.JobNumber,
@@ -56,8 +30,30 @@ function filterServiceRequest(job, role, hideSensitive) {
         };
     }
 
-    // Default fallback for other roles if hideSensitive is somehow true
-    return job;
+    // Default Masked View (Worker, Admin, Owner when sensitive=true)
+    // Applies strict masking to ensure Audit Trail is triggered for raw access.
+    return {
+        JobNumber: job.JobNumber,
+        CustomerId: STRING_HIDDEN,
+        CustomerName: STRING_HIDDEN,
+        PumpsetBrand: job.PumpsetBrand,
+        PumpsetModel: job.PumpsetModel,
+        SerialNumber: job.SerialNumber,
+        HP: job.HP,
+        Warranty: job.Warranty,
+        DateReceived: job.DateReceived,
+        Status: job.Status,
+        Notes: job.Notes,
+        EstimationDate: STRING_HIDDEN,
+        EstimateLink: STRING_HIDDEN,
+        EstimatedAmount: STRING_HIDDEN,
+        BilledAmount: STRING_HIDDEN,
+        WorkLogs: job.WorkLogs ? filterWorkLogList(job.WorkLogs, role, hideSensitive) : undefined,
+        PartsUsed: STRING_HIDDEN,
+        Payments: STRING_HIDDEN,
+        WindingDetails: job.WindingDetails ? filterWindingDetailsList(job.WindingDetails, role, hideSensitive, job.Status) : undefined,
+        Documents: job.Documents ? filterDocumentList(job.Documents, role, hideSensitive) : undefined
+    };
 }
 
 /**
@@ -66,30 +62,31 @@ function filterServiceRequest(job, role, hideSensitive) {
 function filterCustomer(customer, role, hideSensitive) {
     if (!hideSensitive) return customer;
 
-    if (role === AUTH_ROLE_WORKER) {
-        // Worker view: Hidden
-        return {
-            CustomerId: customer.CustomerId,
-            CustomerName: STRING_HIDDEN,
-            CompanyName: STRING_HIDDEN,
-            WhatsappNumber: STRING_HIDDEN,
-            WhatsappSameAsMobile: STRING_HIDDEN,
-            Address: STRING_HIDDEN,
-            CreatedAt: STRING_HIDDEN,
-            UpdatedAt: STRING_HIDDEN
-        };
-    }
-    return customer;
+    // Default Masked View (Worker, Admin, Owner when sensitive=true)
+    return {
+        CustomerId: customer.CustomerId,
+        CustomerName: STRING_HIDDEN,
+        CompanyName: STRING_HIDDEN,
+        WhatsappNumber: STRING_HIDDEN,
+        WhatsappSameAsMobile: STRING_HIDDEN,
+        Address: STRING_HIDDEN,
+        CreatedAt: STRING_HIDDEN,
+        UpdatedAt: STRING_HIDDEN
+    };
 }
 
 /**
  * Filters Winding Details.
- * Special rule: Workers can only see details if Job Status is 'Approved By Customer' or 'Work In Progress'.
+ * Special rule: Workers (and masked Admins) can only see details if Job Status is 'Approved By Customer' or 'Work In Progress'.
  */
 function filterWindingDetails(detail, role, hideSensitive, jobStatus) {
     if (!hideSensitive) return detail;
 
-    if (role === AUTH_ROLE_WORKER) {
+    // Apply strict visibility for everyone when masking is enabled
+    // (except maybe Customers? But customers usually don't see winding details via this API or it's not defined.
+    // Assuming Customers don't use this endpoint or see limited info.
+    // If Admin is masked, they get the same restrictions as Worker to ensure safety.)
+    if (true) {
         const allowedStatuses = ['Approved By Customer', 'Work In Progress'];
         if (allowedStatuses.includes(jobStatus)) {
             // Worker sees technical details but maybe not sensitive notes?
@@ -133,19 +130,16 @@ function filterWindingDetails(detail, role, hideSensitive, jobStatus) {
 function filterInventory(item, role, hideSensitive) {
     if (!hideSensitive) return item;
 
-    if (role === AUTH_ROLE_WORKER) {
-        // Worker: No costs.
-        return {
-            PartId: item.PartId,
-            PartName: item.PartName,
-            Unit: item.Unit,
-            QuantityInStock: item.QuantityInStock,
-            LowStockThreshold: item.LowStockThreshold,
-            // Hide prices
-            SupplierId: STRING_HIDDEN
-        };
-    }
-    return item;
+    // Default Masked View
+    return {
+        PartId: item.PartId,
+        PartName: item.PartName,
+        Unit: item.Unit,
+        QuantityInStock: item.QuantityInStock,
+        LowStockThreshold: item.LowStockThreshold,
+        // Hide prices
+        SupplierId: STRING_HIDDEN
+    };
 }
 
 /**
@@ -154,18 +148,14 @@ function filterInventory(item, role, hideSensitive) {
 function filterWorkLog(log, role, hideSensitive) {
     if (!hideSensitive) return log;
 
-    if (role === AUTH_ROLE_WORKER) {
-        // Worker: Limited fields. No times/notes?
-        // Docs: "Response for Worker ... SubStatus, AssignedWorker, WorkerName".
-        return {
-            WorkLogId: log.WorkLogId,
-            JobNumber: log.JobNumber,
-            SubStatus: log.SubStatus,
-            AssignedWorker: log.AssignedWorker,
-            WorkerName: log.WorkerName
-        };
-    }
-    return log;
+    // Default Masked View
+    return {
+        WorkLogId: log.WorkLogId,
+        JobNumber: log.JobNumber,
+        SubStatus: log.SubStatus,
+        AssignedWorker: log.AssignedWorker,
+        WorkerName: log.WorkerName
+    };
 }
 
 /**
@@ -174,17 +164,14 @@ function filterWorkLog(log, role, hideSensitive) {
 function filterPartsUsed(part, role, hideSensitive) {
     if (!hideSensitive) return part;
 
-    if (role === AUTH_ROLE_WORKER) {
-        // Worker: No costs.
-        return {
-            PartUsedId: part.PartUsedId,
-            JobNumber: part.JobNumber,
-            PartName: part.PartName,
-            Qty: part.Qty,
-            Unit: part.Unit
-        };
-    }
-    return part;
+    // Default Masked View
+    return {
+        PartUsedId: part.PartUsedId,
+        JobNumber: part.JobNumber,
+        PartName: part.PartName,
+        Qty: part.Qty,
+        Unit: part.Unit
+    };
 }
 
 /**
@@ -193,21 +180,14 @@ function filterPartsUsed(part, role, hideSensitive) {
 function filterDocument(doc, role, hideSensitive) {
     if (!hideSensitive) return doc;
 
-    if (role === AUTH_ROLE_WORKER) {
-        // Workers generally don't need to see financial documents (Quotes/Invoices).
-        // Maybe Photos?
-        // Current implementation was hiding everything.
-        // Let's hide EmbedTag (content) but show type? Or just hide everything?
-        // Safe bet: Hide content.
-         return {
-            DocumentId: doc.DocumentId,
-            JobNumber: doc.JobNumber,
-            DocumentType: doc.DocumentType, // Maybe they can see type
-            EmbedTag: STRING_HIDDEN, // Content hidden
-            CreatedAt: doc.CreatedAt
-        };
-    }
-    return doc;
+    // Default Masked View
+    return {
+        DocumentId: doc.DocumentId,
+        JobNumber: doc.JobNumber,
+        DocumentType: doc.DocumentType,
+        EmbedTag: STRING_HIDDEN, // Content hidden
+        CreatedAt: doc.CreatedAt
+    };
 }
 
 // Helper for lists
