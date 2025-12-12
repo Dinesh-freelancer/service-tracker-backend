@@ -1,29 +1,17 @@
 const workLogModel = require('../models/workLogModel');
 const { logAudit } = require('../utils/auditLogger');
-const { STRING_HIDDEN } = require('../utils/constants');
+const { filterWorkLog, filterWorkLogList } = require('../utils/responseFilter');
 
 // List work logs (optionally filter by job number)
 async function listWorkLogs(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         const jobNumber = req.query.jobNumber || null;
         let logs = await workLogModel.getAllWorkLogs(jobNumber);
-        if (hideSensitive) {
-            logs = logs.map(item => ({
-                "WorkLogId": item.WorkLogId,
-                "JobNumber": STRING_HIDDEN,
-                "SubStatus": STRING_HIDDEN,
-                "WorkerId": STRING_HIDDEN,
-                "WorkDone": STRING_HIDDEN,
-                "WorkerName": STRING_HIDDEN,
-                "StartTime": STRING_HIDDEN,
-                "EndTime": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN,
-                "WorkDate": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            }));
-        }
+
+        logs = filterWorkLogList(logs, role, hideSensitive);
+
         res.json(logs);
     } catch (err) {
         next(err);
@@ -34,24 +22,12 @@ async function listWorkLogs(req, res, next) {
 async function getWorkLog(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let log = await workLogModel.getWorkLogById(req.params.workLogId);
         if (!log) return res.status(404).json({ error: 'Work log not found' });
-        if(hideSensitive){
-            log = {
-                "WorkLogId": log.WorkLogId,
-                "JobNumber": STRING_HIDDEN,
-                "SubStatus": STRING_HIDDEN,
-                "WorkerId": STRING_HIDDEN,
-                "WorkDone": STRING_HIDDEN,
-                "WorkerName": STRING_HIDDEN,
-                "StartTime": STRING_HIDDEN,
-                "EndTime": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN,
-                "WorkDate": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            };
-        }
+
+        log = filterWorkLog(log, role, hideSensitive);
+
         res.json(log);
     } catch (err) {
         next(err);

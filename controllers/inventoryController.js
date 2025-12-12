@@ -1,23 +1,15 @@
 const inventoryModel = require('../models/inventoryModel');
-const { STRING_HIDDEN } = require('../utils/constants');
+const { filterInventory, filterInventoryList } = require('../utils/responseFilter');
+
 // List inventory items
 async function listInventory(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let inventory = await inventoryModel.getAllInventory();
-        if (hideSensitive) {
-            inventory = inventory.map(item => ({
-                "PartId": item.PartId,
-                "PartName": STRING_HIDDEN,
-                "Unit": STRING_HIDDEN,
-                "DefaultCostPrice": STRING_HIDDEN,
-                "DefaultSellingPrice": STRING_HIDDEN,
-                "Supplier": STRING_HIDDEN,
-                "QuantityInStock": STRING_HIDDEN,
-                "LowStockThreshold": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN
-            }))
-        }
+
+        inventory = filterInventoryList(inventory, role, hideSensitive);
+
         res.json(inventory);
     } catch (err) {
         next(err);
@@ -28,21 +20,13 @@ async function listInventory(req, res, next) {
 async function getInventoryItem(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
+        const role = req.user ? req.user.Role : null;
         let item = await inventoryModel.getInventoryById(req.params.partId);
-        if(hideSensitive){
-            item = {
-                "PartId": item.PartId,
-                "PartName": STRING_HIDDEN,
-                "Unit": STRING_HIDDEN,
-                "DefaultCostPrice": STRING_HIDDEN,
-                "DefaultSellingPrice": STRING_HIDDEN,
-                "Supplier": STRING_HIDDEN,
-                "QuantityInStock": STRING_HIDDEN,
-                "LowStockThreshold": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN
-            };
-        }
+
         if (!item) return res.status(404).json({ error: 'Inventory item not found' });
+
+        item = filterInventory(item, role, hideSensitive);
+
         res.json(item);
     } catch (err) {
         next(err);

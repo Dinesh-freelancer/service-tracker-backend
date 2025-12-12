@@ -35,19 +35,34 @@ async function addWindingDetail(data) {
 
 // Get all winding details
 async function getAllWindingDetails() {
-    const [rows] = await pool.query('SELECT * FROM windingDetails ORDER BY created_at DESC');
+    const [rows] = await pool.query(`
+        SELECT wd.*, sr.Status as JobStatus
+        FROM windingDetails wd
+        LEFT JOIN servicerequest sr ON wd.jobNumber = sr.JobNumber
+        ORDER BY wd.created_at DESC
+    `);
     return rows;
 }
 
 // Get detail by ID
 async function getWindingDetailById(id) {
-    const [rows] = await pool.query('SELECT * FROM windingDetails WHERE id = ?', [id]);
+    const [rows] = await pool.query(`
+        SELECT wd.*, sr.Status as JobStatus
+        FROM windingDetails wd
+        LEFT JOIN servicerequest sr ON wd.jobNumber = sr.JobNumber
+        WHERE wd.id = ?
+    `, [id]);
     return rows[0];
 }
 
 // Get by jobNumber
 async function getWindingDetailsByJobNumber(jobNumber) {
-    const [rows] = await pool.query('SELECT * FROM windingDetails WHERE jobNumber = ?', [jobNumber]);
+    const [rows] = await pool.query(`
+        SELECT wd.*, sr.Status as JobStatus
+        FROM windingDetails wd
+        LEFT JOIN servicerequest sr ON wd.jobNumber = sr.JobNumber
+        WHERE wd.jobNumber = ?
+    `, [jobNumber]);
     return rows;
 }
 
