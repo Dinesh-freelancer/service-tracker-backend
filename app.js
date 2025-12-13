@@ -3,10 +3,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const { generalLimiter } = require('./middleware/rateLimiter');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Apply rate limiting to all requests
+app.use(generalLimiter);
 
 // Health check
 app.get('/', (req, res) => {
