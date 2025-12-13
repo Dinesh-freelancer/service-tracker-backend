@@ -4,16 +4,49 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const constants = require('../utils/constants');
 const inventoryAlertController = require('../controllers/inventoryAlertController');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
-// GET /api/inventory-alerts/low-stock
-// Users: Admins and Owners
+
+/**
+ * @swagger
+ * tags:
+ *   name: Inventory Alerts
+ *   description: Stock alerts
+ */
+
+/**
+ * @swagger
+ * /inventory-alerts/low-stock:
+ *   get:
+ *     summary: Low stock alerts
+ *     tags: [Inventory Alerts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/HideSensitive'
+ *     responses:
+ *       200:
+ *         description: List of items below threshold
+ */
 router.get('/low-stock',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     inventoryAlertController.lowStockAlerts);
 
-// GET /api/inventory-alerts/out-of-stock
-// Users: Admins and Owners
+/**
+ * @swagger
+ * /inventory-alerts/out-of-stock:
+ *   get:
+ *     summary: Out of stock alerts
+ *     tags: [Inventory Alerts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/HideSensitive'
+ *     responses:
+ *       200:
+ *         description: List of items with 0 stock
+ */
 router.get('/out-of-stock',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     inventoryAlertController.outOfStockAlerts);
