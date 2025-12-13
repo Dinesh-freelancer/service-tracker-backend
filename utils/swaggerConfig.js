@@ -22,6 +22,17 @@ const options = {
           bearerFormat: 'JWT',
         },
       },
+      parameters: {
+        HideSensitive: {
+          in: 'query',
+          name: 'hideSensitive',
+          schema: {
+            type: 'boolean',
+            default: true,
+          },
+          description: 'Set to false to view sensitive data (Admin/Owner only)',
+        },
+      },
     },
     security: [
       {
