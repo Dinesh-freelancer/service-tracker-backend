@@ -446,47 +446,4 @@ Sidebar items (example mapping):
 ***
 
 This document outlines the entire frontend architecture, goals, key screens per role, tech stack, responsive strategy, and a clear status of what is built vs pending. It can be used by UI/UX designers and frontend developers as the master blueprint for implementing the web application.
-<span style="display:none">[^10][^11][^12][^13][^14][^15][^16][^17][^18][^19][^20][^4][^5][^6][^7][^8][^9]</span>
-
-<div align="center">⁂</div>
-
-[^1]: https://mui.com/material-ui/guides/responsive-ui/
-
-[^2]: https://www.zipy.ai/blog/material-ui-guide
-
-[^3]: https://smartters.in/blog/creating-responsive-layouts-in-react-using-material-ui-grid
-
-[^4]: https://www.browserstack.com/guide/how-to-make-react-app-responsive
-
-[^5]: https://www.reddit.com/r/reactnative/comments/y41bet/best_practicesapproach_for_responsive_design_in/
-
-[^6]: https://www.reddit.com/r/reactjs/comments/14v6599/how_does_everyone_handle_responsive_layouts/
-
-[^7]: https://nareshit.com/blogs/responsive-ui-in-react-using-modern-css
-
-[^8]: https://www.dhiwise.com/post/the-ultimate-guide-to-achieving-react-mobile-responsiveness
-
-[^9]: https://marmelab.com/react-admin/AuthRBAC.html
-
-[^10]: https://blog.pixelfreestudio.com/responsive-web-design-with-react-a-practical-guide/
-
-[^11]: https://www.permit.io/blog/implementing-react-rbac-authorization
-
-[^12]: https://www.reddit.com/r/react/comments/1ewnyxo/best_methods_for_responsive_design_across_all/
-
-[^13]: https://www.reddit.com/r/reactjs/comments/1aur1fz/best_practices_for_implementing_rolebased_access/
-
-[^14]: https://www.coders.dev/blog/revolutionize-with-responsive-react-design.html
-
-[^15]: https://mui.com/material-ui/getting-started/usage/
-
-[^16]: https://www.cerbos.dev/blog/how-to-use-react-js-for-secure-role-based-access-control
-
-[^17]: https://www.uxpin.com/studio/blog/best-practices-examples-of-excellent-responsive-design/
-
-[^18]: https://m1.material.io/layout/responsive-ui.html
-
-[^19]: https://dev.to/veaceslav/implementing-role-based-access-control-in-react-a-deep-dive-into-userolemanagement-hook-129i
-
-[^20]: https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Responsive_Design
 
