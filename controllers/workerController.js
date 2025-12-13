@@ -1,7 +1,12 @@
 const workerModel = require('../models/workerModel');
 const { STRING_HIDDEN } = require('../utils/constants');
 
-// List all workers
+/**
+ * Lists all workers.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function listWorkers(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -28,7 +33,12 @@ async function listWorkers(req, res, next) {
     }
 }
 
-// Get worker by ID
+/**
+ * Retrieves a worker by ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getWorker(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -56,7 +66,12 @@ async function getWorker(req, res, next) {
     }
 }
 
-// Add new worker
+/**
+ * Creates a new worker.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function createWorker(req, res, next) {
     try {
         const worker = await workerModel.addWorker(req.body);

@@ -2,7 +2,12 @@ const supplierModel = require('../models/supplierModel');
 const { logAudit } = require('../utils/auditLogger');
 const { STRING_HIDDEN } = require('../utils/constants');
 
-// Get all suppliers
+/**
+ * Lists all suppliers.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getAllSuppliers(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -26,7 +31,12 @@ async function getAllSuppliers(req, res, next) {
     }
 }
 
-// Get supplier by ID
+/**
+ * Retrieves a supplier by ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getSupplierById(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -53,7 +63,12 @@ async function getSupplierById(req, res, next) {
     }
 }
 
-// Add new supplier
+/**
+ * Creates a new supplier.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function addSupplier(req, res, next) {
     try {
         const supplier = await supplierModel.addSupplier(req.body);
@@ -71,7 +86,12 @@ async function addSupplier(req, res, next) {
     }
 }
 
-// Update supplier
+/**
+ * Updates a supplier.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function updateSupplier(req, res, next) {
     try {
         const supplier = await supplierModel.updateSupplier(req.params.id, req.body);
@@ -86,7 +106,12 @@ async function updateSupplier(req, res, next) {
     }
 }
 
-// Delete supplier
+/**
+ * Deletes a supplier.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function deleteSupplier(req, res, next) {
     try {
         await supplierModel.deleteSupplier(req.params.id);
