@@ -8,20 +8,97 @@ const { validateRequest, createCustomerValidators } = require('../middleware/val
 
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
-// GET /api/customers
-// Users: Admins and Owners
+
+/**
+ * @swagger
+ * tags:
+ *   name: Customers
+ *   description: Customer management
+ */
+
+/**
+ * @swagger
+ * /customers:
+ *   get:
+ *     summary: List all customers
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term (Name, Phone)
+ *     responses:
+ *       200:
+ *         description: List of customers
+ */
 router.get('/',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     customerController.listCustomers);
 
-// GET /api/customers/:id
-// Users: Admins and Owners
+/**
+ * @swagger
+ * /customers/{id}:
+ *   get:
+ *     summary: Get customer by ID
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Customer details
+ *       404:
+ *         description: Customer not found
+ */
 router.get('/:id',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     customerController.getCustomer);
 
-// POST /api/customers
-// Users: Admins and Owners
+/**
+ * @swagger
+ * /customers:
+ *   post:
+ *     summary: Create a new customer
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - CustomerName
+ *             properties:
+ *               CustomerName:
+ *                 type: string
+ *               WhatsappNumber:
+ *                 type: string
+ *               Email:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Customer created
+ */
 router.post('/',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     createCustomerValidators,
