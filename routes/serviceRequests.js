@@ -37,6 +37,7 @@ router.use(sensitiveInfoToggle);
  *         name: search
  *         schema:
  *           type: string
+ *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
  *         description: List of jobs
@@ -59,6 +60,7 @@ router.get('/',
  *         required: true
  *         schema:
  *           type: string
+ *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
  *         description: Job details

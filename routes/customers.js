@@ -40,6 +40,7 @@ router.use(sensitiveInfoToggle);
  *         schema:
  *           type: string
  *         description: Search term (Name, Phone)
+ *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
  *         description: List of customers
@@ -62,6 +63,7 @@ router.get('/',
  *         required: true
  *         schema:
  *           type: integer
+ *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
  *         description: Customer details
