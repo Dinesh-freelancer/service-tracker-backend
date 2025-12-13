@@ -1,14 +1,24 @@
 const pool = require('../db');
 
 /**
- * Retrieves all service requests with pagination.
+ * Retrieves all service requests with pagination and filtering.
+ * @param {Object} [filters] - Search filters.
+ * @param {string} [filters.sql] - WHERE clause.
+ * @param {Array} [filters.params] - Parameters for WHERE clause.
  * @param {number} [limit] - Items per page.
  * @param {number} [offset] - Offset.
  * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
  */
-async function getAllServiceRequests(limit, offset) {
-    let query = `SELECT * FROM ServiceRequest ORDER BY DateReceived DESC`;
+async function getAllServiceRequests(filters = {}, limit, offset) {
+    let query = `SELECT * FROM ServiceRequest`;
     const params = [];
+
+    if (filters.sql) {
+        query += ` ${filters.sql}`;
+        params.push(...filters.params);
+    }
+
+    query += ` ORDER BY DateReceived DESC`;
 
     if (limit !== undefined && offset !== undefined) {
         query += ` LIMIT ? OFFSET ?`;
@@ -17,9 +27,15 @@ async function getAllServiceRequests(limit, offset) {
 
     const [rows] = await pool.query(query, params);
 
-    // Get total count (for pagination metadata)
-    // Note: If filters are added later, this count query needs to match filters.
-    const [countResult] = await pool.query(`SELECT COUNT(*) as count FROM ServiceRequest`);
+    // Get total count (using same filters)
+    let countQuery = `SELECT COUNT(*) as count FROM ServiceRequest`;
+    const countParams = [];
+    if (filters.sql) {
+        countQuery += ` ${filters.sql}`;
+        countParams.push(...filters.params);
+    }
+
+    const [countResult] = await pool.query(countQuery, countParams);
     const totalCount = countResult[0].count;
 
     return { rows, totalCount };
