@@ -1,9 +1,10 @@
 const inventoryModel = require('../models/inventoryModel');
 const { filterInventory, filterInventoryList } = require('../utils/responseFilter');
 const { getPagination, getPaginationData } = require('../utils/paginationHelper');
+const { buildSearchFilters } = require('../utils/queryHelper');
 
 /**
- * Lists all inventory items with pagination, filtering sensitive fields.
+ * Lists all inventory items with pagination and searching.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
@@ -14,7 +15,10 @@ async function listInventory(req, res, next) {
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
-        const { rows, totalCount } = await inventoryModel.getAllInventory(limit, offset);
+        const searchableFields = ['PartName'];
+        const filters = buildSearchFilters(req.query, searchableFields);
+
+        const { rows, totalCount } = await inventoryModel.getAllInventory(filters, limit, offset);
 
         const filteredInventory = filterInventoryList(rows, role, hideSensitive);
         const response = getPaginationData(filteredInventory, page, limit, totalCount);

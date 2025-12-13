@@ -82,6 +82,9 @@ Please verify the Frontend binds to these exact keys returned by the API:
     -   **General:** 100 requests / 15 min.
     -   **Auth (Login/Register):** 10 requests / 1 hour.
     -   **Response:** 429 Too Many Requests if exceeded.
+- **[Feature] Search & Filtering:**
+    -   **Text Search:** Use `?search=term` for partial matches on key fields (e.g., Job Number, Customer Name, Part Name).
+    -   **Exact Match:** Use `?field=value` (e.g., `?Status=Completed`).
 
 ---
-*Refer to this document when updating Frontend components to handle "Hidden" values, 403 states, Paginated responses, and 429 Rate Limit errors.*
+*Refer to this document when updating Frontend components to handle "Hidden" values, 403 states, Paginated responses, 429 Rate Limit errors, and Search filters.*

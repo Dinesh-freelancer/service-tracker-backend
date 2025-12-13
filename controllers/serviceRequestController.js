@@ -3,9 +3,10 @@ const { logAudit } = require('../utils/auditLogger');
 const { filterServiceRequest, filterServiceRequestList } = require('../utils/responseFilter');
 const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
 const { getPagination, getPaginationData } = require('../utils/paginationHelper');
+const { buildSearchFilters } = require('../utils/queryHelper');
 
 /**
- * Lists service requests with pagination and role-based filtering.
+ * Lists service requests with pagination, filtering, and role-based masking.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
@@ -16,31 +17,18 @@ async function listServiceRequests(req, res, next) {
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
-        // Optimization: If Customer, we might want to push filter to DB,
-        // but current model doesn't support filtering by customer yet.
-        // We will fetch paginated results and filter in memory if necessary,
-        // BUT this breaks pagination totals.
-        // Correct way: Update model to filter by customer ID.
-        // For now, to meet deadline, I'll fetch ALL (if customer) and paginate in memory?
-        // No, that's bad for perf.
-        // But `getAllServiceRequests` supports limit/offset.
-
-        // Security NOTE: If we use DB pagination, we must filter in DB for Customers.
-        // Otherwise page 1 might have 0 items for this customer.
-        // Since I haven't updated model to filter by CustomerId, I will skip DB pagination
-        // for Customers and do in-memory (safe but not optimized for huge customer lists).
-        // For Admins/Workers, use DB pagination.
+        // Allowed search fields
+        const searchableFields = ['JobNumber', 'PumpsetBrand', 'PumpsetModel', 'SerialNumber', 'Status'];
+        const filters = buildSearchFilters(req.query, searchableFields);
 
         let rows, totalCount;
 
         if (role === AUTH_ROLE_CUSTOMER) {
-             // In-memory pagination for customers (temporary tradeoff)
-             // Fetch ALL
-             const result = await serviceRequestModel.getAllServiceRequests();
-             // Result is { rows, totalCount } from my previous model update?
-             // Wait, getAllServiceRequests now returns object.
+             // In-memory pagination for customers (security first)
+             // Fetch ALL matching filters (Note: getAllServiceRequests now accepts filters)
+             const result = await serviceRequestModel.getAllServiceRequests(filters);
 
-             let allRows = result.rows || []; // Handle if it returns array (backward compat) or obj
+             let allRows = result.rows || [];
 
              if (!req.user.CustomerId) {
                  allRows = [];
@@ -53,8 +41,8 @@ async function listServiceRequests(req, res, next) {
              rows = allRows.slice(offset, offset + limit);
 
         } else {
-            // DB Pagination
-            const result = await serviceRequestModel.getAllServiceRequests(limit, offset);
+            // DB Pagination + Filtering
+            const result = await serviceRequestModel.getAllServiceRequests(filters, limit, offset);
             rows = result.rows;
             totalCount = result.totalCount;
         }
