@@ -1,11 +1,26 @@
 const pool = require('../db');
 
-// Get all inventory items
-async function getAllInventory() {
-    const [rows] = await pool.query(
-        'SELECT * FROM Inventory ORDER BY PartName'
-    );
-    return rows;
+/**
+ * Retrieves all inventory items with pagination.
+ * @param {number} [limit] - Items per page.
+ * @param {number} [offset] - Offset.
+ * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
+ */
+async function getAllInventory(limit, offset) {
+    let query = 'SELECT * FROM Inventory ORDER BY PartName';
+    const params = [];
+
+    if (limit !== undefined && offset !== undefined) {
+        query += ' LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+    }
+
+    const [rows] = await pool.query(query, params);
+
+    const [countResult] = await pool.query('SELECT COUNT(*) as count FROM Inventory');
+    const totalCount = countResult[0].count;
+
+    return { rows, totalCount };
 }
 
 // Get inventory item by PartId

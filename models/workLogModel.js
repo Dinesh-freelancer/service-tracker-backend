@@ -1,18 +1,40 @@
 const pool = require('../db');
 
-// Get all work logs (optionally filter by job)
-async function getAllWorkLogs(jobNumber = null) {
+/**
+ * Retrieves all work logs with pagination.
+ * @param {string|null} [jobNumber=null] - Filter by job number.
+ * @param {number} [limit] - Items per page.
+ * @param {number} [offset] - Offset.
+ * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
+ */
+async function getAllWorkLogs(jobNumber = null, limit, offset) {
+    let query = 'SELECT * FROM WorkLog';
+    const params = [];
+
     if (jobNumber) {
-        const [rows] = await pool.query(
-            'SELECT * FROM WorkLog WHERE JobNumber = ? ORDER BY StartTime', [jobNumber]
-        );
-        return rows;
-    } else {
-        const [rows] = await pool.query(
-            'SELECT * FROM WorkLog ORDER BY StartTime'
-        );
-        return rows;
+        query += ' WHERE JobNumber = ?';
+        params.push(jobNumber);
     }
+
+    query += ' ORDER BY StartTime';
+
+    if (limit !== undefined && offset !== undefined) {
+        query += ' LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+    }
+
+    const [rows] = await pool.query(query, params);
+
+    let countQuery = 'SELECT COUNT(*) as count FROM WorkLog';
+    const countParams = [];
+    if (jobNumber) {
+        countQuery += ' WHERE JobNumber = ?';
+        countParams.push(jobNumber);
+    }
+    const [countResult] = await pool.query(countQuery, countParams);
+    const totalCount = countResult[0].count;
+
+    return { rows, totalCount };
 }
 
 // Get a single work log entry

@@ -1,11 +1,28 @@
 const pool = require('../db');
 
-// Get all service requests
-async function getAllServiceRequests() {
-    const [rows] = await pool.query(
-        `SELECT * FROM ServiceRequest ORDER BY DateReceived DESC`
-    );
-    return rows;
+/**
+ * Retrieves all service requests with pagination.
+ * @param {number} [limit] - Items per page.
+ * @param {number} [offset] - Offset.
+ * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
+ */
+async function getAllServiceRequests(limit, offset) {
+    let query = `SELECT * FROM ServiceRequest ORDER BY DateReceived DESC`;
+    const params = [];
+
+    if (limit !== undefined && offset !== undefined) {
+        query += ` LIMIT ? OFFSET ?`;
+        params.push(limit, offset);
+    }
+
+    const [rows] = await pool.query(query, params);
+
+    // Get total count (for pagination metadata)
+    // Note: If filters are added later, this count query needs to match filters.
+    const [countResult] = await pool.query(`SELECT COUNT(*) as count FROM ServiceRequest`);
+    const totalCount = countResult[0].count;
+
+    return { rows, totalCount };
 }
 
 // Get service request by JobNumber

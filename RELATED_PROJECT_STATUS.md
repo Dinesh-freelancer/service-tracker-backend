@@ -75,6 +75,9 @@ Please verify the Frontend binds to these exact keys returned by the API:
 - **[Fix] Winding Details:** Logic added to check Job Status before revealing winding data.
 - **[Feature] Error Handling:** Centralized error handling middleware implemented.
 - **[Feature] Input Validation:** Added request validation for Auth, Customer, and Job creation endpoints using `express-validator`.
+- **[Feature] Pagination:** Implemented pagination for `Jobs`, `Inventory`, `Customers`, and `WorkLogs`.
+    -   **Response Format Change:** List endpoints now return an object `{ data: [...], pagination: { ... } }` instead of a direct array.
+    -   **Query Params:** Support `?page=1&limit=10`.
 
 ---
-*Refer to this document when updating Frontend components to handle "Hidden" values and 403 states.*
+*Refer to this document when updating Frontend components to handle "Hidden" values, 403 states, and Paginated responses.*
