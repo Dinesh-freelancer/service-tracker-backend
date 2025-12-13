@@ -1,9 +1,10 @@
 const workLogModel = require('../models/workLogModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterWorkLog, filterWorkLogList } = require('../utils/responseFilter');
+const { getPagination, getPaginationData } = require('../utils/paginationHelper');
 
 /**
- * Lists work logs, optionally filtered by job number and applying sensitive data filtering.
+ * Lists work logs with pagination, optionally filtered by job number.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
@@ -13,11 +14,14 @@ async function listWorkLogs(req, res, next) {
         const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         const jobNumber = req.query.jobNumber || null;
-        let logs = await workLogModel.getAllWorkLogs(jobNumber);
+        const { page, limit, offset } = getPagination(req);
 
-        logs = filterWorkLogList(logs, role, hideSensitive);
+        const { rows, totalCount } = await workLogModel.getAllWorkLogs(jobNumber, limit, offset);
 
-        res.json(logs);
+        const filteredLogs = filterWorkLogList(rows, role, hideSensitive);
+        const response = getPaginationData(filteredLogs, page, limit, totalCount);
+
+        res.json(response);
     } catch (err) {
         next(err);
     }
