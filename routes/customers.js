@@ -4,6 +4,8 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 const constants = require('../utils/constants');
 const customerController = require('../controllers/customerController');
+const { validateRequest, createCustomerValidators } = require('../middleware/validationMiddleware');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 // GET /api/customers
@@ -22,6 +24,8 @@ router.get('/:id',
 // Users: Admins and Owners
 router.post('/',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    createCustomerValidators,
+    validateRequest,
     customerController.createCustomer);
 
 module.exports = router;

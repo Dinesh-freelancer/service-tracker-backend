@@ -77,7 +77,9 @@ const documentRoutes = require('./routes/documents');
 app.use('/api/documents', documentRoutes);
 
 
-// Error handler (Add real error middleware as needed)
+// Error handler
+const errorHandler = require('./middleware/errorHandler');
+app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
