@@ -5,15 +5,17 @@ async function getFinancialSummaryAllJobs() {
     const [rows] = await pool.query(`
     SELECT sr.JobNumber,
            sr.CustomerId,
-           sr.PumpsetBrand,
-           sr.PumpsetModel,
+           sr.PumpBrand,
+           sr.PumpModel,
+           sr.MotorBrand,
+           sr.MotorModel,
            IFNULL(SUM(p.Amount), 0) AS TotalPaid,
            IFNULL(sr.EstimatedAmount, 0) AS EstimatedAmount,
            IFNULL(sr.BilledAmount, 0) AS BilledAmount,
            (IFNULL(sr.BilledAmount, sr.EstimatedAmount) - IFNULL(SUM(p.Amount), 0)) AS Outstanding
       FROM servicerequest sr
  LEFT JOIN payments p ON sr.JobNumber = p.JobNumber
-  GROUP BY sr.JobNumber, sr.CustomerId, sr.PumpsetBrand, sr.PumpsetModel, sr.EstimatedAmount, sr.BilledAmount
+  GROUP BY sr.JobNumber, sr.CustomerId, sr.PumpBrand, sr.PumpModel, sr.MotorBrand, sr.MotorModel, sr.EstimatedAmount, sr.BilledAmount
   ORDER BY sr.JobNumber DESC
   `);
     return rows;
@@ -23,15 +25,17 @@ async function getFinancialSummaryAllJobs() {
 async function getFinancialSummaryByCustomer(customerId) {
     const [rows] = await pool.query(`
     SELECT sr.JobNumber,
-           sr.PumpsetBrand,
-           sr.PumpsetModel,
+           sr.PumpBrand,
+           sr.PumpModel,
+           sr.MotorBrand,
+           sr.MotorModel,
            IFNULL(SUM(p.Amount), 0) AS TotalPaid,
            IFNULL(sr.BilledAmount, sr.EstimatedAmount) AS TotalDue,
            (IFNULL(sr.BilledAmount, sr.EstimatedAmount) - IFNULL(SUM(p.Amount), 0)) AS Outstanding
       FROM servicerequest sr
  LEFT JOIN payments p ON sr.JobNumber = p.JobNumber
      WHERE sr.CustomerId = ?
-  GROUP BY sr.JobNumber, sr.PumpsetBrand, sr.PumpsetModel, sr.BilledAmount, sr.EstimatedAmount
+  GROUP BY sr.JobNumber, sr.PumpBrand, sr.PumpModel, sr.MotorBrand, sr.MotorModel, sr.BilledAmount, sr.EstimatedAmount
   ORDER BY sr.JobNumber DESC
   `, [customerId]);
     return rows;

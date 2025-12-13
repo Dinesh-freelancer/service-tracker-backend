@@ -51,11 +51,13 @@ async function getServiceRequestByJobNumber(jobNumber) {
 
 // Create new service request
 async function addServiceRequest(data) {
-    const {
+    let {
         JobNumber,
         CustomerId,
-        PumpsetBrand,
-        PumpsetModel,
+        PumpBrand,
+        PumpModel,
+        MotorBrand,
+        MotorModel,
         HP,
         Warranty,
         SerialNumber,
@@ -66,22 +68,44 @@ async function addServiceRequest(data) {
         EstimateLink
     } = data;
 
-    const [result] = await pool.query(
+    // Generate JobNumber if not provided
+    if (!JobNumber) {
+        // Format: YYYYMMDDNN (e.g., 20251115001)
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        // Fetch last job number for today
+        const [rows] = await pool.query(
+            `SELECT JobNumber FROM ServiceRequest WHERE JobNumber LIKE ? ORDER BY JobNumber DESC LIMIT 1`,
+            [`${dateStr}%`]
+        );
+        let nextSeq = 1;
+        if (rows.length > 0) {
+            const lastSeq = parseInt(rows[0].JobNumber.slice(-3), 10);
+            nextSeq = lastSeq + 1;
+        }
+        JobNumber = `${dateStr}${String(nextSeq).padStart(3, '0')}`;
+    }
+
+    // Default to 'Received' if not provided (matching DB default)
+    Status = Status || 'Received';
+
+    const [result] = await pool.execute(
         `INSERT INTO ServiceRequest (
-      JobNumber, CustomerId, PumpsetBrand, PumpsetModel, HP,
+      JobNumber, CustomerId, PumpBrand, PumpModel, MotorBrand, MotorModel, HP,
       Warranty, SerialNumber, DateReceived, Notes, Status,
       EstimationDate, EstimateLink
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
             JobNumber,
             CustomerId,
-            PumpsetBrand,
-            PumpsetModel,
+            PumpBrand,
+            PumpModel,
+            MotorBrand,
+            MotorModel,
             HP,
             Warranty,
             SerialNumber,
             DateReceived,
             Notes,
-            Status || 'Estimation in Progress',
+            Status,
             EstimationDate,
             EstimateLink
         ]
