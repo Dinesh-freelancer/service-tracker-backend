@@ -6,12 +6,13 @@ const {
     registerValidators,
     loginValidators
 } = require('../middleware/validationMiddleware');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 // POST /api/auth/register
-router.post('/register', registerValidators, validateRequest, authController.register);
+router.post('/register', authLimiter, registerValidators, validateRequest, authController.register);
 
 // POST /api/auth/login
-router.post('/login', loginValidators, validateRequest, authController.login);
+router.post('/login', authLimiter, loginValidators, validateRequest, authController.login);
 
 // POST /api/auth/reset-password
 router.post('/reset-password', authController.resetPassword);

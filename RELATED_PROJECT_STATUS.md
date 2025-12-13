@@ -78,6 +78,10 @@ Please verify the Frontend binds to these exact keys returned by the API:
 - **[Feature] Pagination:** Implemented pagination for `Jobs`, `Inventory`, `Customers`, and `WorkLogs`.
     -   **Response Format Change:** List endpoints now return an object `{ data: [...], pagination: { ... } }` instead of a direct array.
     -   **Query Params:** Support `?page=1&limit=10`.
+- **[Feature] Rate Limiting:** API is now protected by rate limiting.
+    -   **General:** 100 requests / 15 min.
+    -   **Auth (Login/Register):** 10 requests / 1 hour.
+    -   **Response:** 429 Too Many Requests if exceeded.
 
 ---
-*Refer to this document when updating Frontend components to handle "Hidden" values, 403 states, and Paginated responses.*
+*Refer to this document when updating Frontend components to handle "Hidden" values, 403 states, Paginated responses, and 429 Rate Limit errors.*

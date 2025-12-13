@@ -1939,6 +1939,7 @@ CREATE TABLE summaryReports (
 19. **Sensitive Info Toggle Middleware** – Query/header parameter handling
 20. **API Filtering by Role** – Role-based data shaping (partially)
 21. **Pagination** – Large result set handling implemented for major entities
+22. **Rate Limiting \& Throttling** – General and strict auth limits implemented.
 
 ### 🟡 Partially Completed
 
@@ -1948,10 +1949,7 @@ CREATE TABLE summaryReports (
 
 ### ❌ Yet to Do
 
-1. **Rate Limiting \& Throttling**
-    - Prevent API abuse
-    - Per-user rate limiting
-2. **Advanced Search \& Filtering**
+1. **Advanced Search \& Filtering**
     - Full-text search across jobs, customers, parts
     - Complex filter combinations
     - (Completed: Pagination for large result sets)
@@ -1994,7 +1992,7 @@ CREATE TABLE summaryReports (
 
 ### Short-term (Phase 1)
 
-6. **Rate Limiting** – Prevent abuse
+6. **Rate Limiting** – Completed
 7. **Advanced Search \& Filtering** – Better data discovery
 8. **Testing** – Comprehensive test coverage
 9. **API Documentation** – Developer-friendly docs
