@@ -34,8 +34,10 @@ async function addAudit(data) {
 
     const [result] = await pool.execute(
         `INSERT INTO auditdetails (
-      ActionType, ChangedBy, Details
-    ) VALUES (?, ?, ?)`, [
+      JobNumber, ChangedDateTime, ActionType, ChangedBy, Details
+    ) VALUES (?, ?, ?, ?, ?)`, [
+            JobNumber,
+            ChangedDateTime || new Date(),
             ActionType,
             (typeof ChangedBy === 'number') ? ChangedBy : 1, // Fallback to 1 if not number (temporary fix for 'system')
             Details
