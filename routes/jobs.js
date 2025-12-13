@@ -18,7 +18,7 @@ router.use(sensitiveInfoToggle);
 
 /**
  * @swagger
- * /servicerequests:
+ * /jobs:
  *   get:
  *     summary: List service requests
  *     tags: [Jobs]
@@ -48,7 +48,7 @@ router.get('/',
 
 /**
  * @swagger
- * /servicerequests/{jobNumber}:
+ * /jobs/{jobNumber}:
  *   get:
  *     summary: Get job by number
  *     tags: [Jobs]
@@ -73,7 +73,7 @@ router.get('/:jobNumber',
 
 /**
  * @swagger
- * /servicerequests:
+ * /jobs:
  *   post:
  *     summary: Create a new service request
  *     tags: [Jobs]
@@ -87,14 +87,17 @@ router.get('/:jobNumber',
  *             type: object
  *             required:
  *               - CustomerId
- *               - PumpsetBrand
  *               - DateReceived
  *             properties:
  *               CustomerId:
  *                 type: integer
- *               PumpsetBrand:
+ *               PumpBrand:
  *                 type: string
- *               PumpsetModel:
+ *               PumpModel:
+ *                 type: string
+ *               MotorBrand:
+ *                 type: string
+ *               MotorModel:
  *                 type: string
  *               DateReceived:
  *                 type: string
