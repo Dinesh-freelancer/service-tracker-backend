@@ -73,6 +73,8 @@ Please verify the Frontend binds to these exact keys returned by the API:
 - **[Feature] API Layer Filtering:** Centralized response masking implemented.
 - **[Feature] Audit Extension:** Added logging for sensitive views and blocked payment access.
 - **[Fix] Winding Details:** Logic added to check Job Status before revealing winding data.
+- **[Feature] Error Handling:** Centralized error handling middleware implemented.
+- **[Feature] Input Validation:** Added request validation for Auth, Customer, and Job creation endpoints using `express-validator`.
 
 ---
 *Refer to this document when updating Frontend components to handle "Hidden" values and 403 states.*

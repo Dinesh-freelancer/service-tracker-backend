@@ -225,6 +225,36 @@ function filterDocumentList(list, role, hideSensitive) {
     return filterList(list, filterDocument, role, hideSensitive);
 }
 
+/**
+ * Filters Payment records.
+ */
+function filterPayment(payment, role, hideSensitive) {
+    if (!hideSensitive) return payment;
+
+    // Customer view handled by controller logic/RLS mostly, but if we need fields filtering:
+    // If Customer is viewing their own payment, they probably can see the amount.
+    // So if role is Customer, pass through (assuming RLS is passed).
+    const { AUTH_ROLE_CUSTOMER } = require('./constants'); // Require here to avoid top-level cyclic issues if any
+    if (role === AUTH_ROLE_CUSTOMER) {
+        return payment;
+    }
+
+    // Default Masked View (Admin/Owner safe mode, Worker blocked at controller level anyway)
+    // Mask sensitive financials.
+    return {
+        PaymentId: payment.PaymentId,
+        JobNumber: payment.JobNumber,
+        Amount: STRING_HIDDEN,
+        PaymentDate: STRING_HIDDEN,
+        PaymentType: STRING_HIDDEN,
+        PaymentMode: STRING_HIDDEN,
+        Notes: STRING_HIDDEN
+    };
+}
+
+function filterPaymentList(list, role, hideSensitive) {
+    return filterList(list, filterPayment, role, hideSensitive);
+}
 
 module.exports = {
     filterServiceRequest,
@@ -239,5 +269,7 @@ module.exports = {
     filterWorkLogList,
     filterPartsUsed,
     filterPartsUsedList,
-    filterDocumentList
+    filterDocumentList,
+    filterPayment,
+    filterPaymentList
 };

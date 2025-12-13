@@ -4,6 +4,8 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const constants = require('../utils/constants');
 const serviceRequestController = require('../controllers/serviceRequestController');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+const { validateRequest, createServiceRequestValidators } = require('../middleware/validationMiddleware');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 // GET /api/servicerequests
@@ -22,6 +24,8 @@ router.get('/:jobNumber',
 // Users: Admins and Owners
 router.post('/',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    createServiceRequestValidators,
+    validateRequest,
     serviceRequestController.createServiceRequest);
 
 module.exports = router;

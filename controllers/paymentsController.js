@@ -2,8 +2,14 @@ const paymentsModel = require('../models/paymentsModel');
 const serviceRequestModel = require('../models/serviceRequestModel'); // For ownership check
 const { AUTH_ROLE_WORKER, AUTH_ROLE_CUSTOMER } = require('../utils/constants');
 const { logAudit } = require('../utils/auditLogger');
+const { filterPayment, filterPaymentList } = require('../utils/responseFilter');
 
-// List payments (optionally filter by job)
+/**
+ * Lists payments, with security checks for Workers and Customers.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function listPayments(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -31,13 +37,20 @@ async function listPayments(req, res, next) {
         const jobNumber = req.query.jobNumber || null;
         let payments = await paymentsModel.getAllPayments(jobNumber);
 
+        payments = filterPaymentList(payments, role, hideSensitive);
+
         res.json(payments);
     } catch (err) {
         next(err);
     }
 }
 
-// Get a payment by ID
+/**
+ * Retrieves a payment by ID, enforcing access control.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getPayment(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -66,13 +79,20 @@ async function getPayment(req, res, next) {
             }
         }
 
+        payment = filterPayment(payment, role, hideSensitive);
+
         res.json(payment);
     } catch (err) {
         next(err);
     }
 }
 
-// Add a payment
+/**
+ * Creates a new payment.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function createPayment(req, res, next) {
     try {
         const payment = await paymentsModel.addPayment(req.body);
