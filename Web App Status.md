@@ -1950,7 +1950,11 @@ CREATE TABLE summaryReports (
 
 ### ❌ Yet to Do
 
-7. **Notifications System**
+8. **Testing**
+    - Unit tests for models and services
+    - Integration tests for endpoints
+    - API contract testing
+9. **Notifications System**
     - In-app notification creation/retrieval
     - Email/SMS integration (future)
     - Real-time WebSocket support (future)
@@ -1991,8 +1995,8 @@ CREATE TABLE summaryReports (
 
 6. **Rate Limiting** – Completed
 7. **Advanced Search \& Filtering** – Completed
-8. **Testing** – Comprehensive test coverage
-9. **API Documentation** – Developer-friendly docs
+8. **API Documentation** – Completed (Swagger UI)
+9. **Testing** – Comprehensive test coverage
 
 ### Medium-term (Phase 2)
 

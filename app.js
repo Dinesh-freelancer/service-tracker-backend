@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const { generalLimiter } = require('./middleware/rateLimiter');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./utils/swaggerConfig');
 
 // Middleware
 app.use(cors());
@@ -11,6 +13,9 @@ app.use(express.json());
 
 // Apply rate limiting to all requests
 app.use(generalLimiter);
+
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Health check
 app.get('/', (req, res) => {

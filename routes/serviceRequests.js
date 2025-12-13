@@ -8,20 +8,99 @@ const { validateRequest, createServiceRequestValidators } = require('../middlewa
 
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
-// GET /api/servicerequests
-// Users: Admins and Owners
+
+/**
+ * @swagger
+ * tags:
+ *   name: Jobs
+ *   description: Service Request management
+ */
+
+/**
+ * @swagger
+ * /servicerequests:
+ *   get:
+ *     summary: List service requests
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of jobs
+ */
 router.get('/',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     serviceRequestController.listServiceRequests);
 
-// GET /api/servicerequests/:jobNumber
-// Users: Admins and Owners
+/**
+ * @swagger
+ * /servicerequests/{jobNumber}:
+ *   get:
+ *     summary: Get job by number
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobNumber
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Job details
+ *       404:
+ *         description: Job not found
+ */
 router.get('/:jobNumber',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     serviceRequestController.getServiceRequest);
 
-// POST /api/servicerequests
-// Users: Admins and Owners
+/**
+ * @swagger
+ * /servicerequests:
+ *   post:
+ *     summary: Create a new service request
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - CustomerId
+ *               - PumpsetBrand
+ *               - DateReceived
+ *             properties:
+ *               CustomerId:
+ *                 type: integer
+ *               PumpsetBrand:
+ *                 type: string
+ *               PumpsetModel:
+ *                 type: string
+ *               DateReceived:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Job created
+ */
 router.post('/',
     authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
     createServiceRequestValidators,
