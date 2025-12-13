@@ -109,6 +109,8 @@ CREATE TABLE enquiry (
 CREATE TABLE servicerequest (
   JobNumber VARCHAR(50) NOT NULL PRIMARY KEY,
   CustomerId INT NOT NULL,
+  PumpBrand VARCHAR(100),
+  PumpModel VARCHAR(100),
   MotorBrand VARCHAR(100),
   MotorModel VARCHAR(100),
   MotorSerialNo VARCHAR(100),
@@ -743,57 +745,79 @@ CREATE TABLE summaryReports (
 - `dateFrom=YYYY-MM-DD` (optional)
 - `dateTo=YYYY-MM-DD` (optional)
 - `hideSensitive=true|false` (default: true for workers)
+- `page=1` (optional, default 1)
+- `limit=10` (optional, default 10)
 
 **Response for Admin/Owner with hideSensitive=false:** 200 OK
 
 ```json
-[
-  {
-    "JobNumber": "20251115001",
-    "CustomerId": 1,
-    "CustomerName": "John Doe",
-    "MotorBrand": "Grundfos",
-    "MotorModel": "SP5A",
-    "HP": 5.5,
-    "KW": 4.1,
-    "DateReceived": "2025-11-15T09:30:00Z",
-    "Status": "Work In Progress",
-    "EstimatedAmount": 5000,
-    "BilledAmount": null,
-    "Notes": "Motor bearing replacement required"
+{
+  "data": [
+    {
+      "JobNumber": "20251115001",
+      "CustomerId": 1,
+      "CustomerName": "John Doe",
+      "PumpBrand": "Grundfos",
+      "PumpModel": "SP5A",
+      "MotorBrand": "Crompton",
+      "MotorModel": "MB4",
+      "HP": 5.5,
+      "KW": 4.1,
+      "DateReceived": "2025-11-15T09:30:00Z",
+      "Status": "Work In Progress",
+      "EstimatedAmount": 5000,
+      "BilledAmount": null,
+      "Notes": "Motor bearing replacement required"
+    }
+  ],
+  "pagination": {
+      "totalItems": 150,
+      "totalPages": 15,
+      "currentPage": 1,
+      "itemsPerPage": 10
   }
-]
+}
 ```
 
 **Response for Worker with hideSensitive=true:**
 
 ```json
-[
-  {
-    "JobNumber": "20251115001",
-    "CustomerName": "Hidden",
-    "MotorBrand": "Grundfos",
-    "MotorModel": "SP5A",
-    "HP": 5.5,
-    "Status": "Work In Progress",
-    "EstimatedAmount": "Hidden",
-    "BilledAmount": "Hidden"
-  }
-]
+{
+  "data": [
+    {
+      "JobNumber": "20251115001",
+      "CustomerName": "Hidden",
+      "PumpBrand": "Grundfos",
+      "PumpModel": "SP5A",
+      "MotorBrand": "Crompton",
+      "MotorModel": "MB4",
+      "HP": 5.5,
+      "Status": "Work In Progress",
+      "EstimatedAmount": "Hidden",
+      "BilledAmount": "Hidden"
+    }
+  ],
+  "pagination": { ... }
+}
 ```
 
 **Response for Customer (own jobs only):**
 
 ```json
-[
-  {
-    "JobNumber": "20251115001",
-    "MotorBrand": "Grundfos",
-    "MotorModel": "SP5A",
-    "Status": "Work In Progress",
-    "DateReceived": "2025-11-15T09:30:00Z"
-  }
-]
+{
+  "data": [
+    {
+      "JobNumber": "20251115001",
+      "PumpBrand": "Grundfos",
+      "PumpModel": "SP5A",
+      "MotorBrand": "Crompton",
+      "MotorModel": "MB4",
+      "Status": "Work In Progress",
+      "DateReceived": "2025-11-15T09:30:00Z"
+    }
+  ],
+  "pagination": { ... }
+}
 ```
 
 
@@ -864,8 +888,10 @@ CREATE TABLE summaryReports (
 ```json
 {
   "CustomerId": 1,
-  "MotorBrand": "Grundfos",
-  "MotorModel": "SP5A",
+  "PumpBrand": "Grundfos",
+  "PumpModel": "SP5A",
+  "MotorBrand": "Crompton",
+  "MotorModel": "MB4",
   "HP": 5.5,
   "KW": 4.1,
   "Phase": "3-PHASE",

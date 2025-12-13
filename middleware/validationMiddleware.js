@@ -45,7 +45,10 @@ const createCustomerValidators = [
  */
 const createServiceRequestValidators = [
     body('CustomerId').notEmpty().isInt().withMessage('Valid Customer ID is required'),
-    body('PumpsetBrand').notEmpty().withMessage('Pumpset Brand is required'),
+    body('PumpBrand').optional().isString(),
+    body('PumpModel').optional().isString(),
+    body('MotorBrand').optional().isString(),
+    body('MotorModel').optional().isString(),
     body('DateReceived').notEmpty().isISO8601().toDate().withMessage('Valid Date Received is required')
 ];
 

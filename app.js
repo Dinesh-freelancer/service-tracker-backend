@@ -26,8 +26,8 @@ app.get('/', (req, res) => {
 const customerRoutes = require('./routes/customers');
 app.use('/api/customers', customerRoutes);
 
-const serviceRequestRoutes = require('./routes/serviceRequests');
-app.use('/api/servicerequests', serviceRequestRoutes);
+const jobRoutes = require('./routes/jobs');
+app.use('/api/jobs', jobRoutes);
 
 const workLogRoutes = require('./routes/workLogs');
 app.use('/api/worklogs', workLogRoutes);

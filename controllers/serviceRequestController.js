@@ -18,7 +18,7 @@ async function listServiceRequests(req, res, next) {
         const { page, limit, offset } = getPagination(req);
 
         // Allowed search fields
-        const searchableFields = ['JobNumber', 'PumpsetBrand', 'PumpsetModel', 'SerialNumber', 'Status'];
+        const searchableFields = ['JobNumber', 'PumpBrand', 'PumpModel', 'MotorBrand', 'MotorModel', 'SerialNumber', 'Status'];
         const filters = buildSearchFilters(req.query, searchableFields);
 
         let rows, totalCount;
@@ -93,7 +93,7 @@ async function createServiceRequest(req, res, next) {
             JobNumber: serviceRequest.JobNumber,
             ActionType: 'Created',
             ChangedBy: req.body.CreatedBy || 'system', // Use logged-in user or system
-            Details: `ServiceRequest created with brand: ${serviceRequest.PumpsetBrand}, model: ${serviceRequest.PumpsetModel}`,
+            Details: `ServiceRequest created. Pump: ${serviceRequest.PumpBrand} ${serviceRequest.PumpModel}, Motor: ${serviceRequest.MotorBrand} ${serviceRequest.MotorModel}`,
         });
         res.status(201).json(serviceRequest);
     } catch (err) {

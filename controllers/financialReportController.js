@@ -9,8 +9,10 @@ async function summaryAllJobs(req, res, next) {
             summary = summary.map(reportDetail => ({
                 "JobNumber": reportDetail.JobNumber,
                 "CustomerId": STRING_HIDDEN,
-                "PumpsetBrand": STRING_HIDDEN,
-                "PumpsetModel": STRING_HIDDEN,
+                "PumpBrand": STRING_HIDDEN,
+                "PumpModel": STRING_HIDDEN,
+                "MotorBrand": STRING_HIDDEN,
+                "MotorModel": STRING_HIDDEN,
                 "TotalPaid": STRING_HIDDEN,
                 "EstimatedAmount": STRING_HIDDEN,
                 "BilledAmount": STRING_HIDDEN,
