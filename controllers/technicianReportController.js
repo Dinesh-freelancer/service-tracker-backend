@@ -1,6 +1,12 @@
 const technicianReportModel = require('../models/technicianReportModel');
 const { STRING_HIDDEN } = require('../utils/constants');
 
+/**
+ * Retrieves a summary of work logs for technicians.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function workLogSummary(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -19,6 +25,12 @@ async function workLogSummary(req, res, next) {
     }
 }
 
+/**
+ * Retrieves an attendance summary for technicians.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function attendanceSummary(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -41,6 +53,12 @@ async function attendanceSummary(req, res, next) {
     }
 }
 
+/**
+ * Retrieves the job completion rate for technicians.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function jobCompletionRate(req, res, next) {
     try {
         const summary = await technicianReportModel.getJobCompletionRateByWorker();

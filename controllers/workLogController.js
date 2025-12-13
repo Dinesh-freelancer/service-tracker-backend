@@ -2,7 +2,12 @@ const workLogModel = require('../models/workLogModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterWorkLog, filterWorkLogList } = require('../utils/responseFilter');
 
-// List work logs (optionally filter by job number)
+/**
+ * Lists work logs, optionally filtered by job number and applying sensitive data filtering.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function listWorkLogs(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -18,7 +23,12 @@ async function listWorkLogs(req, res, next) {
     }
 }
 
-// Get a work log by ID
+/**
+ * Retrieves a single work log entry by ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getWorkLog(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -34,7 +44,12 @@ async function getWorkLog(req, res, next) {
     }
 }
 
-// Add a work log entry
+/**
+ * Creates a new work log entry.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function createWorkLog(req, res, next) {
     try {
         const log = await workLogModel.addWorkLog(req.body);

@@ -2,6 +2,12 @@ const windingModel = require('../models/windingDetailsModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterWindingDetails } = require('../utils/responseFilter');
 
+/**
+ * Creates new winding details.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function createWindingDetail(req, res, next) {
     try {
         const result = await windingModel.addWindingDetail(req.body);
@@ -16,6 +22,12 @@ async function createWindingDetail(req, res, next) {
     }
 }
 
+/**
+ * Lists all winding details, applying role-based filtering.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getAllWindingDetails(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -33,6 +45,12 @@ async function getAllWindingDetails(req, res, next) {
     }
 }
 
+/**
+ * Retrieves winding details by job number, applying role-based filtering.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function getByJobNumber(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
@@ -49,6 +67,12 @@ async function getByJobNumber(req, res, next) {
     }
 }
 
+/**
+ * Updates a winding detail entry.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function updateWindingDetail(req, res, next) {
     try {
         const updated = await windingModel.updateWindingDetail(req.params.id, req.body);
@@ -63,6 +87,12 @@ async function updateWindingDetail(req, res, next) {
     }
 }
 
+/**
+ * Deletes a winding detail entry.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 async function deleteWindingDetail(req, res, next) {
     try {
         await windingModel.deleteWindingDetail(req.params.id);
