@@ -85,6 +85,9 @@ app.use('/api/winding-details', windingRoutes);
 const documentRoutes = require('./routes/documents');
 app.use('/api/documents', documentRoutes);
 
+const notificationRoutes = require('./routes/notifications');
+app.use('/api/notifications', notificationRoutes);
+
 
 // Error handler
 const errorHandler = require('./middleware/errorHandler');
