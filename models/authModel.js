@@ -20,6 +20,14 @@ async function findUserByUsername(username) {
     return rows[0];
 }
 
+// Find user by ID
+async function getUserById(userId) {
+    const [rows] = await pool.query(
+        'SELECT UserId, Username, Role FROM users WHERE UserId = ?', [userId]
+    );
+    return rows[0];
+}
+
 // Update user password
 async function updatePassword(userId, newPassword) {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -31,5 +39,6 @@ async function updatePassword(userId, newPassword) {
 module.exports = {
     registerUser,
     findUserByUsername,
+    getUserById,
     updatePassword
 };

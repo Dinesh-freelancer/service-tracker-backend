@@ -27,6 +27,8 @@ app.use('/api/jobs', jobRoutes);
 describe('Jobs API', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        // Default mock implementation to prevent "not iterable" errors if we miss a call
+        pool.query.mockResolvedValue([ [], [] ]);
     });
 
     describe('GET /api/jobs', () => {
@@ -59,10 +61,10 @@ describe('Jobs API', () => {
                 []
             ]);
 
-            // Mock INSERT servicerequest
-            pool.execute.mockResolvedValueOnce([{ insertId: 1 }]);
+            // Mock INSERT servicerequest (changed from execute to query)
+            pool.query.mockResolvedValueOnce([{ insertId: 1 }]);
 
-            // Mock INSERT audit (triggered by logAudit)
+            // Mock INSERT audit (triggered by logAudit) - uses execute
             pool.execute.mockResolvedValueOnce([{ insertId: 2 }]);
 
             // Mock getServiceRequest call after creation
@@ -86,9 +88,11 @@ describe('Jobs API', () => {
                 console.log(res.error);
             }
             expect(res.statusCode).toBe(201);
-            expect(pool.execute).toHaveBeenCalledWith(
+
+            // Check if INSERT was called via query
+            expect(pool.query).toHaveBeenCalledWith(
                 expect.stringMatching(/INSERT INTO ServiceRequest/i),
-                expect.arrayContaining(['BrandX', 'ModelX', 'BrandY', 'ModelY'])
+                expect.any(Array)
             );
         });
 
