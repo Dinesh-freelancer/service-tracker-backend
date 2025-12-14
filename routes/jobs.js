@@ -112,4 +112,37 @@ router.post('/',
     validateRequest,
     serviceRequestController.createServiceRequest);
 
+/**
+ * @swagger
+ * /jobs/{jobNumber}:
+ *   put:
+ *     summary: Update a service request
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobNumber
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               Status:
+ *                 type: string
+ *               Notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Job updated
+ */
+router.put('/:jobNumber',
+    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    serviceRequestController.updateServiceRequest);
+
 module.exports = router;

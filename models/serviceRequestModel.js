@@ -113,8 +113,45 @@ async function addServiceRequest(data) {
     return await getServiceRequestByJobNumber(JobNumber);
 }
 
+/**
+ * Updates an existing service request.
+ * @param {string} jobNumber - The job number.
+ * @param {Object} updates - Object containing fields to update.
+ * @returns {Promise<Object>} Result of the update operation.
+ */
+async function updateServiceRequest(jobNumber, updates) {
+    const fields = [];
+    const values = [];
+
+    // Allowed fields to update
+    const allowedFields = [
+        'CustomerId', 'PumpBrand', 'PumpModel', 'MotorBrand', 'MotorModel',
+        'HP', 'Warranty', 'SerialNumber', 'DateReceived', 'Notes', 'Status',
+        'EstimatedAmount', 'BilledAmount', 'EstimationDate', 'EstimateLink'
+    ];
+
+    for (const key of Object.keys(updates)) {
+        if (allowedFields.includes(key)) {
+            fields.push(`${key} = ?`);
+            values.push(updates[key]);
+        }
+    }
+
+    if (fields.length === 0) return { affectedRows: 0 };
+
+    // Update UpdatedAt timestamp
+    // (Assuming DB handles UpdatedAt ON UPDATE CURRENT_TIMESTAMP, but if not we can add it)
+
+    values.push(jobNumber);
+
+    const query = `UPDATE ServiceRequest SET ${fields.join(', ')} WHERE JobNumber = ?`;
+    const [result] = await pool.execute(query, values);
+    return result;
+}
+
 module.exports = {
     getAllServiceRequests,
     getServiceRequestByJobNumber,
-    addServiceRequest
+    addServiceRequest,
+    updateServiceRequest
 };

@@ -4,6 +4,7 @@ const { filterServiceRequest, filterServiceRequestList } = require('../utils/res
 const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
 const { getPagination, getPaginationData } = require('../utils/paginationHelper');
 const { buildSearchFilters } = require('../utils/queryHelper');
+const NotificationService = require('../utils/notificationService');
 
 /**
  * Lists service requests with pagination, filtering, and role-based masking.
@@ -101,8 +102,47 @@ async function createServiceRequest(req, res, next) {
     }
 }
 
+// Update service request
+async function updateServiceRequest(req, res, next) {
+    try {
+        const { jobNumber } = req.params;
+        const updates = req.body;
+
+        // Fetch old job status to compare
+        const existingJob = await serviceRequestModel.getServiceRequestByJobNumber(jobNumber);
+        if (!existingJob) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        const result = await serviceRequestModel.updateServiceRequest(jobNumber, updates);
+
+        // Trigger Notification if Status Changed
+        if (updates.Status && existingJob.Status !== updates.Status) {
+            // Notify Admins/Owners
+            await NotificationService.notifyAdminsAndOwners(
+                'JobUpdate',
+                `Job Status Updated: ${jobNumber}`,
+                `Status changed from ${existingJob.Status} to ${updates.Status} by ${req.user ? req.user.Username : 'System'}`,
+                jobNumber
+            );
+        }
+
+        await logAudit({
+            JobNumber: jobNumber,
+            ActionType: 'Updated',
+            ChangedBy: req.user ? req.user.UserId : null,
+            Details: `Job updated. Changes: ${Object.keys(updates).join(', ')}`
+        });
+
+        res.json({ message: 'Job updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listServiceRequests,
     getServiceRequest,
     createServiceRequest,
+    updateServiceRequest
 };

@@ -2,6 +2,7 @@ const workLogModel = require('../models/workLogModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterWorkLog, filterWorkLogList } = require('../utils/responseFilter');
 const { getPagination, getPaginationData } = require('../utils/paginationHelper');
+const NotificationService = require('../utils/notificationService');
 
 /**
  * Lists work logs with pagination, optionally filtered by job number.
@@ -57,6 +58,18 @@ async function getWorkLog(req, res, next) {
 async function createWorkLog(req, res, next) {
     try {
         const log = await workLogModel.addWorkLog(req.body);
+
+        // Notify Assigned Worker
+        if (req.body.AssignedWorker) {
+            await NotificationService.notifyAssignedWorker(
+                req.body.AssignedWorker,
+                'JobAssignment',
+                'New Job Assignment',
+                `You have been assigned to job ${log.JobNumber} (${req.body.SubStatus})`,
+                log.JobNumber
+            );
+        }
+
         await logAudit({
             JobNumber: log.JobNumber,
             ActionType: 'WorkLog Created',
