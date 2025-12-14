@@ -88,7 +88,7 @@ async function addServiceRequest(data) {
     // Default to 'Received' if not provided (matching DB default)
     Status = Status || 'Received';
 
-    const [result] = await pool.execute(
+    const [result] = await pool.query(
         `INSERT INTO ServiceRequest (
       JobNumber, CustomerId, PumpBrand, PumpModel, MotorBrand, MotorModel, HP,
       Warranty, SerialNumber, DateReceived, Notes, Status,
@@ -145,7 +145,7 @@ async function updateServiceRequest(jobNumber, updates) {
     values.push(jobNumber);
 
     const query = `UPDATE ServiceRequest SET ${fields.join(', ')} WHERE JobNumber = ?`;
-    const [result] = await pool.execute(query, values);
+    const [result] = await pool.query(query, values);
     return result;
 }
 

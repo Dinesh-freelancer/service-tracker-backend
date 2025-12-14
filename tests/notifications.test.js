@@ -28,12 +28,12 @@ describe('Notifications API', () => {
     describe('GET /api/notifications', () => {
         it('should return paginated list of notifications', async () => {
             // Mock DB response for getByUser
-            pool.execute.mockResolvedValueOnce([
+            pool.query.mockResolvedValueOnce([
                 [{ NotificationId: 1, Title: 'Test Notification' }], // rows
                 [] // fields
             ]);
             // Mock count query
-            pool.execute.mockResolvedValueOnce([
+            pool.query.mockResolvedValueOnce([
                 [{ total: 1 }],
                 []
             ]);
@@ -50,7 +50,7 @@ describe('Notifications API', () => {
     describe('PUT /api/notifications/:id/read', () => {
         it('should mark a notification as read', async () => {
             // Mock update query
-            pool.execute.mockResolvedValueOnce([
+            pool.query.mockResolvedValueOnce([
                 { affectedRows: 1 },
                 []
             ]);
@@ -62,7 +62,7 @@ describe('Notifications API', () => {
         });
 
         it('should return 404 if notification not found', async () => {
-            pool.execute.mockResolvedValueOnce([
+            pool.query.mockResolvedValueOnce([
                 { affectedRows: 0 },
                 []
             ]);
@@ -75,7 +75,7 @@ describe('Notifications API', () => {
 
     describe('PUT /api/notifications/read-all', () => {
         it('should mark all notifications as read', async () => {
-            pool.execute.mockResolvedValueOnce([
+            pool.query.mockResolvedValueOnce([
                 { affectedRows: 5 },
                 []
             ]);

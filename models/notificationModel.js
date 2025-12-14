@@ -7,7 +7,7 @@ const Notification = {
             INSERT INTO notifications (UserId, Type, Title, Message, ReferenceId)
             VALUES (?, ?, ?, ?, ?)
         `;
-        const [result] = await db.execute(query, [userId, type, title, message, referenceId]);
+        const [result] = await db.query(query, [userId, type, title, message, referenceId]);
         return result.insertId;
     },
 
@@ -26,7 +26,7 @@ const Notification = {
         query += ` ORDER BY CreatedAt DESC LIMIT ? OFFSET ?`;
         params.push(limit, offset);
 
-        const [rows] = await db.execute(query, params);
+        const [rows] = await db.query(query, params);
 
         // Get total count for pagination
         let countQuery = `SELECT COUNT(*) as total FROM notifications WHERE UserId = ?`;
@@ -34,7 +34,7 @@ const Notification = {
         if (unreadOnly) {
             countQuery += ` AND IsRead = 0`;
         }
-        const [countResult] = await db.execute(countQuery, countParams);
+        const [countResult] = await db.query(countQuery, countParams);
 
         return {
             notifications: rows,
@@ -49,7 +49,7 @@ const Notification = {
             SET IsRead = 1
             WHERE NotificationId = ? AND UserId = ?
         `;
-        const [result] = await db.execute(query, [notificationId, userId]);
+        const [result] = await db.query(query, [notificationId, userId]);
         return result.affectedRows > 0;
     },
 
@@ -60,7 +60,7 @@ const Notification = {
             SET IsRead = 1
             WHERE UserId = ? AND IsRead = 0
         `;
-        const [result] = await db.execute(query, [userId]);
+        const [result] = await db.query(query, [userId]);
         return result.affectedRows;
     },
 
@@ -70,7 +70,7 @@ const Notification = {
             DELETE FROM notifications
             WHERE CreatedAt < DATE_SUB(NOW(), INTERVAL ? DAY)
         `;
-        const [result] = await db.execute(query, [days]);
+        const [result] = await db.query(query, [days]);
         return result.affectedRows;
     }
 };
