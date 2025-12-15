@@ -1,5 +1,7 @@
 const partsUsedModel = require('../models/partsUsedModel');
 const { filterPartsUsed, filterPartsUsedList } = require('../utils/responseFilter');
+const NotificationService = require('../utils/notificationService');
+const InventoryModel = require('../models/inventoryModel');
 
 // List parts used (optionally filtered by job)
 async function listPartsUsed(req, res, next) {
@@ -37,6 +39,20 @@ async function getPartUsed(req, res, next) {
 async function createPartUsed(req, res, next) {
     try {
         const partUsed = await partsUsedModel.addPartUsed(req.body);
+
+        // Check for Low Stock
+        if (req.body.PartId) {
+            const part = await InventoryModel.getPartById(req.body.PartId);
+            if (part && part.QuantityInStock <= part.LowStockThreshold) {
+                await NotificationService.notifyAdminsAndOwners(
+                    'LowStock',
+                    `Low Stock Alert: ${part.PartName}`,
+                    `Stock for ${part.PartName} is now ${part.QuantityInStock} (Threshold: ${part.LowStockThreshold})`,
+                    String(part.PartId)
+                );
+            }
+        }
+
         res.status(201).json(partUsed);
     } catch (err) {
         next(err);
