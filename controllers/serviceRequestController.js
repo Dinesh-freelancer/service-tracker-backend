@@ -5,6 +5,7 @@ const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
 const { getPagination, getPaginationData } = require('../utils/paginationHelper');
 const { buildSearchFilters } = require('../utils/queryHelper');
 const NotificationService = require('../utils/notificationService');
+const authModel = require('../models/authModel');
 
 /**
  * Lists service requests with pagination, filtering, and role-based masking.
@@ -118,11 +119,18 @@ async function updateServiceRequest(req, res, next) {
 
         // Trigger Notification if Status Changed
         if (updates.Status && existingJob.Status !== updates.Status) {
+            // Get username
+            let username = 'System';
+            if (req.user && req.user.UserId) {
+                const user = await authModel.getUserById(req.user.UserId);
+                if (user) username = user.Username;
+            }
+
             // Notify Admins/Owners
             await NotificationService.notifyAdminsAndOwners(
                 'JobUpdate',
                 `Job Status Updated: ${jobNumber}`,
-                `Status changed from ${existingJob.Status} to ${updates.Status} by ${req.user ? req.user.Username : 'System'}`,
+                `Status changed from ${existingJob.Status} to ${updates.Status} by ${username}`,
                 jobNumber
             );
         }
