@@ -9,8 +9,9 @@
 2. [Database Schema](#database-schema)
 3. [Authentication \& Authorization](#authentication--authorization)
 4. [API Endpoints](#api-endpoints)
-5. [Implementation Status](#implementation-status)
-6. [Yet To Do](#yet-to-do)
+5. [Frontend Integration Guide \& Data Visibility](#frontend-integration-guide--data-visibility)
+6. [Implementation Status](#implementation-status)
+7. [Yet To Do](#yet-to-do)
 
 ***
 
@@ -25,6 +26,10 @@ The Submersible Motor Service Center backend is a comprehensive REST API system 
 - JWT for authentication
 - bcrypt for password hashing
 - Role-based access control (RBAC)
+
+**Base API Path:** `/api`
+**Authentication:** JWT (Bearer Token).
+**Header:** `Authorization: Bearer <token>`
 
 ***
 
@@ -1940,6 +1945,65 @@ CREATE TABLE summaryReports (
 
 ***
 
+## Frontend Integration Guide \& Data Visibility
+
+This section outlines the interface contract, role-specific constraints, and data visibility rules for Frontend integration.
+
+### Role-Based Access Control (RBAC) \& Visibility
+
+The backend strictly enforces data visibility based on roles.
+
+| Role | Access Level | Description |
+| :--- | :--- | :--- |
+| **Admin** | Full | Full access to all data and features. |
+| **Owner** | Full | Same as Admin. |
+| **Worker** | Operational | Access to Jobs, Inventory, Work Logs. **No Financials.** **No Customer PII.** |
+| **Customer** | Personal | Read-only access to own Jobs, Quotes, Invoices. |
+
+### API Layer Filtering (Global Behavior)
+
+- **`hideSensitive` Flag:** By default, all responses are "masked" (`hideSensitive=true`) for safety.
+- **"Hidden" Values:** Sensitive fields (e.g., `CustomerName`, `EstimatedAmount`) are replaced with the string `"Hidden"`.
+- **Admin Override:** Admins/Owners can request raw data by passing `?hideSensitive=false` in the query string or `x-hide-sensitive: false` header. **Note:** This action is logged in the Audit Trail.
+
+### Role-Specific Constraints
+
+#### 👷 Worker Role
+The Frontend should expect the following limitations for logged-in Workers:
+
+1.  **Service Requests (Jobs):**
+    -   **Visible:** `JobNumber`, `MotorBrand` (mapped from `PumpsetBrand`), `MotorModel` (mapped from `PumpsetModel`), `HP`, `Warranty`, `DateReceived`, `Status`, `Notes`.
+    -   **Hidden:** `CustomerName` (PII), `CustomerId`, `EstimatedAmount`, `BilledAmount`.
+2.  **Winding Details:**
+    -   **Conditional Visibility:** Full technical details are **only** returned if the Job Status is:
+        -   `Approved By Customer`
+        -   `Work In Progress`
+    -   **Otherwise:** The API returns a filtered object with `message: "Winding details not available at this stage"`.
+3.  **Payments:**
+    -   **Access Blocked:** `GET /api/payments` returns `[]` (empty list). `GET /api/payments/:id` returns `403 Forbidden`.
+    -   *Frontend Action:* Hide "Payments" tab/section for Workers.
+4.  **Inventory & Parts:**
+    -   **Visible:** `PartName`, `QuantityInStock`, `Unit`.
+    -   **Hidden:** `CostPrice`, `SellingPrice`, `Supplier` info.
+5.  **Documents:**
+    -   **Visible:** Metadata (`DocumentId`, `DocumentType`, `CreatedAt`).
+    -   **Hidden:** Content (`EmbedTag`).
+
+#### 👤 Customer Role
+1.  **Scope:** Can only access data linked to their `CustomerId`.
+2.  **Fields:** Can see Estimates, Billed Amounts, and Documents (Quotes/Invoices).
+3.  **Hiding:** Internal fields might be hidden, but generally they see their own transaction data.
+
+### Entity Field Mappings (Frontend Reference)
+
+Please verify the Frontend binds to these exact keys returned by the API:
+
+-   **Service Request:** `JobNumber`, `PumpsetBrand`, `PumpsetModel`, `SerialNumber`, `HP`, `Warranty`, `Status`, `Notes`.
+-   **Customer:** `CustomerId`, `CustomerName`, `WhatsappNumber`, `Address`.
+-   **Inventory:** `PartId`, `PartName`, `QuantityInStock`, `Unit`.
+
+***
+
 ## Implementation Status
 
 ### ✅ Completed
@@ -1967,40 +2031,28 @@ CREATE TABLE summaryReports (
 21. **Pagination** – Large result set handling implemented for major entities
 22. **Rate Limiting \& Throttling** – General and strict auth limits implemented.
 23. **Advanced Search \& Filtering** – Full-text search and complex filtering implemented.
+24. **Notifications System** – Core system implemented (Models, Routes, Controllers)
+25. **API Documentation** – Swagger UI integrated
+26. **Testing Infrastructure** – Jest and Supertest setup configured
 
 ### 🟡 Partially Completed
 
-1. **API Layer Filtering** – Basic role checks in place; full field-level filtering needed
+1. **API Layer Filtering** – Basic role checks in place; full field-level filtering needs refinement
 2. **Audit Trail for Sensitive Access** – Structure ready; logging of sensitive views needs integration
 3. **Minimalistic API Responses** – Some endpoints shaped; all need complete field-level filtering
 
 ### ❌ Yet to Do
 
-8. **Testing**
-    - Unit tests for models and services
-    - Integration tests for endpoints
-    - API contract testing
-9. **Notifications System**
-    - In-app notification creation/retrieval
-    - Email/SMS integration (future)
-    - Real-time WebSocket support (future)
-8. **Performance Optimization**
+1. **Comprehensive Testing** – Complete coverage pending (Unit & Integration)
+2. **Performance Optimization**
     - Query optimization with proper indexing
     - Response caching strategies
     - Database connection pooling tuning
-9. **Testing**
-    - Unit tests for models and services
-    - Integration tests for endpoints
-    - API contract testing
-10. **API Documentation**
-    - OpenAPI/Swagger specification
-    - Interactive documentation
-    - Example payloads and responses
-11. **Environment Configuration**
+3. **Environment Configuration**
     - Deployment guides
     - Environment-specific settings
     - Secrets management
-12. **File Upload \& Cloud Storage** (Future Phase)
+4. **File Upload \& Cloud Storage** (Future Phase)
     - Move from embed tags to actual file uploads
     - AWS S3 or Azure Blob integration
     - File versioning and retention
@@ -2022,11 +2074,11 @@ CREATE TABLE summaryReports (
 6. **Rate Limiting** – Completed
 7. **Advanced Search \& Filtering** – Completed
 8. **API Documentation** – Completed (Swagger UI)
-9. **Testing** – Comprehensive test coverage
+9. **Comprehensive Testing** – Complete testing coverage is pending
 
 ### Medium-term (Phase 2)
 
-10. **Notifications System** – Job/payment alerts
+10. **Notifications System** – Completed (Core)
 11. **Performance Optimization** – Query tuning, caching
 12. **Environment Config** – Production-ready setup
 
@@ -2081,4 +2133,3 @@ const pool = mysql.createPool({
 ***
 
 This comprehensive backend documentation covers the entire system architecture, all implemented endpoints with sample payloads/responses, database schema with purposes, current implementation status, and a clear roadmap for remaining work. It's ready for handoff to frontend teams and future backend developers.
-
