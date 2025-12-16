@@ -85,6 +85,11 @@ Please verify the Frontend binds to these exact keys returned by the API:
 - **[Feature] Search & Filtering:**
     -   **Text Search:** Use `?search=term` for partial matches on key fields (e.g., Job Number, Customer Name, Part Name).
     -   **Exact Match:** Use `?field=value` (e.g., `?Status=Completed`).
+- **[Feature] Notifications:**
+    -   **Endpoints:** `GET /api/notifications` (List), `PUT /api/notifications/:id/read` (Mark Read), `PUT /api/notifications/read-all`.
+    -   **Polling:** Frontend should poll `GET /api/notifications?unreadOnly=true` periodically.
+- **[Feature] Job Update:**
+    -   **Endpoint:** `PUT /api/jobs/:jobNumber` is now available for status updates.
 - **[Docs] Swagger UI:** API documentation available at `/api-docs`.
 
 ---

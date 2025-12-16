@@ -1967,6 +1967,8 @@ CREATE TABLE summaryReports (
 21. **Pagination** – Large result set handling implemented for major entities
 22. **Rate Limiting \& Throttling** – General and strict auth limits implemented.
 23. **Advanced Search \& Filtering** – Full-text search and complex filtering implemented.
+24. **Notifications System** – In-app notification creation, retrieval, and triggers (Low Stock, Job Update, Assignment).
+25. **Seeding** – Database seed script created.
 
 ### 🟡 Partially Completed
 
@@ -1976,14 +1978,22 @@ CREATE TABLE summaryReports (
 
 ### ❌ Yet to Do
 
-8. **Testing**
-    - Unit tests for models and services
-    - Integration tests for endpoints
-    - API contract testing
-9. **Notifications System**
-    - In-app notification creation/retrieval
-    - Email/SMS integration (future)
-    - Real-time WebSocket support (future)
+8. **Performance Optimization**
+    - Query optimization with proper indexing
+    - Response caching strategies
+    - Database connection pooling tuning
+9. **Environment Configuration**
+    - Deployment guides
+    - Environment-specific settings
+    - Secrets management
+10. **API Documentation**
+    - OpenAPI/Swagger specification (Partially done)
+    - Interactive documentation
+    - Example payloads and responses
+11. **File Upload \& Cloud Storage** (Future Phase)
+    - Move from embed tags to actual file uploads
+    - AWS S3 or Azure Blob integration
+    - File versioning and retention
 8. **Performance Optimization**
     - Query optimization with proper indexing
     - Response caching strategies
