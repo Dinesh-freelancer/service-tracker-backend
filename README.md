@@ -48,18 +48,45 @@ cd apps/web
 npm run dev
 ```
 
-## Deployment
+## Deployment & Configuration
 
-### Backend (Render)
+### 1. Database (Aiven MySQL)
 
-*   **Root Directory**: Set to `apps/api` in your Render service settings.
+Your database is hosted on Aiven. You will need the **Service URI** or the individual connection details (Host, Port, User, Password) from the Aiven console.
+
+### 2. Backend (Render)
+
+Deploy the `apps/api` directory to Render as a **Web Service**.
+
+*   **Root Directory**: `apps/api`
 *   **Build Command**: `npm install`
 *   **Start Command**: `npm start`
-*   **Environment Variables**: Ensure all required environment variables (DB credentials, JWT secrets, etc.) are set in the Render dashboard.
+*   **Environment Variables**:
+    Go to the **Environment** tab in your Render dashboard and add the following:
 
-### Frontend (Vercel)
+    | Variable | Description | Example Value |
+    | :--- | :--- | :--- |
+    | `DB_HOST` | Aiven Hostname | `mysql-service.aivencloud.com` |
+    | `DB_PORT` | Aiven Port | `12345` |
+    | `DB_USER` | Aiven Username | `avnadmin` |
+    | `DB_PASSWORD` | Aiven Password | `secret-password` |
+    | `DB_NAME` | Database Name | `service_db` |
+    | `JWT_SECRET` | Secret for auth tokens | `your-secure-random-string` |
+    | `PORT` | (Optional) | Render sets this automatically (usually 10000) |
 
-*   **Framework Preset**: Vite (Auto-detected).
-*   **Root Directory**: `apps/web` (You may need to configure this in Vercel settings if it doesn't auto-detect the monorepo structure correctly, but usually Vercel handles this well).
+### 3. Frontend (Vercel)
+
+Deploy the `apps/web` directory to Vercel.
+
+*   **Root Directory**: `apps/web`
+*   **Framework Preset**: Vite
 *   **Build Command**: `npm run build`
 *   **Output Directory**: `dist`
+*   **Environment Variables**:
+    Go to **Settings > Environment Variables** in your Vercel project and add:
+
+    | Variable | Description | Example Value |
+    | :--- | :--- | :--- |
+    | `VITE_API_URL` | URL of your deployed Backend | `https://your-app-name.onrender.com/api` |
+
+    *Note: The frontend code must use `import.meta.env.VITE_API_URL` to access this value.*
