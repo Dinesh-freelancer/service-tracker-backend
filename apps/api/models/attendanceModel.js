@@ -1,57 +1,62 @@
 const pool = require('../db');
 
-// Get all attendance records (optionally filter by date/worker)
-async function getattendance({ date, workerId } = {}) {
+// Get all attendance records with filters
+async function getAllAttendance(filters) {
     let query = 'SELECT * FROM attendance WHERE 1=1';
-    const params = [];
-    if (date) {
-        query += ' AND attendanceDate = ?';
-        params.push(date);
+    let params = [];
+
+    if (filters.workerId) {
+        query += ' AND WorkerId = ?';
+        params.push(filters.workerId);
     }
-    if (workerId) {
-        query += ' AND workerId = ?';
-        params.push(workerId);
+
+    if (filters.dateFrom) {
+        query += ' AND AttendanceDate >= ?';
+        params.push(filters.dateFrom);
     }
-    query += ' ORDER BY attendanceDate DESC, workerId';
+
+    if (filters.dateTo) {
+        query += ' AND AttendanceDate <= ?';
+        params.push(filters.dateTo);
+    }
+
+    query += ' ORDER BY AttendanceDate DESC';
 
     const [rows] = await pool.query(query, params);
     return rows;
 }
 
-// Get attendance by record ID
-async function getattendanceById(attendanceId) {
+async function getAttendanceById(attendanceId) {
     const [rows] = await pool.query(
-        'SELECT * FROM attendance WHERE attendanceId = ?', [attendanceId]
+        'SELECT * FROM attendance WHERE AttendanceId = ?', [attendanceId]
     );
     return rows[0];
 }
 
-// Add attendance record
-async function addattendance(data) {
-    const {
-        workerId,
-        attendanceDate,
-        Status, // ENUM: Present, Absent, HalfDay, FieldWork, OnLeave
-        CheckInTime,
-        CheckOutTime,
-        Notes,
-        MarkedBy
-    } = data;
-
+async function markAttendance(attendanceData) {
+    const { WorkerId, AttendanceDate, Status, Notes } = attendanceData;
     const [result] = await pool.query(
-        `INSERT INTO attendance (
-      workerId, attendanceDate, Status, CheckInTime,
-      CheckOutTime, Notes, MarkedBy
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`, [
-            workerId, attendanceDate, Status, CheckInTime,
-            CheckOutTime, Notes, MarkedBy
-        ]
+        `INSERT INTO attendance (WorkerId, AttendanceDate, Status, Notes)
+     VALUES (?, ?, ?, ?)`,
+        [WorkerId, AttendanceDate, Status, Notes]
     );
-    return await getattendanceById(result.insertId);
+    return result.insertId;
+}
+
+async function updateAttendance(attendanceId, attendanceData) {
+    const fields = Object.keys(attendanceData).map(field => `${field} = ?`);
+    const values = Object.values(attendanceData);
+    values.push(attendanceId);
+
+    await pool.query(
+        `UPDATE attendance SET ${fields.join(', ')} WHERE AttendanceId = ?`,
+        values
+    );
 }
 
 module.exports = {
-    getattendance,
-    getattendanceById,
-    addattendance
+    getAllAttendance,
+    getAttendanceById,
+    markAttendance,
+    updateAttendance
 };

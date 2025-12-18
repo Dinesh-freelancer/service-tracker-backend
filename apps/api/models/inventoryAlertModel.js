@@ -1,39 +1,17 @@
 const pool = require('../db');
 
-// Get all parts with stock below threshold
-async function getLowStockAlerts() {
-    const [rows] = await pool.query(`
+// Get inventory alerts
+async function getInventoryAlerts(hideSensitive = true) {
+    const query = `
     SELECT 
-      PartId,
-      PartName,
-      QuantityInStock,
-      LowStockThreshold,
-      Supplier,
-      Notes
+      PartId, PartName, QuantityInStock, LowStockThreshold, Unit, SupplierId
     FROM inventory
     WHERE QuantityInStock <= LowStockThreshold
-    ORDER BY QuantityInStock ASC
-  `);
-    return rows;
-}
-
-// Get all parts with zero stock
-async function getOutOfStockAlerts() {
-    const [rows] = await pool.query(`
-    SELECT 
-      PartId,
-      PartName,
-      QuantityInStock,
-      Supplier,
-      Notes
-    FROM inventory
-    WHERE QuantityInStock = 0
-    ORDER BY PartName
-  `);
+  `;
+    const [rows] = await pool.query(query);
     return rows;
 }
 
 module.exports = {
-    getLowStockAlerts,
-    getOutOfStockAlerts
+    getInventoryAlerts
 };

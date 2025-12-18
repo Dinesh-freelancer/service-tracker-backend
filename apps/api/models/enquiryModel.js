@@ -1,65 +1,57 @@
 const pool = require('../db');
 
-// Get all enquiries (optionally filter by date or linked job)
-async function getAllEnquiries({ enquiryDate, linkedJobNumber } = {}) {
+// Get all enquiries with filters
+async function getAllEnquiry(filters) {
     let query = 'SELECT * FROM enquiry WHERE 1=1';
-    const params = [];
-    if (enquiryDate) {
-        query += ' AND enquiryDate = ?';
-        params.push(enquiryDate);
+    let params = [];
+
+    if (filters.customerId) {
+        query += ' AND CustomerId = ?';
+        params.push(filters.customerId);
     }
-    if (linkedJobNumber) {
-        query += ' AND LinkedJobNumber = ?';
-        params.push(linkedJobNumber);
+
+    if (filters.status) {
+        query += ' AND Status = ?';
+        params.push(filters.status);
     }
-    query += ' ORDER BY enquiryDate DESC';
+
+    query += ' ORDER BY EnquiryDate DESC';
 
     const [rows] = await pool.query(query, params);
     return rows;
 }
 
-// Get enquiry by ID
-async function getenquiryById(enquiryId) {
-    const [rows] = await pool.query('SELECT * FROM enquiry WHERE enquiryId = ?', [enquiryId]);
+async function getEnquiryById(enquiryId) {
+    const [rows] = await pool.query('SELECT * FROM enquiry WHERE EnquiryId = ?', [enquiryId]);
     return rows[0];
 }
 
-// Add new enquiry
-async function addenquiry(data) {
-    const {
-        enquiryDate,
-        CustomerName,
-        ContactNumber,
-        NatureOfQuery,
-        QueryDetails,
-        NextFollowUpDate,
-        FollowUpNotes,
-        EnteredBy,
-        LinkedJobNumber
-    } = data;
+async function createEnquiry(enquiryData) {
+    const fields = Object.keys(enquiryData);
+    const values = Object.values(enquiryData);
+    const placeholders = fields.map(() => '?').join(', ');
 
     const [result] = await pool.query(
-        `INSERT INTO enquiry (
-      enquiryDate, CustomerName, ContactNumber, NatureOfQuery,
-      QueryDetails, NextFollowUpDate, FollowUpNotes, EnteredBy, LinkedJobNumber
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-            enquiryDate,
-            CustomerName,
-            ContactNumber,
-            NatureOfQuery,
-            QueryDetails,
-            NextFollowUpDate,
-            FollowUpNotes,
-            EnteredBy,
-            LinkedJobNumber || null
-        ]
+        `INSERT INTO enquiry (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
     );
+    return result.insertId;
+}
 
-    return await getenquiryById(result.insertId);
+async function updateEnquiry(enquiryId, enquiryData) {
+    const fields = Object.keys(enquiryData).map(field => `${field} = ?`);
+    const values = Object.values(enquiryData);
+    values.push(enquiryId);
+
+    await pool.query(
+        `UPDATE enquiry SET ${fields.join(', ')} WHERE EnquiryId = ?`,
+        values
+    );
 }
 
 module.exports = {
-    getAllEnquiries,
-    getenquiryById,
-    addenquiry
+    getAllEnquiry,
+    getEnquiryById,
+    createEnquiry,
+    updateEnquiry
 };

@@ -1,83 +1,78 @@
 const pool = require('../db');
 
-/**
- * Retrieves all work logs with pagination.
- * @param {string|null} [jobNumber=null] - Filter by job number.
- * @param {number} [limit] - Items per page.
- * @param {number} [offset] - Offset.
- * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
- */
-async function getAllworklogs(jobNumber = null, limit, offset) {
+// Get all work logs with filters
+async function getAllWorkLogs(jobNumber, limit = 10, offset = 0) {
     let query = 'SELECT * FROM worklog';
-    const params = [];
+    let countQuery = 'SELECT COUNT(*) as count FROM worklog';
+    let params = [];
+    let whereClauses = [];
 
     if (jobNumber) {
-        query += ' WHERE JobNumber = ?';
+        whereClauses.push('JobNumber = ?');
         params.push(jobNumber);
     }
 
-    query += ' ORDER BY StartTime';
+    // Add other filters if needed
 
-    if (limit !== undefined && offset !== undefined) {
-        query += ' LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+    if (whereClauses.length > 0) {
+        const whereSql = ' WHERE ' + whereClauses.join(' AND ');
+        query += whereSql;
+        countQuery += whereSql;
     }
+
+    query += ' ORDER BY Date DESC, StartTime DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await pool.query(query, params);
 
-    let countQuery = 'SELECT COUNT(*) as count FROM worklog';
-    const countParams = [];
-    if (jobNumber) {
-        countQuery += ' WHERE JobNumber = ?';
-        countParams.push(jobNumber);
-    }
-    const [countResult] = await pool.query(countQuery, countParams);
-    const totalCount = countResult[0].count;
+    // Count query
+    let countParams = params.slice(0, -2);
+    const [countRows] = await pool.query(countQuery, countParams);
 
-    return { rows, totalCount };
+    return { rows, totalCount: countRows[0].count };
 }
 
-// Get a single work log entry
-async function getworklogById(workLogId) {
+async function getWorkLogById(workLogId) {
     const [rows] = await pool.query(
-        'SELECT * FROM worklog WHERE worklogId = ?', [workLogId]
+        'SELECT * FROM worklog WHERE WorkLogId = ?', [workLogId]
     );
     return rows[0];
 }
 
-// Create new work log entry
-async function addworklog(data) {
-    const {
-        JobNumber,
-        SubStatus,
-        WorkDone,
-        workerId,
-        workerName,
-        StartTime,
-        EndTime,
-        Notes
-    } = data;
+async function addWorkLog(logData) {
+    const fields = Object.keys(logData);
+    const values = Object.values(logData);
+    const placeholders = fields.map(() => '?').join(', ');
 
     const [result] = await pool.query(
-        `INSERT INTO worklog (
-      JobNumber, SubStatus, WorkDone, workerId, workerName,
-      StartTime, EndTime, Notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
-            JobNumber,
-            SubStatus,
-            WorkDone,
-            workerId,
-            workerName,
-            StartTime,
-            EndTime,
-            Notes
-        ]
+        `INSERT INTO worklog (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
     );
-    return await getworklogById(result.insertId);
+    const [rows] = await pool.query('SELECT * FROM worklog WHERE WorkLogId = ?', [result.insertId]);
+    return rows[0];
+}
+
+async function updateWorkLog(workLogId, logData) {
+    const fields = Object.keys(logData).map(field => `${field} = ?`);
+    const values = Object.values(logData);
+    values.push(workLogId);
+
+    await pool.query(
+        `UPDATE worklog SET ${fields.join(', ')} WHERE WorkLogId = ?`,
+        values
+    );
+    const [rows] = await pool.query('SELECT * FROM worklog WHERE WorkLogId = ?', [workLogId]);
+    return rows[0];
+}
+
+async function deleteWorkLog(workLogId) {
+    await pool.query('DELETE FROM worklog WHERE WorkLogId = ?', [workLogId]);
 }
 
 module.exports = {
-    getAllworklogs,
-    getworklogById,
-    addworklog
+    getAllWorkLogs,
+    getWorkLogById,
+    addWorkLog,
+    updateWorkLog,
+    deleteWorkLog
 };

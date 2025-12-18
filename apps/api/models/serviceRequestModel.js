@@ -1,157 +1,97 @@
 const pool = require('../db');
 
-/**
- * Retrieves all service requests with pagination and filtering.
- * @param {Object} [filters] - Search filters.
- * @param {string} [filters.sql] - WHERE clause.
- * @param {Array} [filters.params] - Parameters for WHERE clause.
- * @param {number} [limit] - Items per page.
- * @param {number} [offset] - Offset.
- * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
- */
-async function getAllservicerequests(filters = {}, limit, offset) {
+// Get all service requests with filters and pagination
+async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
     let query = `SELECT * FROM servicerequest`;
-    const params = [];
+    let countQuery = `SELECT COUNT(*) as count FROM servicerequest`;
+    let params = [];
+    let whereClauses = [];
 
-    if (filters.sql) {
-        query += ` ${filters.sql}`;
-        params.push(...filters.params);
+    // Apply filters
+    if (filters.status) {
+        whereClauses.push(`Status = ?`);
+        params.push(filters.status);
     }
 
-    query += ` ORDER BY DateReceived DESC`;
+    // Add logic for date filtering, search, etc. here
 
-    if (limit !== undefined && offset !== undefined) {
-        query += ` LIMIT ? OFFSET ?`;
-        params.push(limit, offset);
+    if (whereClauses.length > 0) {
+        const whereSql = ' WHERE ' + whereClauses.join(' AND ');
+        query += whereSql;
+        countQuery += whereSql;
     }
+
+    // Sort by DateReceived descending
+    query += ` ORDER BY DateReceived DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await pool.query(query, params);
 
-    // Get total count (using same filters)
-    let countQuery = `SELECT COUNT(*) as count FROM servicerequest`;
-    const countParams = [];
-    if (filters.sql) {
-        countQuery += ` ${filters.sql}`;
-        countParams.push(...filters.params);
-    }
+    // Count query
+    let countParams = params.slice(0, -2);
+    const [countRows] = await pool.query(countQuery, countParams);
 
-    const [countResult] = await pool.query(countQuery, countParams);
-    const totalCount = countResult[0].count;
-
-    return { rows, totalCount };
+    return { rows, totalCount: countRows[0].count };
 }
 
-// Get service request by JobNumber
-async function getservicerequestByJobNumber(jobNumber) {
+async function getServiceRequestByJobNumber(jobNumber) {
     const [rows] = await pool.query(
         `SELECT * FROM servicerequest WHERE JobNumber = ?`, [jobNumber]
     );
     return rows[0];
 }
 
-// Create new service request
-async function addservicerequest(data) {
-    let {
-        JobNumber,
-        CustomerId,
-        PumpBrand,
-        PumpModel,
-        MotorBrand,
-        MotorModel,
-        HP,
-        Warranty,
-        SerialNumber,
-        DateReceived,
-        Notes,
-        Status,
-        EstimationDate,
-        EstimateLink
-    } = data;
-
-    // Generate JobNumber if not provided
-    if (!JobNumber) {
-        // Format: YYYYMMDDNN (e.g., 20251115001)
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        // Fetch last job number for today
-        const [rows] = await pool.query(
-            `SELECT JobNumber FROM servicerequest WHERE JobNumber LIKE ? ORDER BY JobNumber DESC LIMIT 1`,
-            [`${dateStr}%`]
-        );
-        let nextSeq = 1;
-        if (rows.length > 0) {
-            const lastSeq = parseInt(rows[0].JobNumber.slice(-3), 10);
-            nextSeq = lastSeq + 1;
-        }
-        JobNumber = `${dateStr}${String(nextSeq).padStart(3, '0')}`;
-    }
-
-    // Default to 'Received' if not provided (matching DB default)
-    Status = Status || 'Received';
+async function addServiceRequest(jobData) {
+    const fields = Object.keys(jobData);
+    const values = Object.values(jobData);
+    const placeholders = fields.map(() => '?').join(', ');
 
     const [result] = await pool.query(
-        `INSERT INTO servicerequest (
-      JobNumber, CustomerId, PumpBrand, PumpModel, MotorBrand, MotorModel, HP,
-      Warranty, SerialNumber, DateReceived, Notes, Status,
-      EstimationDate, EstimateLink
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-            JobNumber,
-            CustomerId,
-            PumpBrand,
-            PumpModel,
-            MotorBrand,
-            MotorModel,
-            HP,
-            Warranty,
-            SerialNumber,
-            DateReceived,
-            Notes,
-            Status,
-            EstimationDate,
-            EstimateLink
-        ]
+        `INSERT INTO servicerequest (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
     );
-    return await getservicerequestByJobNumber(JobNumber);
+    // Usually job number is unique, so we can fetch by it, but here we just return what was created if needed
+    // Assuming JobNumber was part of input or we query by ID if auto-inc ID exists (JobId)
+    // The table has JobId auto-inc.
+    const [rows] = await pool.query('SELECT * FROM servicerequest WHERE JobId = ?', [result.insertId]);
+    return rows[0];
 }
 
-/**
- * Updates an existing service request.
- * @param {string} jobNumber - The job number.
- * @param {Object} updates - Object containing fields to update.
- * @returns {Promise<Object>} Result of the update operation.
- */
-async function updateservicerequest(jobNumber, updates) {
-    const fields = [];
-    const values = [];
-
-    // Allowed fields to update
-    const allowedFields = [
-        'CustomerId', 'PumpBrand', 'PumpModel', 'MotorBrand', 'MotorModel',
-        'HP', 'Warranty', 'SerialNumber', 'DateReceived', 'Notes', 'Status',
-        'EstimatedAmount', 'BilledAmount', 'EstimationDate', 'EstimateLink'
-    ];
-
-    for (const key of Object.keys(updates)) {
-        if (allowedFields.includes(key)) {
-            fields.push(`${key} = ?`);
-            values.push(updates[key]);
-        }
-    }
-
-    if (fields.length === 0) return { affectedRows: 0 };
-
-    // Update UpdatedAt timestamp
-    // (Assuming DB handles UpdatedAt ON UPDATE CURRENT_TIMESTAMP, but if not we can add it)
-
+async function updateServiceRequest(jobNumber, updateData) {
+    const fields = Object.keys(updateData).map(field => `${field} = ?`);
+    const values = Object.values(updateData);
     values.push(jobNumber);
 
     const query = `UPDATE servicerequest SET ${fields.join(', ')} WHERE JobNumber = ?`;
-    const [result] = await pool.query(query, values);
-    return result;
+    await pool.query(query, values);
+
+    const [rows] = await pool.query('SELECT * FROM servicerequest WHERE JobNumber = ?', [jobNumber]);
+    return rows[0];
+}
+
+// Helper to generate JobNumber (YYYYMMDDNNN)
+async function generateJobNumber() {
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+
+    const [rows] = await pool.query(
+        `SELECT JobNumber FROM servicerequest WHERE JobNumber LIKE ? ORDER BY JobNumber DESC LIMIT 1`,
+        [`${dateStr}%`]
+    );
+
+    let nextNum = 1;
+    if (rows.length > 0) {
+        const lastNum = parseInt(rows[0].JobNumber.slice(-3));
+        nextNum = lastNum + 1;
+    }
+
+    return `${dateStr}${String(nextNum).padStart(3, '0')}`;
 }
 
 module.exports = {
-    getAllservicerequests,
-    getservicerequestByJobNumber,
-    addservicerequest,
-    updateservicerequest
+    getAllServiceRequests,
+    getServiceRequestByJobNumber,
+    addServiceRequest,
+    updateServiceRequest,
+    generateJobNumber
 };
