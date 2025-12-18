@@ -1,36 +1,36 @@
 const pool = require('../db');
 
 // Get all attendance records (optionally filter by date/worker)
-async function getAttendance({ date, workerId } = {}) {
-    let query = 'SELECT * FROM Attendance WHERE 1=1';
+async function getattendance({ date, workerId } = {}) {
+    let query = 'SELECT * FROM attendance WHERE 1=1';
     const params = [];
     if (date) {
-        query += ' AND AttendanceDate = ?';
+        query += ' AND attendanceDate = ?';
         params.push(date);
     }
     if (workerId) {
-        query += ' AND WorkerId = ?';
+        query += ' AND workerId = ?';
         params.push(workerId);
     }
-    query += ' ORDER BY AttendanceDate DESC, WorkerId';
+    query += ' ORDER BY attendanceDate DESC, workerId';
 
     const [rows] = await pool.query(query, params);
     return rows;
 }
 
 // Get attendance by record ID
-async function getAttendanceById(attendanceId) {
+async function getattendanceById(attendanceId) {
     const [rows] = await pool.query(
-        'SELECT * FROM Attendance WHERE AttendanceId = ?', [attendanceId]
+        'SELECT * FROM attendance WHERE attendanceId = ?', [attendanceId]
     );
     return rows[0];
 }
 
 // Add attendance record
-async function addAttendance(data) {
+async function addattendance(data) {
     const {
-        WorkerId,
-        AttendanceDate,
+        workerId,
+        attendanceDate,
         Status, // ENUM: Present, Absent, HalfDay, FieldWork, OnLeave
         CheckInTime,
         CheckOutTime,
@@ -39,19 +39,19 @@ async function addAttendance(data) {
     } = data;
 
     const [result] = await pool.query(
-        `INSERT INTO Attendance (
-      WorkerId, AttendanceDate, Status, CheckInTime,
+        `INSERT INTO attendance (
+      workerId, attendanceDate, Status, CheckInTime,
       CheckOutTime, Notes, MarkedBy
     ) VALUES (?, ?, ?, ?, ?, ?, ?)`, [
-            WorkerId, AttendanceDate, Status, CheckInTime,
+            workerId, attendanceDate, Status, CheckInTime,
             CheckOutTime, Notes, MarkedBy
         ]
     );
-    return await getAttendanceById(result.insertId);
+    return await getattendanceById(result.insertId);
 }
 
 module.exports = {
-    getAttendance,
-    getAttendanceById,
-    addAttendance
+    getattendance,
+    getattendanceById,
+    addattendance
 };

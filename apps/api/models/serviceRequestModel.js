@@ -9,8 +9,8 @@ const pool = require('../db');
  * @param {number} [offset] - Offset.
  * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
  */
-async function getAllServiceRequests(filters = {}, limit, offset) {
-    let query = `SELECT * FROM ServiceRequest`;
+async function getAllservicerequests(filters = {}, limit, offset) {
+    let query = `SELECT * FROM servicerequest`;
     const params = [];
 
     if (filters.sql) {
@@ -28,7 +28,7 @@ async function getAllServiceRequests(filters = {}, limit, offset) {
     const [rows] = await pool.query(query, params);
 
     // Get total count (using same filters)
-    let countQuery = `SELECT COUNT(*) as count FROM ServiceRequest`;
+    let countQuery = `SELECT COUNT(*) as count FROM servicerequest`;
     const countParams = [];
     if (filters.sql) {
         countQuery += ` ${filters.sql}`;
@@ -42,15 +42,15 @@ async function getAllServiceRequests(filters = {}, limit, offset) {
 }
 
 // Get service request by JobNumber
-async function getServiceRequestByJobNumber(jobNumber) {
+async function getservicerequestByJobNumber(jobNumber) {
     const [rows] = await pool.query(
-        `SELECT * FROM ServiceRequest WHERE JobNumber = ?`, [jobNumber]
+        `SELECT * FROM servicerequest WHERE JobNumber = ?`, [jobNumber]
     );
     return rows[0];
 }
 
 // Create new service request
-async function addServiceRequest(data) {
+async function addservicerequest(data) {
     let {
         JobNumber,
         CustomerId,
@@ -74,7 +74,7 @@ async function addServiceRequest(data) {
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
         // Fetch last job number for today
         const [rows] = await pool.query(
-            `SELECT JobNumber FROM ServiceRequest WHERE JobNumber LIKE ? ORDER BY JobNumber DESC LIMIT 1`,
+            `SELECT JobNumber FROM servicerequest WHERE JobNumber LIKE ? ORDER BY JobNumber DESC LIMIT 1`,
             [`${dateStr}%`]
         );
         let nextSeq = 1;
@@ -89,7 +89,7 @@ async function addServiceRequest(data) {
     Status = Status || 'Received';
 
     const [result] = await pool.query(
-        `INSERT INTO ServiceRequest (
+        `INSERT INTO servicerequest (
       JobNumber, CustomerId, PumpBrand, PumpModel, MotorBrand, MotorModel, HP,
       Warranty, SerialNumber, DateReceived, Notes, Status,
       EstimationDate, EstimateLink
@@ -110,7 +110,7 @@ async function addServiceRequest(data) {
             EstimateLink
         ]
     );
-    return await getServiceRequestByJobNumber(JobNumber);
+    return await getservicerequestByJobNumber(JobNumber);
 }
 
 /**
@@ -119,7 +119,7 @@ async function addServiceRequest(data) {
  * @param {Object} updates - Object containing fields to update.
  * @returns {Promise<Object>} Result of the update operation.
  */
-async function updateServiceRequest(jobNumber, updates) {
+async function updateservicerequest(jobNumber, updates) {
     const fields = [];
     const values = [];
 
@@ -144,14 +144,14 @@ async function updateServiceRequest(jobNumber, updates) {
 
     values.push(jobNumber);
 
-    const query = `UPDATE ServiceRequest SET ${fields.join(', ')} WHERE JobNumber = ?`;
+    const query = `UPDATE servicerequest SET ${fields.join(', ')} WHERE JobNumber = ?`;
     const [result] = await pool.query(query, values);
     return result;
 }
 
 module.exports = {
-    getAllServiceRequests,
-    getServiceRequestByJobNumber,
-    addServiceRequest,
-    updateServiceRequest
+    getAllservicerequests,
+    getservicerequestByJobNumber,
+    addservicerequest,
+    updateservicerequest
 };

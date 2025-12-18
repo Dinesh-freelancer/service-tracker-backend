@@ -4,12 +4,12 @@ const pool = require('../db');
 async function getAllAudits(jobNumber = null) {
     if (jobNumber) {
         const [rows] = await pool.query(
-            'SELECT * FROM AuditDetails WHERE JobNumber = ? ORDER BY ChangedDateTime DESC', [jobNumber]
+            'SELECT * FROM auditdetails WHERE JobNumber = ? ORDER BY ChangedDateTime DESC', [jobNumber]
         );
         return rows;
     } else {
         const [rows] = await pool.query(
-            'SELECT * FROM AuditDetails ORDER BY ChangedDateTime DESC'
+            'SELECT * FROM auditdetails ORDER BY ChangedDateTime DESC'
         );
         return rows;
     }

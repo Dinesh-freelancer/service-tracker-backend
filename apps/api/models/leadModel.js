@@ -1,9 +1,9 @@
 const db = require('../db');
 
-const Leads = {
+const leads = {
   create: async (leadData) => {
     const query = `
-      INSERT INTO Leads (Name, Phone, PumpType, ApproxWeight, Location)
+      INSERT INTO leads (Name, Phone, PumpType, ApproxWeight, Location)
       VALUES (?, ?, ?, ?, ?)
     `;
     const params = [
@@ -23,4 +23,4 @@ const Leads = {
   },
 };
 
-module.exports = Leads;
+module.exports = leads;

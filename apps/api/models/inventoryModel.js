@@ -9,8 +9,8 @@ const pool = require('../db');
  * @param {number} [offset] - Offset.
  * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
  */
-async function getAllInventory(filters = {}, limit, offset) {
-    let query = 'SELECT * FROM Inventory';
+async function getAllinventory(filters = {}, limit, offset) {
+    let query = 'SELECT * FROM inventory';
     const params = [];
 
     if (filters.sql) {
@@ -27,7 +27,7 @@ async function getAllInventory(filters = {}, limit, offset) {
 
     const [rows] = await pool.query(query, params);
 
-    let countQuery = 'SELECT COUNT(*) as count FROM Inventory';
+    let countQuery = 'SELECT COUNT(*) as count FROM inventory';
     const countParams = [];
     if (filters.sql) {
         countQuery += ` ${filters.sql}`;
@@ -41,15 +41,15 @@ async function getAllInventory(filters = {}, limit, offset) {
 }
 
 // Get inventory item by PartId
-async function getInventoryById(partId) {
+async function getinventoryById(partId) {
     const [rows] = await pool.query(
-        'SELECT * FROM Inventory WHERE PartId = ?', [partId]
+        'SELECT * FROM inventory WHERE PartId = ?', [partId]
     );
     return rows[0];
 }
 
 // Add new inventory item
-async function addInventory(data) {
+async function addinventory(data) {
     const {
         PartName,
         Unit,
@@ -62,17 +62,17 @@ async function addInventory(data) {
     } = data;
 
     const [result] = await pool.query(
-        `INSERT INTO Inventory (
+        `INSERT INTO inventory (
       PartName, Unit, DefaultCostPrice, DefaultSellingPrice,
       Supplier, QuantityInStock, LowStockThreshold, Notes
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [PartName, Unit, DefaultCostPrice, DefaultSellingPrice, Supplier, QuantityInStock, LowStockThreshold, Notes]
     );
 
-    return await getInventoryById(result.insertId);
+    return await getinventoryById(result.insertId);
 }
 
 module.exports = {
-    getAllInventory,
-    getInventoryById,
-    addInventory
+    getAllinventory,
+    getinventoryById,
+    addinventory
 };

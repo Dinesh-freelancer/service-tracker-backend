@@ -1,15 +1,15 @@
 const pool = require('../db');
 
 // Get all payments (optionally filter by job)
-async function getAllPayments(jobNumber = null) {
+async function getAllpayments(jobNumber = null) {
     if (jobNumber) {
         const [rows] = await pool.query(
-            'SELECT * FROM Payments WHERE JobNumber = ? ORDER BY PaymentDate DESC', [jobNumber]
+            'SELECT * FROM payments WHERE JobNumber = ? ORDER BY PaymentDate DESC', [jobNumber]
         );
         return rows;
     } else {
         const [rows] = await pool.query(
-            'SELECT * FROM Payments ORDER BY PaymentDate DESC'
+            'SELECT * FROM payments ORDER BY PaymentDate DESC'
         );
         return rows;
     }
@@ -18,17 +18,17 @@ async function getAllPayments(jobNumber = null) {
 // Get single payment by PaymentId
 async function getPaymentById(paymentId) {
     const [rows] = await pool.query(
-        'SELECT * FROM Payments WHERE PaymentId = ?', [paymentId]
+        'SELECT * FROM payments WHERE PaymentId = ?', [paymentId]
     );
     return rows[0];
 }
 
 // Get payments by CustomerId
-async function getPaymentsByCustomerId(customerId) {
+async function getpaymentsByCustomerId(customerId) {
     const [rows] = await pool.query(`
         SELECT p.*
-        FROM Payments p
-        JOIN ServiceRequest sr ON p.JobNumber = sr.JobNumber
+        FROM payments p
+        JOIN servicerequest sr ON p.JobNumber = sr.JobNumber
         WHERE sr.CustomerId = ?
         ORDER BY p.PaymentDate DESC
     `, [customerId]);
@@ -46,7 +46,7 @@ async function addPayment(data) {
         Notes
     } = data;
     const [result] = await pool.query(
-        `INSERT INTO Payments (
+        `INSERT INTO payments (
       JobNumber, Amount, PaymentDate, PaymentType, PaymentMode, Notes
     ) VALUES (?, ?, ?, ?, ?, ?)`, [JobNumber, Amount, PaymentDate, PaymentType, PaymentMode, Notes]
     );
@@ -54,8 +54,8 @@ async function addPayment(data) {
 }
 
 module.exports = {
-    getAllPayments,
+    getAllpayments,
     getPaymentById,
-    getPaymentsByCustomerId,
+    getpaymentsByCustomerId,
     addPayment
 };

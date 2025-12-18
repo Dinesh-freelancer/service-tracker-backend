@@ -11,21 +11,21 @@ async function getDailySummary(date) {
     WHERE DATE(DateReceived) = ?
     UNION ALL
     SELECT
-      'Payments' AS Type,
+      'payments' AS Type,
       COUNT(*) AS Count,
       SUM(Amount) AS Amount
     FROM payments
     WHERE DATE(PaymentDate) = ?
     UNION ALL
     SELECT
-      'Attendance' AS Type,
+      'attendance' AS Type,
       COUNT(*) AS Count,
       NULL AS Amount
     FROM attendance
-    WHERE AttendanceDate = ?
+    WHERE attendanceDate = ?
     UNION ALL
     SELECT
-      'PartsUsed' AS Type,
+      'partsused' AS Type,
       COUNT(*) AS Count,
       SUM(CostPrice * Qty) AS Amount
     FROM partsused
@@ -45,21 +45,21 @@ async function getWeeklySummary(startDate, endDate) {
     WHERE DateReceived BETWEEN ? AND ?
     UNION ALL
     SELECT
-      'Payments' AS Type,
+      'payments' AS Type,
       COUNT(*) AS Count,
       SUM(Amount) AS Amount
     FROM payments
     WHERE DATE(PaymentDate) BETWEEN ? AND ?
     UNION ALL
     SELECT
-      'Attendance' AS Type,
+      'attendance' AS Type,
       COUNT(*) AS Count,
       NULL AS Amount
     FROM attendance
-    WHERE AttendanceDate BETWEEN ? AND ?
+    WHERE attendanceDate BETWEEN ? AND ?
     UNION ALL
     SELECT
-      'PartsUsed' AS Type,
+      'partsused' AS Type,
       COUNT(*) AS Count,
       SUM(CostPrice * Qty) AS Amount
     FROM partsused
@@ -79,21 +79,21 @@ async function getMonthlySummary(yearMonth) {
     WHERE DATE_FORMAT(DateReceived, '%Y-%m') = ?
     UNION ALL
     SELECT
-      'Payments' AS Type,
+      'payments' AS Type,
       COUNT(*) AS Count,
       SUM(Amount) AS Amount
     FROM payments
     WHERE DATE_FORMAT(PaymentDate, '%Y-%m') = ?
     UNION ALL
     SELECT
-      'Attendance' AS Type,
+      'attendance' AS Type,
       COUNT(*) AS Count,
       NULL AS Amount
     FROM attendance
-    WHERE DATE_FORMAT(AttendanceDate, '%Y-%m') = ?
+    WHERE DATE_FORMAT(attendanceDate, '%Y-%m') = ?
     UNION ALL
     SELECT
-      'PartsUsed' AS Type,
+      'partsused' AS Type,
       COUNT(*) AS Count,
       SUM(CostPrice * Qty) AS Amount
     FROM partsused

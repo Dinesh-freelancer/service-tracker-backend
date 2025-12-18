@@ -2,32 +2,32 @@ const pool = require('../db');
 
 // Get all enquiries (optionally filter by date or linked job)
 async function getAllEnquiries({ enquiryDate, linkedJobNumber } = {}) {
-    let query = 'SELECT * FROM Enquiry WHERE 1=1';
+    let query = 'SELECT * FROM enquiry WHERE 1=1';
     const params = [];
     if (enquiryDate) {
-        query += ' AND EnquiryDate = ?';
+        query += ' AND enquiryDate = ?';
         params.push(enquiryDate);
     }
     if (linkedJobNumber) {
         query += ' AND LinkedJobNumber = ?';
         params.push(linkedJobNumber);
     }
-    query += ' ORDER BY EnquiryDate DESC';
+    query += ' ORDER BY enquiryDate DESC';
 
     const [rows] = await pool.query(query, params);
     return rows;
 }
 
 // Get enquiry by ID
-async function getEnquiryById(enquiryId) {
-    const [rows] = await pool.query('SELECT * FROM Enquiry WHERE EnquiryId = ?', [enquiryId]);
+async function getenquiryById(enquiryId) {
+    const [rows] = await pool.query('SELECT * FROM enquiry WHERE enquiryId = ?', [enquiryId]);
     return rows[0];
 }
 
 // Add new enquiry
-async function addEnquiry(data) {
+async function addenquiry(data) {
     const {
-        EnquiryDate,
+        enquiryDate,
         CustomerName,
         ContactNumber,
         NatureOfQuery,
@@ -39,11 +39,11 @@ async function addEnquiry(data) {
     } = data;
 
     const [result] = await pool.query(
-        `INSERT INTO Enquiry (
-      EnquiryDate, CustomerName, ContactNumber, NatureOfQuery,
+        `INSERT INTO enquiry (
+      enquiryDate, CustomerName, ContactNumber, NatureOfQuery,
       QueryDetails, NextFollowUpDate, FollowUpNotes, EnteredBy, LinkedJobNumber
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-            EnquiryDate,
+            enquiryDate,
             CustomerName,
             ContactNumber,
             NatureOfQuery,
@@ -55,11 +55,11 @@ async function addEnquiry(data) {
         ]
     );
 
-    return await getEnquiryById(result.insertId);
+    return await getenquiryById(result.insertId);
 }
 
 module.exports = {
     getAllEnquiries,
-    getEnquiryById,
-    addEnquiry
+    getenquiryById,
+    addenquiry
 };

@@ -10,7 +10,7 @@ const pool = require('../db');
  * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
  */
 async function getAllCustomers(filters = {}, limit, offset) {
-    let query = 'SELECT * FROM CustomerDetails';
+    let query = 'SELECT * FROM customerdetails';
     const params = [];
 
     if (filters.sql) {
@@ -27,7 +27,7 @@ async function getAllCustomers(filters = {}, limit, offset) {
 
     const [rows] = await pool.query(query, params);
 
-    let countQuery = 'SELECT COUNT(*) as count FROM CustomerDetails';
+    let countQuery = 'SELECT COUNT(*) as count FROM customerdetails';
     const countParams = [];
     if (filters.sql) {
         countQuery += ` ${filters.sql}`;
@@ -42,7 +42,7 @@ async function getAllCustomers(filters = {}, limit, offset) {
 
 // Get customer by ID
 async function getCustomerById(id) {
-    const [rows] = await pool.query('SELECT * FROM CustomerDetails WHERE CustomerId = ?', [id]);
+    const [rows] = await pool.query('SELECT * FROM customerdetails WHERE CustomerId = ?', [id]);
     return rows[0];
 }
 
@@ -50,7 +50,7 @@ async function getCustomerById(id) {
 async function addCustomer(data) {
     const { CustomerName, CompanyName, Address, WhatsappNumber, WhatsappSameAsMobile } = data;
     const [result] = await pool.query(
-        'INSERT INTO CustomerDetails (CustomerName, CompanyName, Address, WhatsappNumber, WhatsappSameAsMobile) VALUES (?, ?, ?, ?, ?)', [CustomerName, CompanyName, Address, WhatsappNumber, !!WhatsappSameAsMobile]
+        'INSERT INTO customerdetails (CustomerName, CompanyName, Address, WhatsappNumber, WhatsappSameAsMobile) VALUES (?, ?, ?, ?, ?)', [CustomerName, CompanyName, Address, WhatsappNumber, !!WhatsappSameAsMobile]
     );
     return await getCustomerById(result.insertId);
 }

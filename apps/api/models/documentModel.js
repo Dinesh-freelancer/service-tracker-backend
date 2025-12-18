@@ -14,14 +14,14 @@ async function getDocumentById(id) {
     return rows[0];
 }
 
-async function getDocumentsByJob(jobNumber) {
+async function getdocumentsByJob(jobNumber) {
     const [rows] = await pool.query(
         `SELECT * FROM documents WHERE JobNumber = ? ORDER BY CreatedAt DESC`, [jobNumber]
     );
     return rows;
 }
 
-async function getDocumentsByCustomer(customerId) {
+async function getdocumentsByCustomer(customerId) {
     const [rows] = await pool.query(
         `SELECT * FROM documents WHERE CustomerId = ? ORDER BY CreatedAt DESC`, [customerId]
     );
@@ -35,7 +35,7 @@ async function deleteDocument(id) {
 module.exports = {
     addDocument,
     getDocumentById,
-    getDocumentsByJob,
-    getDocumentsByCustomer,
+    getdocumentsByJob,
+    getdocumentsByCustomer,
     deleteDocument
 };

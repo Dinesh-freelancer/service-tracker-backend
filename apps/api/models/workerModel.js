@@ -1,25 +1,25 @@
 const pool = require('../db');
 
 // Get all workers
-async function getAllWorkers() {
+async function getAllworkers() {
     const [rows] = await pool.query(
-        'SELECT * FROM Worker ORDER BY WorkerName'
+        'SELECT * FROM worker ORDER BY workerName'
     );
     return rows;
 }
 
 // Get a worker by ID
-async function getWorkerById(workerId) {
+async function getworkerById(workerId) {
     const [rows] = await pool.query(
-        'SELECT * FROM Worker WHERE WorkerId = ?', [workerId]
+        'SELECT * FROM worker WHERE workerId = ?', [workerId]
     );
     return rows[0];
 }
 
 // Add new worker
-async function addWorker(data) {
+async function addworker(data) {
     const {
-        WorkerName,
+        workerName,
         MobileNumber,
         AlternateNumber,
         WhatsappNumber,
@@ -31,11 +31,11 @@ async function addWorker(data) {
     } = data;
 
     const [result] = await pool.query(
-        `INSERT INTO Worker (
-      WorkerName, MobileNumber, AlternateNumber, WhatsappNumber,
+        `INSERT INTO worker (
+      workerName, MobileNumber, AlternateNumber, WhatsappNumber,
       Address, DateOfJoining, Skills, IsActive, Notes
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-            WorkerName,
+            workerName,
             MobileNumber,
             AlternateNumber,
             WhatsappNumber,
@@ -46,11 +46,11 @@ async function addWorker(data) {
             Notes
         ]
     );
-    return await getWorkerById(result.insertId);
+    return await getworkerById(result.insertId);
 }
 
 module.exports = {
-    getAllWorkers,
-    getWorkerById,
-    addWorker
+    getAllworkers,
+    getworkerById,
+    addworker
 };

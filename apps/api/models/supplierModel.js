@@ -1,7 +1,7 @@
 const pool = require('../db');
 
 // Get all suppliers
-async function getAllSuppliers() {
+async function getAllsuppliers() {
     const [rows] = await pool.query('SELECT * FROM suppliers ORDER BY SupplierName');
     return rows;
 }
@@ -39,7 +39,7 @@ async function deleteSupplier(supplierId) {
 }
 
 module.exports = {
-    getAllSuppliers,
+    getAllsuppliers,
     getSupplierById,
     addSupplier,
     updateSupplier,

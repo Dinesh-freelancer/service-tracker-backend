@@ -34,7 +34,7 @@ async function addWindingDetail(data) {
 }
 
 // Get all winding details
-async function getAllWindingDetails() {
+async function getAllwindingdetails() {
     const [rows] = await pool.query(`
         SELECT wd.*, sr.Status as JobStatus
         FROM windingDetails wd
@@ -56,7 +56,7 @@ async function getWindingDetailById(id) {
 }
 
 // Get by jobNumber
-async function getWindingDetailsByJobNumber(jobNumber) {
+async function getwindingdetailsByJobNumber(jobNumber) {
     const [rows] = await pool.query(`
         SELECT wd.*, sr.Status as JobStatus
         FROM windingDetails wd
@@ -100,9 +100,9 @@ async function deleteWindingDetail(id) {
 
 module.exports = {
     addWindingDetail,
-    getAllWindingDetails,
+    getAllwindingdetails,
     getWindingDetailById,
-    getWindingDetailsByJobNumber,
+    getwindingdetailsByJobNumber,
     updateWindingDetail,
     deleteWindingDetail
 };

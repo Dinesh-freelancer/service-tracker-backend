@@ -32,10 +32,10 @@ async function setupLeads() {
 
     console.log('Executing create_leads_table.sql...');
     await connection.query(sql);
-    console.log('Leads table created successfully.');
+    console.log('leads table created successfully.');
 
   } catch (err) {
-    console.error('Error setting up Leads table:', err);
+    console.error('Error setting up leads table:', err);
   } finally {
     if (connection) {
       await connection.end();

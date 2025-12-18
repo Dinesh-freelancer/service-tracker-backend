@@ -7,8 +7,8 @@ const pool = require('../db');
  * @param {number} [offset] - Offset.
  * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
  */
-async function getAllWorkLogs(jobNumber = null, limit, offset) {
-    let query = 'SELECT * FROM WorkLog';
+async function getAllworklogs(jobNumber = null, limit, offset) {
+    let query = 'SELECT * FROM worklog';
     const params = [];
 
     if (jobNumber) {
@@ -25,7 +25,7 @@ async function getAllWorkLogs(jobNumber = null, limit, offset) {
 
     const [rows] = await pool.query(query, params);
 
-    let countQuery = 'SELECT COUNT(*) as count FROM WorkLog';
+    let countQuery = 'SELECT COUNT(*) as count FROM worklog';
     const countParams = [];
     if (jobNumber) {
         countQuery += ' WHERE JobNumber = ?';
@@ -38,46 +38,46 @@ async function getAllWorkLogs(jobNumber = null, limit, offset) {
 }
 
 // Get a single work log entry
-async function getWorkLogById(workLogId) {
+async function getworklogById(workLogId) {
     const [rows] = await pool.query(
-        'SELECT * FROM WorkLog WHERE WorkLogId = ?', [workLogId]
+        'SELECT * FROM worklog WHERE worklogId = ?', [workLogId]
     );
     return rows[0];
 }
 
 // Create new work log entry
-async function addWorkLog(data) {
+async function addworklog(data) {
     const {
         JobNumber,
         SubStatus,
         WorkDone,
-        WorkerId,
-        WorkerName,
+        workerId,
+        workerName,
         StartTime,
         EndTime,
         Notes
     } = data;
 
     const [result] = await pool.query(
-        `INSERT INTO WorkLog (
-      JobNumber, SubStatus, WorkDone, WorkerId, WorkerName,
+        `INSERT INTO worklog (
+      JobNumber, SubStatus, WorkDone, workerId, workerName,
       StartTime, EndTime, Notes
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
             JobNumber,
             SubStatus,
             WorkDone,
-            WorkerId,
-            WorkerName,
+            workerId,
+            workerName,
             StartTime,
             EndTime,
             Notes
         ]
     );
-    return await getWorkLogById(result.insertId);
+    return await getworklogById(result.insertId);
 }
 
 module.exports = {
-    getAllWorkLogs,
-    getWorkLogById,
-    addWorkLog
+    getAllworklogs,
+    getworklogById,
+    addworklog
 };

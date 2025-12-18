@@ -1,7 +1,7 @@
 const pool = require('../db');
 
 // Get all purchases with supplier and purchaser details
-async function getAllPurchases() {
+async function getAllpurchases() {
     const [rows] = await pool.query(`
     SELECT p.*, s.SupplierName, u.Username AS PurchasedByName
     FROM purchases p
@@ -76,7 +76,7 @@ async function createPurchase(purchaseData, items) {
 }
 
 module.exports = {
-    getAllPurchases,
+    getAllpurchases,
     getPurchaseById,
     createPurchase
 };
