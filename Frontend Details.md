@@ -18,9 +18,9 @@ The frontend is a React-based, role-aware, responsive web application built to m
 ## Tech stack & architecture
 
 - **Framework:** React 18 (Vite-based SPA).
-- **Styling:** Tailwind CSS (configured with Deep Navy & Slate Blue).
+- **Styling:** Tailwind CSS v3 (configured with Deep Navy & Slate Blue).
 - **UI library:** Lucide React (Icons).
-- **Routing:** React Router v7.
+- **Routing:** React Router v6.
 - **State management:** React Hooks.
 - **Forms:** React Hook Form.
 - **SEO:** React Helmet Async (JSON-LD Schema).

@@ -11,7 +11,7 @@ async function getSupplierById(supplierId) {
     return rows[0];
 }
 
-async function createSupplier(supplierData) {
+async function addSupplier(supplierData) {
     const fields = Object.keys(supplierData);
     const values = Object.values(supplierData);
     const placeholders = fields.map(() => '?').join(', ');
@@ -41,7 +41,7 @@ async function deleteSupplier(supplierId) {
 module.exports = {
     getAllSuppliers,
     getSupplierById,
-    createSupplier,
+    addSupplier,
     updateSupplier,
     deleteSupplier
 };

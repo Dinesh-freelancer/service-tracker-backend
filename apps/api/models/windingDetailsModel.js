@@ -1,7 +1,13 @@
 const pool = require('../db');
 
+// Get all winding details (usually filtered by job, but controller might ask for all)
+async function getAllWindingDetails() {
+    const [rows] = await pool.query('SELECT * FROM windingdetails');
+    return rows;
+}
+
 // Get winding details for a specific job
-async function getWindingDetails(jobNumber) {
+async function getWindingDetailsByJobNumber(jobNumber) {
     // We might join with ServiceRequest to get JobStatus if needed for visibility check
     const [rows] = await pool.query(
         `SELECT wd.*, sr.Status as JobStatus
@@ -13,7 +19,7 @@ async function getWindingDetails(jobNumber) {
     return rows;
 }
 
-async function createWindingDetails(data) {
+async function addWindingDetail(data) {
     const fields = Object.keys(data);
     const values = Object.values(data);
     const placeholders = fields.map(() => '?').join(', ');
@@ -25,7 +31,7 @@ async function createWindingDetails(data) {
     return result.insertId;
 }
 
-async function updateWindingDetails(id, data) {
+async function updateWindingDetail(id, data) {
     const fields = Object.keys(data).map(field => `${field} = ?`);
     const values = Object.values(data);
     values.push(id);
@@ -36,13 +42,14 @@ async function updateWindingDetails(id, data) {
     );
 }
 
-async function deleteWindingDetails(id) {
+async function deleteWindingDetail(id) {
     await pool.query('DELETE FROM windingdetails WHERE id = ?', [id]);
 }
 
 module.exports = {
-    getWindingDetails,
-    createWindingDetails,
-    updateWindingDetails,
-    deleteWindingDetails
+    getAllWindingDetails,
+    getWindingDetailsByJobNumber,
+    addWindingDetail,
+    updateWindingDetail,
+    deleteWindingDetail
 };

@@ -1,7 +1,7 @@
 const pool = require('../db');
 
-// Get all attendance records with filters
-async function getAllAttendance(filters) {
+// Get attendance records with filters (controller calls getAttendance)
+async function getAttendance(filters) {
     let query = 'SELECT * FROM attendance WHERE 1=1';
     let params = [];
 
@@ -20,6 +20,12 @@ async function getAllAttendance(filters) {
         params.push(filters.dateTo);
     }
 
+    // Also handle 'date' single param if passed
+    if (filters.date) {
+        query += ' AND AttendanceDate = ?';
+        params.push(filters.date);
+    }
+
     query += ' ORDER BY AttendanceDate DESC';
 
     const [rows] = await pool.query(query, params);
@@ -33,7 +39,7 @@ async function getAttendanceById(attendanceId) {
     return rows[0];
 }
 
-async function markAttendance(attendanceData) {
+async function addAttendance(attendanceData) {
     const { WorkerId, AttendanceDate, Status, Notes } = attendanceData;
     const [result] = await pool.query(
         `INSERT INTO attendance (WorkerId, AttendanceDate, Status, Notes)
@@ -55,8 +61,8 @@ async function updateAttendance(attendanceId, attendanceData) {
 }
 
 module.exports = {
-    getAllAttendance,
+    getAttendance,
     getAttendanceById,
-    markAttendance,
+    addAttendance,
     updateAttendance
 };

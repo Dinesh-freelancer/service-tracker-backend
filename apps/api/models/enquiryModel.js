@@ -1,7 +1,7 @@
 const pool = require('../db');
 
-// Get all enquiries with filters
-async function getAllEnquiry(filters) {
+// Get all enquiries with filters (Controller calls getAllEnquiries)
+async function getAllEnquiries(filters) {
     let query = 'SELECT * FROM enquiry WHERE 1=1';
     let params = [];
 
@@ -15,6 +15,12 @@ async function getAllEnquiry(filters) {
         params.push(filters.status);
     }
 
+    // Controller might pass { enquiryDate } or { linkedJobNumber }
+    if (filters.enquiryDate) {
+        query += ' AND DATE(EnquiryDate) = ?';
+        params.push(filters.enquiryDate);
+    }
+
     query += ' ORDER BY EnquiryDate DESC';
 
     const [rows] = await pool.query(query, params);
@@ -26,7 +32,7 @@ async function getEnquiryById(enquiryId) {
     return rows[0];
 }
 
-async function createEnquiry(enquiryData) {
+async function addEnquiry(enquiryData) {
     const fields = Object.keys(enquiryData);
     const values = Object.values(enquiryData);
     const placeholders = fields.map(() => '?').join(', ');
@@ -50,8 +56,8 @@ async function updateEnquiry(enquiryId, enquiryData) {
 }
 
 module.exports = {
-    getAllEnquiry,
+    getAllEnquiries,
     getEnquiryById,
-    createEnquiry,
+    addEnquiry,
     updateEnquiry
 };

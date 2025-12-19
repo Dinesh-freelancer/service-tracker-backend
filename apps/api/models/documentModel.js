@@ -30,7 +30,16 @@ async function getDocuments(filters) {
     return rows;
 }
 
-async function createDocuments(docData) {
+// Aliases for specific controller calls
+async function getDocumentsByJob(jobNumber) {
+    return getDocuments({ jobNumber });
+}
+
+async function getDocumentsByCustomer(customerId) {
+    return getDocuments({ customerId });
+}
+
+async function addDocument(docData) {
     const fields = Object.keys(docData);
     const values = Object.values(docData);
     const placeholders = fields.map(() => '?').join(', ');
@@ -42,12 +51,14 @@ async function createDocuments(docData) {
     return result.insertId;
 }
 
-async function deleteDocuments(documentId) {
+async function deleteDocument(documentId) {
     await pool.query('DELETE FROM documents WHERE DocumentId = ?', [documentId]);
 }
 
 module.exports = {
     getDocuments,
-    createDocuments,
-    deleteDocuments
+    getDocumentsByJob,
+    getDocumentsByCustomer,
+    addDocument,
+    deleteDocument
 };
