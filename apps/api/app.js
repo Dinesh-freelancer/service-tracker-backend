@@ -1,4 +1,13 @@
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load .env from apps/api/ (primary) or root (fallback)
+const apiEnvPath = path.resolve(__dirname, '.env');
+const result = dotenv.config({ path: apiEnvPath });
+if (result.error) {
+    const rootEnvPath = path.resolve(__dirname, '../../.env');
+    dotenv.config({ path: rootEnvPath });
+}
 
 const express = require('express');
 const cors = require('cors');
