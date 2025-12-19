@@ -1,41 +1,64 @@
 const pool = require('../db');
 
-async function addDocument(data) {
-    const { JobNumber, CustomerId, DocumentType, EmbedTag, CreatedBy } = data;
-    const [result] = await pool.query(
-        `INSERT INTO documents (JobNumber, CustomerId, DocumentType, EmbedTag, CreatedBy)
-     VALUES (?, ?, ?, ?, ?)`, [JobNumber || null, CustomerId || null, DocumentType, EmbedTag, CreatedBy]
-    );
-    return getDocumentById(result.insertId);
-}
+// Get documents with optional filters
+async function getDocuments(filters) {
+    let query = 'SELECT * FROM documents';
+    let params = [];
+    let whereClauses = [];
 
-async function getDocumentById(id) {
-    const [rows] = await pool.query('SELECT * FROM documents WHERE DocumentId = ?', [id]);
-    return rows[0];
-}
+    if (filters.jobNumber) {
+        whereClauses.push('JobNumber = ?');
+        params.push(filters.jobNumber);
+    }
 
-async function getDocumentsByJob(jobNumber) {
-    const [rows] = await pool.query(
-        `SELECT * FROM documents WHERE JobNumber = ? ORDER BY CreatedAt DESC`, [jobNumber]
-    );
+    if (filters.customerId) {
+        whereClauses.push('CustomerId = ?');
+        params.push(filters.customerId);
+    }
+
+    if (filters.documentType) {
+        whereClauses.push('DocumentType = ?');
+        params.push(filters.documentType);
+    }
+
+    if (whereClauses.length > 0) {
+        const whereSql = ' WHERE ' + whereClauses.join(' AND ');
+        query += whereSql;
+    }
+
+    const [rows] = await pool.query(query, params);
     return rows;
+}
+
+// Aliases for specific controller calls
+async function getDocumentsByJob(jobNumber) {
+    return getDocuments({ jobNumber });
 }
 
 async function getDocumentsByCustomer(customerId) {
-    const [rows] = await pool.query(
-        `SELECT * FROM documents WHERE CustomerId = ? ORDER BY CreatedAt DESC`, [customerId]
-    );
-    return rows;
+    return getDocuments({ customerId });
 }
 
-async function deleteDocument(id) {
-    await pool.query('DELETE FROM documents WHERE DocumentId = ?', [id]);
+async function addDocument(docData) {
+    const fields = Object.keys(docData);
+    const values = Object.values(docData);
+    const placeholders = fields.map(() => '?').join(', ');
+
+    const [result] = await pool.query(
+        `INSERT INTO documents (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
+    );
+    return result.insertId;
+}
+
+async function deleteDocument(documentId) {
+    await pool.query('DELETE FROM documents WHERE DocumentId = ?', [documentId]);
 }
 
 module.exports = {
-    addDocument,
-    getDocumentById,
+    getDocuments,
     getDocumentsByJob,
     getDocumentsByCustomer,
+    addDocument,
     deleteDocument
 };

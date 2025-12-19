@@ -7,42 +7,51 @@ The frontend is a React-based, role-aware, responsive web application built to m
 ## Web app overview
 
 - **Goal:** Provide a secure, fast, and intuitive interface for managing motor service jobs from enquiry to delivery, including winding details, inventory, purchases, documents, and reports, with strict role-based visibility and a sensitive‑info toggle for Admin/Owner.
-- **New Requirement:** A portfolio site for the company which will include the login page.
+- **Requirement:** A portfolio site for the company which includes the login page.
 - **Primary users:**
     - Admin & Owner: Full operational and financial control.
     - Worker: Operational view only; no sensitive info.
     - Customer: Self-service portal for own jobs, quotes, invoices, and payments only.
-- **Key UX principles:**
-    - Desktop‑first, then responsive down to tablet and mobile.
-    - Clear separation of “operational” vs “sensitive” information.
-    - Minimal, focused views for Worker/Customer (only what they need).
 
 ***
 
 ## Tech stack & architecture
 
 - **Framework:** React 18 (Vite-based SPA).
-- **UI library:** Material UI (MUI) for components, layout grid, responsive design, and theming.
+- **Styling:** Tailwind CSS v3 (configured with Deep Navy & Slate Blue).
+- **UI library:** Lucide React (Icons).
 - **Routing:** React Router v6.
-- **State management:** React Context + Hooks.
-- **HTTP client:** Axios.
-- **Forms:** React Hook Form + Yup.
+- **State management:** React Hooks.
+- **Forms:** React Hook Form.
+- **SEO:** React Helmet Async (JSON-LD Schema).
+- **PWA:** Vite Plugin PWA.
 
 ***
 
 ## Frontend implementation status
 
-### ❌ Starting Phase
+### ✅ Completed Phase 1: Portfolio Site
 
-The frontend implementation is starting from scratch. No phases have been completed yet.
+The public-facing Landing Page has been implemented.
 
-### Key interfaces / screens (Planned)
+- **Landing Page (`/`)**:
+    - Hero Section with CTA ("Track My Repair").
+    - "Schedule a Pickup" Form (POSTs to `/api/leads/pickup`).
+    - Trust Section (Legacy, Warranty).
+    - Services Grid (Pump Types).
+    - Location Section (Google Maps Placeholder).
+    - WhatsApp Integration (Floating Button).
+    - Footer with Quick Links.
+    - **SEO:** JSON-LD Schema for LocalBusiness.
+    - **PWA:** Basic manifest configuration.
 
-#### Public Portfolio Site
-- **Home Page**: Company overview, services, contact info.
-- **Login Page**: Entry point for the web application (`/login`).
+- **Login Page (`/login`)**:
+    - Placeholder component connected via React Router.
 
-#### Web Application (Authenticated)
+### ❌ Upcoming Phase 2: Internal Portal Integration
+
+The following screens are planned but not yet implemented (currently placeholders):
+
 1. **Dashboard**
     - Role-specific widgets and metrics.
 2. **Jobs (Service Requests)**

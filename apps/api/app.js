@@ -97,6 +97,9 @@ app.use('/api/documents', documentRoutes);
 const notificationRoutes = require('./routes/notifications');
 app.use('/api/notifications', notificationRoutes);
 
+const leadRoutes = require('./routes/leads');
+app.use('/api/leads', leadRoutes);
+
 
 // Error handler
 const errorHandler = require('./middleware/errorHandler');

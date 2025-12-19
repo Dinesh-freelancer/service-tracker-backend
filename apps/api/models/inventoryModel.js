@@ -1,78 +1,82 @@
 const pool = require('../db');
 
-/**
- * Retrieves all inventory items with pagination and filtering.
- * @param {Object} [filters] - Search filters.
- * @param {string} [filters.sql] - WHERE clause.
- * @param {Array} [filters.params] - Parameters for WHERE clause.
- * @param {number} [limit] - Items per page.
- * @param {number} [offset] - Offset.
- * @returns {Promise<{rows: Array, totalCount: number}>} Object containing rows and totalCount.
- */
-async function getAllInventory(filters = {}, limit, offset) {
-    let query = 'SELECT * FROM Inventory';
-    const params = [];
+// Get all inventory items with pagination
+async function getAllInventory(filters = {}, limit = 10, offset = 0) {
+    let query = 'SELECT * FROM inventory';
+    let countQuery = 'SELECT COUNT(*) as count FROM inventory';
+    let params = [];
+    let whereClauses = [];
 
-    if (filters.sql) {
-        query += ` ${filters.sql}`;
-        params.push(...filters.params);
+    // Filter by low stock
+    if (filters.lowStock) {
+        whereClauses.push('QuantityInStock <= LowStockThreshold');
     }
 
-    query += ' ORDER BY PartName';
-
-    if (limit !== undefined && offset !== undefined) {
-        query += ' LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+    // Search by name
+    if (filters.search) {
+        whereClauses.push('PartName LIKE ?');
+        params.push(`%${filters.search}%`);
     }
+
+    if (whereClauses.length > 0) {
+        const whereSql = ' WHERE ' + whereClauses.join(' AND ');
+        query += whereSql;
+        countQuery += whereSql;
+    }
+
+    query += ' ORDER BY PartName ASC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await pool.query(query, params);
 
-    let countQuery = 'SELECT COUNT(*) as count FROM Inventory';
-    const countParams = [];
-    if (filters.sql) {
-        countQuery += ` ${filters.sql}`;
-        countParams.push(...filters.params);
-    }
+    // Count query
+    let countParams = params.slice(0, -2);
+    const [countRows] = await pool.query(countQuery, countParams);
 
-    const [countResult] = await pool.query(countQuery, countParams);
-    const totalCount = countResult[0].count;
-
-    return { rows, totalCount };
+    return { rows, totalCount: countRows[0].count };
 }
 
-// Get inventory item by PartId
 async function getInventoryById(partId) {
     const [rows] = await pool.query(
-        'SELECT * FROM Inventory WHERE PartId = ?', [partId]
+        'SELECT * FROM inventory WHERE PartId = ?', [partId]
     );
     return rows[0];
 }
 
-// Add new inventory item
-async function addInventory(data) {
-    const {
-        PartName,
-        Unit,
-        DefaultCostPrice,
-        DefaultSellingPrice,
-        Supplier,
-        QuantityInStock,
-        LowStockThreshold,
-        Notes
-    } = data;
+async function addInventory(itemData) {
+    const fields = Object.keys(itemData);
+    const values = Object.values(itemData);
+    const placeholders = fields.map(() => '?').join(', ');
 
     const [result] = await pool.query(
-        `INSERT INTO Inventory (
-      PartName, Unit, DefaultCostPrice, DefaultSellingPrice,
-      Supplier, QuantityInStock, LowStockThreshold, Notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [PartName, Unit, DefaultCostPrice, DefaultSellingPrice, Supplier, QuantityInStock, LowStockThreshold, Notes]
+        `INSERT INTO inventory (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
     );
+    const [rows] = await pool.query('SELECT * FROM inventory WHERE PartId = ?', [result.insertId]);
+    return rows[0];
+}
 
-    return await getInventoryById(result.insertId);
+async function updateInventory(partId, itemData) {
+    const fields = Object.keys(itemData).map(field => `${field} = ?`);
+    const values = Object.values(itemData);
+    values.push(partId);
+
+    await pool.query(
+        `UPDATE inventory SET ${fields.join(', ')} WHERE PartId = ?`,
+        values
+    );
+    const [rows] = await pool.query('SELECT * FROM inventory WHERE PartId = ?', [partId]);
+    return rows[0];
+}
+
+async function deleteInventory(partId) {
+    await pool.query('DELETE FROM inventory WHERE PartId = ?', [partId]);
 }
 
 module.exports = {
     getAllInventory,
     getInventoryById,
-    addInventory
+    addInventory,
+    updateInventory,
+    deleteInventory
 };

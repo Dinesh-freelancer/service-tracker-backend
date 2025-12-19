@@ -1,17 +1,17 @@
-# Submersible Motor Service Center – Complete Backend Documentation
-
+# Submersible Motor Service Center – Complete Web App Status
 
 ***
 
 ## Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Database Schema](#database-schema)
-3. [Authentication \& Authorization](#authentication--authorization)
-4. [API Endpoints](#api-endpoints)
-5. [Frontend Integration Guide \& Data Visibility](#frontend-integration-guide--data-visibility)
-6. [Implementation Status](#implementation-status)
-7. [Yet To Do](#yet-to-do)
+2. [Portfolio \& Landing Page](#portfolio--landing-page)
+3. [Database Schema](#database-schema)
+4. [Authentication \& Authorization](#authentication--authorization)
+5. [API Endpoints](#api-endpoints)
+6. [Frontend Integration Guide \& Data Visibility](#frontend-integration-guide--data-visibility)
+7. [Implementation Status](#implementation-status)
+8. [Yet To Do](#yet-to-do)
 
 ***
 
@@ -19,21 +19,39 @@
 
 The Submersible Motor Service Center backend is a comprehensive REST API system built with Node.js, Express, and MySQL. It manages the complete lifecycle of motor service requests, from initial enquiry to final delivery, with role-based access control (Admin, Owner, Worker, Customer).
 
+The project includes a **Public Portfolio Site** (Landing Page) to attract customers and convert leads, which integrates seamlessly with the internal portal.
+
 **Tech Stack:**
 
-- Node.js with Express.js
-- MySQL with connection pooling
-- JWT for authentication
-- bcrypt for password hashing
-- Role-based access control (RBAC)
+- **Frontend:** React, Vite, Tailwind CSS (v4), React Router (v6), React Helmet Async
+- **Backend:** Node.js with Express.js
+- **Database:** MySQL with connection pooling (Lowercase table names)
+- **Authentication:** JWT (Bearer Token)
+- **Role-based access control (RBAC):** Admin, Owner, Worker, Customer
 
 **Base API Path:** `/api`
-**Authentication:** JWT (Bearer Token).
-**Header:** `Authorization: Bearer <token>`
+
+***
+
+## Portfolio \& Landing Page
+
+A high-conversion landing page has been implemented at the root path (`/`).
+
+**Key Features:**
+- **Hero Section:** "Expert Pump Repair & Service" with calls to action.
+- **Trust Section:** Highlighting "20-Year Legacy", Genuine Spares, and Warranty.
+- **Services Grid:** Showcase of Borewell, Dewatering, Sewage, and Pressure Pumps.
+- **Location Section:** Map placeholder and service radius information.
+- **Schedule Pickup Form:** Integrated lead generation form posting to `/api/leads/pickup`.
+- **WhatsApp Integration:** Floating chat button.
+- **SEO:** JSON-LD Schema implementation for LocalBusiness.
+- **PWA:** Configured for offline capabilities and installability.
 
 ***
 
 ## Database Schema
+
+**Note:** All table names are strictly **lowercase** to ensure compatibility with Linux-based MySQL environments (e.g., Aiven).
 
 ### 1. **users Table**
 
@@ -55,8 +73,6 @@ CREATE TABLE users (
 ```
 
 **Purpose:** Store user credentials, roles, and link to worker or customer records.
-
-***
 
 ### 2. **customerdetails Table**
 
@@ -84,8 +100,6 @@ CREATE TABLE customerdetails (
 
 **Purpose:** Store customer profile information and contact details.
 
-***
-
 ### 3. **enquiry Table**
 
 ```sql
@@ -105,8 +119,6 @@ CREATE TABLE enquiry (
 ```
 
 **Purpose:** Track customer enquiries before job creation.
-
-***
 
 ### 4. **servicerequest Table**
 
@@ -140,8 +152,6 @@ CREATE TABLE servicerequest (
 
 **Purpose:** Core table storing service request/job details.
 
-***
-
 ### 5. **worklog Table**
 
 ```sql
@@ -166,8 +176,6 @@ CREATE TABLE worklog (
 
 **Purpose:** Track work done on each service request with substatus and assignee.
 
-***
-
 ### 6. **worker Table**
 
 ```sql
@@ -187,8 +195,6 @@ CREATE TABLE worker (
 
 **Purpose:** Store worker/technician profile information.
 
-***
-
 ### 7. **attendance Table**
 
 ```sql
@@ -207,8 +213,6 @@ CREATE TABLE attendance (
 ```
 
 **Purpose:** Track daily worker attendance.
-
-***
 
 ### 8. **inventory Table**
 
@@ -234,8 +238,6 @@ CREATE TABLE inventory (
 
 **Purpose:** Manage parts/materials inventory with stock levels and pricing.
 
-***
-
 ### 9. **partsused Table**
 
 ```sql
@@ -257,8 +259,6 @@ CREATE TABLE partsused (
 ```
 
 **Purpose:** Track parts used in specific service requests with cost breakdowns.
-
-***
 
 ### 10. **payments Table**
 
@@ -284,8 +284,6 @@ CREATE TABLE payments (
 
 **Purpose:** Track all payments received for service requests.
 
-***
-
 ### 11. **suppliers Table**
 
 ```sql
@@ -305,8 +303,6 @@ CREATE TABLE suppliers (
 ```
 
 **Purpose:** Store supplier information for parts procurement.
-
-***
 
 ### 12. **purchases Table**
 
@@ -329,12 +325,10 @@ CREATE TABLE purchases (
 
 **Purpose:** Record purchase events from suppliers.
 
-***
-
-### 13. **purchaseItems Table**
+### 13. **purchaseitems Table**
 
 ```sql
-CREATE TABLE purchaseItems (
+CREATE TABLE purchaseitems (
   PurchaseItemId INT NOT NULL AUTO_INCREMENT,
   PurchaseId INT NOT NULL,
   PartId INT NOT NULL,
@@ -351,12 +345,10 @@ CREATE TABLE purchaseItems (
 
 **Purpose:** Track individual items within each purchase.
 
-***
-
-### 14. **windingDetails Table**
+### 14. **windingdetails Table**
 
 ```sql
-CREATE TABLE windingDetails (
+CREATE TABLE windingdetails (
   id INT AUTO_INCREMENT PRIMARY KEY,
   jobNumber VARCHAR(50) NOT NULL,
   hp DECIMAL(5,2) NOT NULL,
@@ -397,8 +389,6 @@ CREATE TABLE windingDetails (
 
 **Purpose:** Store technical winding specifications for motor rewinding.
 
-***
-
 ### 15. **documents Table**
 
 ```sql
@@ -419,8 +409,6 @@ CREATE TABLE documents (
 
 **Purpose:** Store embed tags for quotes, invoices, and documents linked to jobs/customers.
 
-***
-
 ### 16. **auditdetails Table**
 
 ```sql
@@ -439,12 +427,10 @@ CREATE TABLE auditdetails (
 
 **Purpose:** Log all system actions for compliance and troubleshooting.
 
-***
-
-### 17. **summaryReports Table (Optional, for caching)**
+### 17. **summaryreports Table (Optional, for caching)**
 
 ```sql
-CREATE TABLE summaryReports (
+CREATE TABLE summaryreports (
   ReportId INT NOT NULL AUTO_INCREMENT,
   ReportDate DATE NOT NULL,
   ReportType ENUM('Daily', 'Weekly', 'Monthly') NOT NULL,
@@ -461,6 +447,23 @@ CREATE TABLE summaryReports (
 ```
 
 **Purpose:** Cache aggregated summary data for reporting efficiency.
+
+### 18. **leads Table (New)**
+
+```sql
+CREATE TABLE leads (
+    LeadId INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL,
+    Phone VARCHAR(20) NOT NULL,
+    PumpType VARCHAR(100),
+    ApproxWeight VARCHAR(50),
+    Location VARCHAR(255),
+    Status ENUM('New', 'Contacted', 'Converted', 'Closed') DEFAULT 'New',
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Purpose:** Store pickup requests generated from the Landing Page.
 
 ***
 
@@ -1945,6 +1948,35 @@ CREATE TABLE summaryReports (
 
 ***
 
+### Leads Endpoints
+
+#### `POST /api/leads/pickup`
+
+**Role:** Public
+
+**Request:**
+
+```json
+{
+  "name": "John Doe",
+  "phone": "9876543210",
+  "pumpType": "Borewell",
+  "approxWeight": "50",
+  "location": "Guindy"
+}
+```
+
+**Response:** 201 Created
+
+```json
+{
+  "message": "Pickup request received successfully",
+  "data": { ... }
+}
+```
+
+***
+
 ## Frontend Integration Guide \& Data Visibility
 
 This section outlines the interface contract, role-specific constraints, and data visibility rules for Frontend integration.
@@ -2008,84 +2040,27 @@ Please verify the Frontend binds to these exact keys returned by the API:
 
 ### ✅ Completed
 
-1. **Database Schema** – All 17 tables designed and created
-2. **Authentication** – Login, registration, password reset with JWT
-3. **Authorization** – Role-based middleware (Admin, Owner, Worker, Customer)
-4. **Customer Management** – Full CRUD with audit logging
-5. **Enquiry Management** – Full CRUD
-6. **Service Request (Jobs)** – Full CRUD with status workflow
-7. **Work Logs** – Full CRUD with substatus tracking
-8. **Worker Management** – Full CRUD
-9. **Attendance Management** – Full CRUD with date tracking
-10. **Inventory Management** – Full CRUD with stock levels
-11. **Parts Used Tracking** – Full CRUD with cost tracking
-12. **Payment Management** – Full CRUD with payment types
-13. **Supplier Management** – Full CRUD
-14. **Purchase Management** – Full CRUD with multi-item purchases
-15. **Winding Details Management** – Full CRUD with JSON slot turns
-16. **Document Management** – Full CRUD with embed tag storage
-17. **Audit Logging** – Comprehensive logging of all actions
-18. **Summary Reports** – Daily/Weekly/Monthly aggregations
-19. **Sensitive Info Toggle Middleware** – Query/header parameter handling
-20. **API Filtering by Role** – Role-based data shaping (partially)
-21. **Pagination** – Large result set handling implemented for major entities
-22. **Rate Limiting \& Throttling** – General and strict auth limits implemented.
-23. **Advanced Search \& Filtering** – Full-text search and complex filtering implemented.
-24. **Notifications System** – Core system implemented (Models, Routes, Controllers)
-25. **API Documentation** – Swagger UI integrated
-26. **Testing Infrastructure** – Jest and Supertest setup configured
+1. **Portfolio / Landing Page** – Fully implemented with React/Tailwind.
+2. **Leads System** – Database schema, Backend API, and Frontend Form integration.
+3. **Database Schema** – All 18 tables designed (including Leads) with strictly lowercase names.
+4. **Authentication** – Login, registration, password reset with JWT.
+5. **Authorization** – Role-based middleware (Admin, Owner, Worker, Customer).
+6. **Core Modules** – Customer, Enquiry, Jobs, Work Logs, Inventory, Parts, Payments, Suppliers, Purchases, Winding Details, Documents.
+7. **Audit Logging** – Comprehensive logging of all actions.
+8. **Summary Reports** – Daily/Weekly/Monthly aggregations.
+9. **API Documentation** – Swagger UI integrated.
+10. **Testing Infrastructure** – Jest and Supertest setup configured.
 
 ### 🟡 Partially Completed
 
-1. **API Layer Filtering** – Basic role checks in place; full field-level filtering needs refinement
-2. **Audit Trail for Sensitive Access** – Structure ready; logging of sensitive views needs integration
-3. **Minimalistic API Responses** – Some endpoints shaped; all need complete field-level filtering
+1. **Frontend Phase 1** – Internal portal views are currently placeholders.
+2. **End-to-End Testing** – Manual verification required for DB integration (Localhost environment).
 
 ### ❌ Yet to Do
 
-1. **Comprehensive Testing** – Complete coverage pending (Unit & Integration)
-2. **Performance Optimization**
-    - Query optimization with proper indexing
-    - Response caching strategies
-    - Database connection pooling tuning
-3. **Environment Configuration**
-    - Deployment guides
-    - Environment-specific settings
-    - Secrets management
-4. **File Upload \& Cloud Storage** (Future Phase)
-    - Move from embed tags to actual file uploads
-    - AWS S3 or Azure Blob integration
-    - File versioning and retention
-
-***
-
-## Yet To Do – Priority Order
-
-### Immediate (Critical for MVP)
-
-1. **Step 2: API Layer Filtering** – Completed
-2. **Step 3: Audit Trail Extension** – Completed
-3. **Step 4: Minimalistic API Responses** – Completed
-4. **Error Handling \& Validation** – Completed
-5. **Pagination** – Completed
-
-### Short-term (Phase 1)
-
-6. **Rate Limiting** – Completed
-7. **Advanced Search \& Filtering** – Completed
-8. **API Documentation** – Completed (Swagger UI)
-9. **Comprehensive Testing** – Complete testing coverage is pending
-
-### Medium-term (Phase 2)
-
-10. **Notifications System** – Completed (Core)
-11. **Performance Optimization** – Query tuning, caching
-12. **Environment Config** – Production-ready setup
-
-### Long-term (Phase 3+)
-
-13. **File Upload Integration** – Cloud storage migration
-14. **Advanced Features** – Sub-roles, permissions, integrations
+1. **Comprehensive Testing** – Complete coverage pending (Unit & Integration).
+2. **Performance Optimization** – Query optimization, caching.
+3. **File Upload** – Cloud storage migration.
 
 ***
 
@@ -2097,39 +2072,18 @@ Please verify the Frontend binds to these exact keys returned by the API:
 PORT=3000
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=motor_service_center
+DB_PASSWORD=root
+DB_NAME=service_db
 JWT_SECRET=your_super_secret_key_here_change_in_production
 NODE_ENV=development
 ```
 
+### Setup Instructions (Leads Table)
 
-### Database Connection Pool
+To enable the Leads feature, run the provided script:
 
-```js
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+```bash
+node apps/api/scripts/setup_leads.js
 ```
 
-
 ***
-
-## Deployment Considerations
-
-- Use PM2 or Docker for production deployment
-- Enable HTTPS/TLS for all endpoints
-- Store JWT_SECRET securely (AWS Secrets Manager, vault)
-- Set up database backups and recovery
-- Configure CORS appropriately
-- Use reverse proxy (nginx) for load balancing
-
-***
-
-This comprehensive backend documentation covers the entire system architecture, all implemented endpoints with sample payloads/responses, database schema with purposes, current implementation status, and a clear roadmap for remaining work. It's ready for handoff to frontend teams and future backend developers.
