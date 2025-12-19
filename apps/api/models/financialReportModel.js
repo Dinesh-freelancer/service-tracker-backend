@@ -21,7 +21,7 @@ async function getFinancialSummaryAllJobs() {
     return rows;
 }
 
-// Payments received, outstanding for a specific customer
+// payments received, outstanding for a specific customer
 async function getFinancialSummaryByCustomer(customerId) {
     const [rows] = await pool.query(`
     SELECT sr.JobNumber,
@@ -46,7 +46,7 @@ async function getFinancialTotals() {
     const [rows] = await pool.query(`
     SELECT
       COUNT(DISTINCT sr.JobNumber) AS TotalJobs,
-      IFNULL(SUM(p.Amount), 0) AS TotalPaymentsReceived,
+      IFNULL(SUM(p.Amount), 0) AS TotalpaymentsReceived,
       IFNULL(SUM(sr.BilledAmount), SUM(sr.EstimatedAmount)) AS TotalAmountBilled,
       (IFNULL(SUM(sr.BilledAmount), SUM(sr.EstimatedAmount)) - IFNULL(SUM(p.Amount), 0)) AS TotalOutstanding
     FROM servicerequest sr

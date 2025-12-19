@@ -1,61 +1,73 @@
 const pool = require('../db');
 
-// Get all payments (optionally filter by job)
-async function getAllPayments(jobNumber = null) {
-    if (jobNumber) {
-        const [rows] = await pool.query(
-            'SELECT * FROM Payments WHERE JobNumber = ? ORDER BY PaymentDate DESC', [jobNumber]
-        );
-        return rows;
-    } else {
-        const [rows] = await pool.query(
-            'SELECT * FROM Payments ORDER BY PaymentDate DESC'
-        );
-        return rows;
+// Get all payments with filters
+async function getAllPayments(filters, hideSensitive = true) {
+    let query = 'SELECT * FROM payments ORDER BY PaymentDate DESC';
+    let params = [];
+
+    // If we need to filter by job or date
+    let whereClauses = [];
+    if (filters.jobNumber) {
+        whereClauses.push('JobNumber = ?');
+        params.push(filters.jobNumber);
     }
+
+    if (whereClauses.length > 0) {
+        query = 'SELECT * FROM payments WHERE ' + whereClauses.join(' AND ') + ' ORDER BY PaymentDate DESC';
+    }
+
+    const [rows] = await pool.query(query, params);
+    return rows;
 }
 
-// Get single payment by PaymentId
-async function getPaymentById(paymentId) {
+async function getPaymentsByJob(jobNumber, hideSensitive = true) {
     const [rows] = await pool.query(
-        'SELECT * FROM Payments WHERE PaymentId = ?', [paymentId]
+        'SELECT * FROM payments WHERE JobNumber = ? ORDER BY PaymentDate DESC', [jobNumber]
+    );
+    return rows;
+}
+
+async function getPaymentById(paymentId) {
+    // Maybe join with ServiceRequest to check ownership/permissions if needed
+    // For now simple select
+    const [rows] = await pool.query(
+        'SELECT * FROM payments WHERE PaymentId = ?', [paymentId]
     );
     return rows[0];
 }
 
-// Get payments by CustomerId
-async function getPaymentsByCustomerId(customerId) {
-    const [rows] = await pool.query(`
-        SELECT p.*
-        FROM Payments p
-        JOIN ServiceRequest sr ON p.JobNumber = sr.JobNumber
-        WHERE sr.CustomerId = ?
-        ORDER BY p.PaymentDate DESC
-    `, [customerId]);
-    return rows;
+async function createPayment(paymentData) {
+    const fields = Object.keys(paymentData);
+    const values = Object.values(paymentData);
+    const placeholders = fields.map(() => '?').join(', ');
+
+    const [result] = await pool.query(
+        `INSERT INTO payments (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
+    );
+    return result.insertId;
 }
 
-// Create a payment
-async function addPayment(data) {
-    const {
-        JobNumber,
-        Amount,
-        PaymentDate,
-        PaymentType,
-        PaymentMode,
-        Notes
-    } = data;
-    const [result] = await pool.query(
-        `INSERT INTO Payments (
-      JobNumber, Amount, PaymentDate, PaymentType, PaymentMode, Notes
-    ) VALUES (?, ?, ?, ?, ?, ?)`, [JobNumber, Amount, PaymentDate, PaymentType, PaymentMode, Notes]
+async function updatePayment(paymentId, paymentData) {
+    const fields = Object.keys(paymentData).map(field => `${field} = ?`);
+    const values = Object.values(paymentData);
+    values.push(paymentId);
+
+    await pool.query(
+        `UPDATE payments SET ${fields.join(', ')} WHERE PaymentId = ?`,
+        values
     );
-    return await getPaymentById(result.insertId);
+}
+
+async function deletePayment(paymentId) {
+    await pool.query('DELETE FROM payments WHERE PaymentId = ?', [paymentId]);
 }
 
 module.exports = {
     getAllPayments,
+    getPaymentsByJob,
     getPaymentById,
-    getPaymentsByCustomerId,
-    addPayment
+    createPayment,
+    updatePayment,
+    deletePayment
 };

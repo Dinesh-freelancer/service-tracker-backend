@@ -6,34 +6,34 @@ async function getAllSuppliers() {
     return rows;
 }
 
-// Get supplier by ID
 async function getSupplierById(supplierId) {
     const [rows] = await pool.query('SELECT * FROM suppliers WHERE SupplierId = ?', [supplierId]);
     return rows[0];
 }
 
-// Add a new supplier
-async function addSupplier(data) {
-    const { SupplierName, ContactName, ContactPhone, ContactEmail, Address, Notes } = data;
+async function addSupplier(supplierData) {
+    const fields = Object.keys(supplierData);
+    const values = Object.values(supplierData);
+    const placeholders = fields.map(() => '?').join(', ');
+
     const [result] = await pool.query(
-        `INSERT INTO suppliers (SupplierName, ContactName, ContactPhone, ContactEmail, Address, Notes)
-     VALUES (?, ?, ?, ?, ?, ?)`, [SupplierName, ContactName, ContactPhone, ContactEmail, Address, Notes]
+        `INSERT INTO suppliers (${fields.join(', ')}) VALUES (${placeholders})`,
+        values
     );
-    return getSupplierById(result.insertId);
+    return result.insertId;
 }
 
-// Update supplier
-async function updateSupplier(supplierId, data) {
-    const { SupplierName, ContactName, ContactPhone, ContactEmail, Address, Notes } = data;
+async function updateSupplier(supplierId, supplierData) {
+    const fields = Object.keys(supplierData).map(field => `${field} = ?`);
+    const values = Object.values(supplierData);
+    values.push(supplierId);
+
     await pool.query(
-        `UPDATE suppliers 
-     SET SupplierName = ?, ContactName = ?, ContactPhone = ?, ContactEmail = ?, Address = ?, Notes = ?, UpdatedAt = CURRENT_TIMESTAMP
-     WHERE SupplierId = ?`, [SupplierName, ContactName, ContactPhone, ContactEmail, Address, Notes, supplierId]
+        `UPDATE suppliers SET ${fields.join(', ')} WHERE SupplierId = ?`,
+        values
     );
-    return getSupplierById(supplierId);
 }
 
-// Delete supplier
 async function deleteSupplier(supplierId) {
     await pool.query('DELETE FROM suppliers WHERE SupplierId = ?', [supplierId]);
 }

@@ -1,75 +1,105 @@
 const pool = require('../db');
 
-// Get all purchases with supplier and purchaser details
-async function getAllPurchases() {
-    const [rows] = await pool.query(`
+// Get all purchases with details
+async function getAllPurchases(filters, hideSensitive = true) {
+    let query = `
     SELECT p.*, s.SupplierName, u.Username AS PurchasedByName
     FROM purchases p
-    JOIN suppliers s ON p.SupplierId = s.SupplierId
-    JOIN users u ON p.PurchasedBy = u.UserId
-    ORDER BY p.PurchaseDate DESC
-  `);
+    LEFT JOIN suppliers s ON p.SupplierId = s.SupplierId
+    LEFT JOIN users u ON p.PurchasedBy = u.UserId
+  `;
+    let params = [];
+    let whereClauses = [];
+
+    if (filters.supplierId) {
+        whereClauses.push('p.SupplierId = ?');
+        params.push(filters.supplierId);
+    }
+
+    // Date filters...
+
+    if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    query += ' ORDER BY p.PurchaseDate DESC';
+
+    const [rows] = await pool.query(query, params);
+
+    // Fetch items for each purchase? Or do it in getPurchaseById only to save bandwidth.
+    // For list view, maybe we don't need all items.
+
     return rows;
 }
 
-// Get single purchase by ID with items
 async function getPurchaseById(purchaseId) {
-    const [
-        [purchase]
-    ] = await pool.query(`
-    SELECT p.*, s.SupplierName, u.Username AS PurchasedByName
-    FROM purchases p
-    JOIN suppliers s ON p.SupplierId = s.SupplierId
-    JOIN users u ON p.PurchasedBy = u.UserId
-    WHERE p.PurchaseId = ?
-  `, [purchaseId]);
+    const [rows] = await pool.query(
+        `SELECT p.*, s.SupplierName, u.Username AS PurchasedByName
+     FROM purchases p
+     LEFT JOIN suppliers s ON p.SupplierId = s.SupplierId
+     LEFT JOIN users u ON p.PurchasedBy = u.UserId
+     WHERE p.PurchaseId = ?`,
+        [purchaseId]
+    );
 
-    if (!purchase) return null;
+    if (rows.length === 0) return null;
 
-    const [items] = await pool.query(`
-    SELECT pi.*, i.PartName, i.Unit
-    FROM purchaseItems pi
-    JOIN inventory i ON pi.PartId = i.PartId
-    WHERE pi.PurchaseId = ?
-  `, [purchaseId]);
+    const purchase = rows[0];
+
+    // Get items
+    const [items] = await pool.query(
+        `SELECT pi.*, i.PartName, i.Unit
+     FROM purchaseitems pi
+     LEFT JOIN inventory i ON pi.PartId = i.PartId
+     WHERE pi.PurchaseId = ?`,
+        [purchaseId]
+    );
 
     purchase.Items = items;
     return purchase;
 }
 
-// Create new purchase with items (transaction)
 async function createPurchase(purchaseData, items) {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
-        const { PurchaseDate, SupplierId, PurchasedBy, Notes } = purchaseData;
-        const [result] = await connection.query(`
-      INSERT INTO purchases (PurchaseDate, SupplierId, PurchasedBy, Notes)
-      VALUES (?, ?, ?, ?)
-    `, [PurchaseDate, SupplierId, PurchasedBy, Notes]);
+        // Insert Purchase
+        const pFields = Object.keys(purchaseData);
+        const pValues = Object.values(purchaseData);
+        const pPlaceholders = pFields.map(() => '?').join(', ');
 
-        const purchaseId = result.insertId;
+        const [pResult] = await connection.query(
+            `INSERT INTO purchases (${pFields.join(', ')}) VALUES (${pPlaceholders})`,
+            pValues
+        );
+        const purchaseId = pResult.insertId;
 
+        // Insert Items
         for (const item of items) {
-            const { PartId, Qty, UnitPrice, Notes: itemNotes } = item;
-            await connection.query(`
-        INSERT INTO purchaseItems (PurchaseId, PartId, Qty, UnitPrice, Notes)
-        VALUES (?, ?, ?, ?, ?)
-      `, [purchaseId, PartId, Qty, UnitPrice, itemNotes]);
+            item.PurchaseId = purchaseId;
+            const iFields = Object.keys(item);
+            const iValues = Object.values(item);
+            const iPlaceholders = iFields.map(() => '?').join(', ');
 
-            // Optional: Update inventory quantity (increase stock)
-            await connection.query(`
-        UPDATE inventory SET QuantityInStock = QuantityInStock + ?
-        WHERE PartId = ?
-      `, [Qty, PartId]);
+            await connection.query(
+                `INSERT INTO purchaseitems (${iFields.join(', ')}) VALUES (${iPlaceholders})`,
+                iValues
+            );
+
+            // Update Inventory Stock
+            await connection.query(
+                `UPDATE inventory SET QuantityInStock = QuantityInStock + ? WHERE PartId = ?`,
+                [item.Qty, item.PartId]
+            );
         }
 
         await connection.commit();
-        return await getPurchaseById(purchaseId);
-    } catch (err) {
+        return purchaseId;
+
+    } catch (error) {
         await connection.rollback();
-        throw err;
+        throw error;
     } finally {
         connection.release();
     }
