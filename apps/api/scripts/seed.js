@@ -37,13 +37,13 @@ async function seed() {
     // --- Schema Creation ---
     console.log('Creating tables...');
 
-    // Users Table
+    // 1. users Table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         UserId INT AUTO_INCREMENT PRIMARY KEY,
         Username VARCHAR(255) UNIQUE NOT NULL,
         PasswordHash VARCHAR(255) NOT NULL,
-        Role ENUM('Owner', 'Admin', 'Worker', 'Customer') NOT NULL,
+        Role ENUM('Admin', 'Owner', 'Worker', 'Customer') NOT NULL,
         WorkerId INT DEFAULT NULL,
         CustomerId INT DEFAULT NULL,
         IsActive TINYINT(1) DEFAULT 1,
@@ -52,7 +52,7 @@ async function seed() {
       )
     `);
 
-    // Customers Table (customerdetails)
+    // 2. customerdetails Table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS customerdetails (
         CustomerId INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,49 +72,22 @@ async function seed() {
       )
     `);
 
-    // Workers Table (worker)
+    // 3. enquiry Table
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS worker (
-        WorkerId INT AUTO_INCREMENT PRIMARY KEY,
-        WorkerName VARCHAR(255) NOT NULL,
-        Phone VARCHAR(20),
-        Skills TEXT,
-        DateOfJoining DATE,
-        IsActive TINYINT(1) DEFAULT 1,
-        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Add Foreign Keys to Users (Circular dependency handling: Create tables first, then add FKs if needed, or just rely on IDs existing)
-    // For simplicity in seed, we assume order is fine or allow loose FK creation if tables exist.
-    // Alter table to add constraints if strictly needed, but standard creates work if referenced table exists.
-    // Since users references worker/customer, those must exist. But logic in app is often loose.
-    // We will add constraints via ALTER to be safe if they don't exist yet, but for now simple CREATE is okay.
-    // Actually, `users` references `worker` and `customerdetails`. So we should create them first?
-    // The previous schema had `users` referencing them. Let's do that properly.
-    // Re-ordering: create worker/customer first, then users. But users is often root.
-    // Let's stick to the order: worker -> customerdetails -> users.
-
-    // Inventory Table (inventory)
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS inventory (
-        PartId INT NOT NULL AUTO_INCREMENT,
-        PartName VARCHAR(255) NOT NULL UNIQUE,
-        Unit ENUM('Nos', 'Kg', 'Ltr', 'Meter', 'Pair') NOT NULL,
-        QuantityInStock DECIMAL(10,2) NOT NULL DEFAULT 0,
-        LowStockThreshold DECIMAL(10,2) NOT NULL DEFAULT 0,
-        CostPrice DECIMAL(10,2) NOT NULL DEFAULT 0,
-        SellingPrice DECIMAL(10,2),
-        SupplierId INT,
-        Notes TEXT,
+      CREATE TABLE IF NOT EXISTS enquiry (
+        EnquiryId INT AUTO_INCREMENT PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        MotorDetails TEXT,
+        EnquiryDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+        Status ENUM('New', 'Contacted', 'Quoted', 'Closed') DEFAULT 'New',
+        FollowUpNotes TEXT,
         CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (PartId)
+        FOREIGN KEY (CustomerId) REFERENCES customerdetails(CustomerId)
       )
     `);
 
-    // Service Requests (Jobs) Table (servicerequest)
+    // 4. servicerequest Table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS servicerequest (
         JobNumber VARCHAR(50) NOT NULL PRIMARY KEY,
@@ -140,10 +113,24 @@ async function seed() {
       )
     `);
 
-    // Work Logs Table (worklog)
+    // 6. worker Table (Created before worklog for FK)
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS worker (
+        WorkerId INT AUTO_INCREMENT PRIMARY KEY,
+        WorkerName VARCHAR(255) NOT NULL,
+        Phone VARCHAR(20),
+        Skills TEXT,
+        DateOfJoining DATE,
+        IsActive TINYINT(1) DEFAULT 1,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 5. worklog Table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS worklog (
-        WorkLogId INT NOT NULL AUTO_INCREMENT,
+        WorkLogId INT AUTO_INCREMENT PRIMARY KEY,
         JobNumber VARCHAR(50) NOT NULL,
         WorkDescription VARCHAR(255),
         SubStatus ENUM('Inspection', 'Winding', 'Lathe Machining', 'Assembling', 'Testing', 'Delivery Prep') NOT NULL,
@@ -153,16 +140,62 @@ async function seed() {
         Notes TEXT,
         CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (WorkLogId),
         FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber),
         FOREIGN KEY (AssignedWorker) REFERENCES worker(WorkerId)
       )
     `);
 
-    // Parts Used Table (partsused)
+    // 7. attendance Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS attendance (
+        AttendanceId INT AUTO_INCREMENT PRIMARY KEY,
+        WorkerId INT NOT NULL,
+        AttendanceDate DATE NOT NULL,
+        Status ENUM('Present', 'Absent', 'Leave', 'Holiday') DEFAULT 'Present',
+        Notes TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (WorkerId) REFERENCES worker(WorkerId)
+      )
+    `);
+
+    // 11. suppliers Table (Created before inventory for FK)
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS suppliers (
+        SupplierId INT AUTO_INCREMENT PRIMARY KEY,
+        SupplierName VARCHAR(255) NOT NULL UNIQUE,
+        ContactName VARCHAR(255),
+        ContactPhone VARCHAR(50),
+        ContactEmail VARCHAR(255),
+        Address TEXT,
+        Notes TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 8. inventory Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS inventory (
+        PartId INT AUTO_INCREMENT PRIMARY KEY,
+        PartName VARCHAR(255) NOT NULL UNIQUE,
+        Unit ENUM('Nos', 'Kg', 'Ltr', 'Meter', 'Pair') NOT NULL,
+        QuantityInStock DECIMAL(10,2) NOT NULL DEFAULT 0,
+        LowStockThreshold DECIMAL(10,2) NOT NULL DEFAULT 0,
+        CostPrice DECIMAL(10,2) NOT NULL DEFAULT 0,
+        SellingPrice DECIMAL(10,2),
+        SupplierId INT,
+        Notes TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (SupplierId) REFERENCES suppliers(SupplierId)
+      )
+    `);
+
+    // 9. partsused Table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS partsused (
-        PartUsedId INT NOT NULL AUTO_INCREMENT,
+        PartUsedId INT AUTO_INCREMENT PRIMARY KEY,
         JobNumber VARCHAR(50) NOT NULL,
         PartId INT NOT NULL,
         Qty DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -170,13 +203,152 @@ async function seed() {
         SellingPrice DECIMAL(10,2),
         CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (PartUsedId),
         FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber),
         FOREIGN KEY (PartId) REFERENCES inventory(PartId)
       )
     `);
 
-    // Notifications Table (notifications)
+    // 10. payments Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS payments (
+        PaymentId INT AUTO_INCREMENT PRIMARY KEY,
+        JobNumber VARCHAR(50) NOT NULL,
+        PaymentDate DATETIME NOT NULL,
+        Amount DECIMAL(12,2) NOT NULL,
+        PaymentType ENUM('Advance', 'Partial', 'Final') DEFAULT 'Final',
+        PaymentMode ENUM('Cash', 'Cheque', 'Online', 'Credit') DEFAULT 'Cash',
+        ReceivedBy INT,
+        Notes TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber),
+        FOREIGN KEY (ReceivedBy) REFERENCES users(UserId)
+      )
+    `);
+
+    // 12. purchases Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS purchases (
+        PurchaseId INT AUTO_INCREMENT PRIMARY KEY,
+        PurchaseDate DATETIME NOT NULL,
+        SupplierId INT NOT NULL,
+        PurchasedBy INT NOT NULL,
+        Notes TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (SupplierId) REFERENCES suppliers(SupplierId),
+        FOREIGN KEY (PurchasedBy) REFERENCES users(UserId)
+      )
+    `);
+
+    // 13. purchaseitems Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS purchaseitems (
+        PurchaseItemId INT AUTO_INCREMENT PRIMARY KEY,
+        PurchaseId INT NOT NULL,
+        PartId INT NOT NULL,
+        Qty DECIMAL(10,2) NOT NULL DEFAULT 0,
+        UnitPrice DECIMAL(10,2) NOT NULL DEFAULT 0,
+        TotalPrice DECIMAL(10,2) AS (Qty * UnitPrice) STORED,
+        Notes TEXT,
+        PRIMARY KEY (PurchaseItemId),
+        FOREIGN KEY (PurchaseId) REFERENCES purchases(PurchaseId) ON DELETE CASCADE,
+        FOREIGN KEY (PartId) REFERENCES inventory(PartId)
+      )
+    `);
+
+    // 14. windingdetails Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS windingdetails (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        jobNumber VARCHAR(50) NOT NULL,
+        hp DECIMAL(5,2) NOT NULL,
+        kw DECIMAL(5,2),
+        phase ENUM('1-PHASE', '3-PHASE') NOT NULL,
+        connection_type ENUM('STAR', 'DELTA', 'NONE') DEFAULT 'NONE',
+        swg_run INT,
+        swg_start INT,
+        swg_3phase INT,
+        wire_id_run DECIMAL(5,3),
+        wire_od_run DECIMAL(5,3),
+        wire_id_start DECIMAL(5,3),
+        wire_od_start DECIMAL(5,3),
+        wire_id_3phase DECIMAL(5,3),
+        wire_od_3phase DECIMAL(5,3),
+        turns_run INT,
+        turns_start INT,
+        turns_3phase INT,
+        slot_turns_run JSON,
+        slot_turns_start JSON,
+        slot_turns_3phase JSON,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT fk_winding_job FOREIGN KEY (jobNumber) REFERENCES servicerequest(JobNumber)
+      )
+    `);
+
+    // 15. documents Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS documents (
+        DocumentId INT AUTO_INCREMENT PRIMARY KEY,
+        JobNumber VARCHAR(50) NULL,
+        CustomerId INT NULL,
+        DocumentType ENUM('Quote', 'Invoice', 'Photo', 'Other') NOT NULL,
+        EmbedTag TEXT NOT NULL,
+        CreatedBy INT NOT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber),
+        FOREIGN KEY (CustomerId) REFERENCES customerdetails(CustomerId),
+        FOREIGN KEY (CreatedBy) REFERENCES users(UserId)
+      )
+    `);
+
+    // 16. auditdetails Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS auditdetails (
+        AuditId INT AUTO_INCREMENT PRIMARY KEY,
+        ActionType VARCHAR(255) NOT NULL,
+        ChangedBy INT NOT NULL,
+        Details TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (ChangedBy) REFERENCES users(UserId)
+      )
+    `);
+
+    // 17. summaryreports Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS summaryreports (
+        ReportId INT AUTO_INCREMENT PRIMARY KEY,
+        ReportDate DATE NOT NULL,
+        ReportType ENUM('Daily', 'Weekly', 'Monthly') NOT NULL,
+        JobsCount INT DEFAULT 0,
+        PaymentsCount INT DEFAULT 0,
+        PaymentsTotal DECIMAL(12,2) DEFAULT 0,
+        AttendanceCount INT DEFAULT 0,
+        PartsUsedCount INT DEFAULT 0,
+        PartsUsedTotal DECIMAL(12,2) DEFAULT 0,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_report (ReportDate, ReportType)
+      )
+    `);
+
+    // 18. leads Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS leads (
+        LeadId INT AUTO_INCREMENT PRIMARY KEY,
+        Name VARCHAR(255) NOT NULL,
+        Phone VARCHAR(20) NOT NULL,
+        PumpType VARCHAR(100),
+        ApproxWeight VARCHAR(50),
+        Location VARCHAR(255),
+        Status ENUM('New', 'Contacted', 'Converted', 'Closed') DEFAULT 'New',
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Notifications Table (Added in previous step, ensuring it's here)
     await connection.query(`
       CREATE TABLE IF NOT EXISTS notifications (
         NotificationId INT AUTO_INCREMENT PRIMARY KEY,
@@ -203,9 +375,6 @@ async function seed() {
     const [existingUsers] = await connection.query('SELECT Count(*) as count FROM users');
 
     if (existingUsers[0].count === 0) {
-        // Create Workers & Customers first to get IDs?
-        // For simplicity in this seed, we create users first with NULL FKs, then update if needed,
-        // OR we just create them as standalone since this is a basic seed.
 
         const usersValues = [
             ['owner', hashedPassword, 'Owner'],
@@ -213,7 +382,6 @@ async function seed() {
             ['worker1', hashedPassword, 'Worker'],
             ['customer1', hashedPassword, 'Customer']
         ];
-        // Note: Missing WorkerId/CustomerId in values, assuming defaults NULL are fine for now.
         await connection.query('INSERT INTO users (Username, PasswordHash, Role) VALUES ?', [usersValues]);
         console.log('Users seeded.');
 
@@ -258,9 +426,6 @@ async function seed() {
         const [customers] = await connection.query('SELECT CustomerId FROM customerdetails LIMIT 1');
         if (customers.length > 0) {
              const customerId = customers[0].CustomerId;
-             const [workers] = await connection.query('SELECT WorkerId FROM worker LIMIT 1'); // Fixed table name
-             // const workerId = workers.length > 0 ? workers[0].WorkerId : null;
-
              // servicerequest (JobNumber, CustomerId, PumpBrand, PumpModel, MotorBrand, MotorModel, HP, DateReceived, Status, EstimatedAmount, Notes)
              // JobNumber must be unique string
              const jobsValues = [
