@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'react-hot-toast';
-import { Eye, EyeOff, CheckCircle2, UserCircle2, HardHat, Home } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 import Input from '../components/ui/Input';
@@ -22,9 +22,9 @@ const loginSchema = z.object({
 });
 
 // -----------------------------------------------------------------------------
-// Assets / Illustrations (SVGs as Components for now)
+// Assets / Illustrations (Generic Service Center)
 // -----------------------------------------------------------------------------
-const StaffIllustration = () => (
+const GenericIllustration = () => (
   <svg viewBox="0 0 400 300" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
     <rect width="400" height="300" fill="transparent" />
     <circle cx="200" cy="150" r="100" className="fill-blue-100 dark:fill-blue-900/30" />
@@ -37,24 +37,11 @@ const StaffIllustration = () => (
   </svg>
 );
 
-const CustomerIllustration = () => (
-  <svg viewBox="0 0 400 300" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-    <rect width="400" height="300" fill="transparent" />
-    <circle cx="200" cy="150" r="100" className="fill-green-100 dark:fill-green-900/30" />
-    <g transform="translate(120, 80)">
-       <path d="M80 0 L160 60 L0 60 Z" className="fill-slate-700 dark:fill-slate-500" />
-       <rect x="20" y="60" width="120" height="100" className="fill-white dark:fill-slate-200" />
-       <rect x="60" y="100" width="40" height="60" className="fill-blue-400" />
-    </g>
-  </svg>
-);
-
 // -----------------------------------------------------------------------------
 // Login Page Component
 // -----------------------------------------------------------------------------
 const Login = () => {
   const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState('staff'); // 'staff' | 'customer'
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +69,9 @@ const Login = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
+      // Use VITE_API_URL from environment variables
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,6 +79,12 @@ const Login = () => {
           Password: data.password,
         }),
       });
+
+      // Check if response is JSON (avoiding 'Unexpected end of JSON input')
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response. Please check API URL.");
+      }
 
       const result = await response.json();
 
@@ -117,7 +112,7 @@ const Login = () => {
 
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Invalid credentials');
+      toast.error(err.message || 'Invalid credentials or server error');
     } finally {
       setIsLoading(false);
     }
@@ -134,36 +129,19 @@ const Login = () => {
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
-        className={clsx(
-            "hidden lg:flex w-1/2 flex-col justify-center items-center relative overflow-hidden",
-            selectedRole === 'staff'
-                ? "bg-gradient-to-br from-blue-900 to-slate-900"
-                : "bg-gradient-to-br from-emerald-900 to-slate-900"
-        )}
+        className="hidden lg:flex w-1/2 flex-col justify-center items-center relative overflow-hidden bg-gradient-to-br from-blue-900 to-slate-900"
       >
         <div className="relative z-10 w-full max-w-md p-10 text-center text-white">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={selectedRole}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4 }}
-                >
-                    <div className="w-64 h-64 mx-auto mb-8 drop-shadow-2xl">
-                        {selectedRole === 'staff' ? <StaffIllustration /> : <CustomerIllustration />}
-                    </div>
+            <div className="w-64 h-64 mx-auto mb-8 drop-shadow-2xl">
+                <GenericIllustration />
+            </div>
 
-                    <h1 className="text-4xl font-bold mb-4 tracking-tight">
-                        {selectedRole === 'staff' ? 'Master Operations' : 'Track Your Repairs'}
-                    </h1>
-                    <p className="text-lg text-white/80 leading-relaxed">
-                        {selectedRole === 'staff'
-                            ? 'Efficiently manage service requests, inventory, and workflows from one central hub.'
-                            : 'Real-time updates, instant quotes, and seamless payments for your peace of mind.'}
-                    </p>
-                </motion.div>
-            </AnimatePresence>
+            <h1 className="text-4xl font-bold mb-4 tracking-tight">
+                Service Center Portal
+            </h1>
+            <p className="text-lg text-white/80 leading-relaxed">
+                Seamlessly manage operations, track repairs, and view real-time status updates from one central hub.
+            </p>
         </div>
 
         {/* Decorative Circles */}
@@ -192,34 +170,6 @@ const Login = () => {
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                     Welcome back! Please enter your details.
                 </p>
-            </div>
-
-            {/* Role Switcher Tabs */}
-            <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex">
-                <button
-                    onClick={() => setSelectedRole('staff')}
-                    className={clsx(
-                        "flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                        selectedRole === 'staff'
-                            ? "bg-white dark:bg-slate-700 shadow text-blue-700 dark:text-blue-300"
-                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                    )}
-                >
-                    <HardHat size={18} />
-                    <span>Staff / Admin</span>
-                </button>
-                <button
-                    onClick={() => setSelectedRole('customer')}
-                    className={clsx(
-                        "flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                        selectedRole === 'customer'
-                            ? "bg-white dark:bg-slate-700 shadow text-emerald-700 dark:text-emerald-300"
-                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                    )}
-                >
-                    <UserCircle2 size={18} />
-                    <span>Customer</span>
-                </button>
             </div>
 
             {/* Form */}
@@ -273,10 +223,7 @@ const Login = () => {
                 <Button
                     type="submit"
                     isLoading={isLoading}
-                    className={clsx(
-                        "h-12 text-lg shadow-lg shadow-blue-500/30 dark:shadow-blue-900/40",
-                        selectedRole === 'customer' && "bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 focus:ring-emerald-500"
-                    )}
+                    className="h-12 text-lg shadow-lg shadow-blue-500/30 dark:shadow-blue-900/40"
                 >
                     Sign in
                 </Button>
