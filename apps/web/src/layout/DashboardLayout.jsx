@@ -191,7 +191,10 @@ const DashboardLayout = () => {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-                <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full relative">
+                <button
+                    onClick={() => toast('No new notifications', { icon: '🔔' })}
+                    className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full relative"
+                >
                     <Bell size={20} />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
                 </button>

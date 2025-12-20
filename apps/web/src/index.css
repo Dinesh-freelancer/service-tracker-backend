@@ -5,6 +5,8 @@
   --color-secondary: #637484;
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   @apply bg-gray-50 text-gray-900;
   font-family: 'Inter', system-ui, sans-serif;
