@@ -8,7 +8,7 @@ const PickupForm = () => {
   const onSubmit = async (data) => {
     setStatus('loading');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/pickup`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/pickup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
