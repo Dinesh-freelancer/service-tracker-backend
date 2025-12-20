@@ -2053,9 +2053,10 @@ Please verify the Frontend binds to these exact keys returned by the API:
 
 ### 🟡 Partially Completed
 
-1. **Frontend Phase 1** – Internal portal views are currently placeholders.
-2. **Dashboard** – In Progress (Widgets, Quick Actions).
-3. **End-to-End Testing** – Manual verification required for DB integration (Localhost environment).
+1. **Dashboard** – `✅ Completed` (Layout, Widgets, Quick Actions).
+2. **Jobs Module** – `🟡 In Progress` (List View).
+3. **Frontend Phase 1** – Internal portal views are currently placeholders.
+4. **End-to-End Testing** – Manual verification required for DB integration (Localhost environment).
 
 ### ❌ Yet to Do
 

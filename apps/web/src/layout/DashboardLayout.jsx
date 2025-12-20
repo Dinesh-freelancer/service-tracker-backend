@@ -83,7 +83,7 @@ const DashboardLayout = () => {
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed lg:sticky top-0 left-0 z-30 h-screen bg-white dark:bg-slate-800 shadow-xl border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}
+        className={`fixed lg:sticky top-0 left-0 z-30 h-screen bg-white dark:bg-slate-800 shadow-xl border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 overflow-x-hidden ${isSidebarOpen ? 'w-64' : 'w-20'}`}
         initial={false}
         animate={{ width: isSidebarOpen ? 256 : 80 }}
       >
@@ -112,7 +112,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-3">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-3 custom-scrollbar">
             {navItems.map((item) => (
                 <NavLink
                     key={item.name}

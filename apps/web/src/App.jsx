@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Placeholder from './pages/Placeholder';
+import JobsList from './pages/jobs/JobsList';
 import DashboardLayout from './layout/DashboardLayout';
 import './App.css';
 
@@ -31,7 +32,7 @@ function App() {
           <Route index element={<Dashboard />} />
 
           {/* Placeholder Routes for Sidebar Links */}
-          <Route path="jobs" element={<Placeholder />} />
+          <Route path="jobs" element={<JobsList />} />
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Placeholder />} />
           <Route path="reports" element={<Placeholder />} />
