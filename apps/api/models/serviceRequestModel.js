@@ -3,9 +3,10 @@ const pool = require('../db');
 // Get all service requests with filters and pagination
 async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
     let query = `
-        SELECT sr.*, c.CustomerName, c.Phone1
+        SELECT sr.*, c.CustomerName, c.PrimaryContact, c.CustomerType, c.OrganizationId, o.OrganizationName
         FROM servicerequest sr
         LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
+        LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId
     `;
     let countQuery = `SELECT COUNT(*) as count FROM servicerequest sr`;
     let params = [];

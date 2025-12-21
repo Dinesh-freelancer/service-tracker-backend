@@ -186,8 +186,12 @@ const JobsList = () => {
                                 </td>
                                 {isAdminOrOwner && (
                                     <td className="p-4 text-slate-600 dark:text-slate-300">
-                                        <div className="font-medium">{job.CustomerName}</div>
-                                        {/* <div className="text-xs text-slate-400">{job.Phone1 || 'No Phone'}</div> */}
+                                        <div className="font-medium">
+                                            {job.CustomerType === 'OrganizationMember' && job.OrganizationName
+                                                ? `${job.OrganizationName} - ${job.CustomerName}`
+                                                : job.CustomerName}
+                                        </div>
+                                        <div className="text-xs text-slate-400">{job.PrimaryContact || 'No Contact'}</div>
                                     </td>
                                 )}
                                 <td className="p-4 text-slate-600 dark:text-slate-300">
