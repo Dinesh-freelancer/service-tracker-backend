@@ -18,6 +18,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
 import toast, { Toaster } from 'react-hot-toast';
 
+/**
+ * Dashboard Layout Component
+ * Provides the main application shell with a responsive sidebar and top navbar.
+ * Handles navigation, user profile, and global notifications (Toaster).
+ * @component
+ */
 const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();

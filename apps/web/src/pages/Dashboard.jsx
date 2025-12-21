@@ -76,6 +76,11 @@ const QuickActionBtn = ({ icon: Icon, label, onClick, colorClass = "bg-blue-50 t
     </button>
 );
 
+/**
+ * Dashboard Page Component
+ * Displays role-specific widgets, statistics, and quick actions.
+ * @component
+ */
 const Dashboard = () => {
     const role = localStorage.getItem('role') || 'Admin';
 

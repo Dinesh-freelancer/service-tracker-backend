@@ -40,6 +40,13 @@ const GenericIllustration = () => (
 // -----------------------------------------------------------------------------
 // Login Page Component
 // -----------------------------------------------------------------------------
+
+/**
+ * Login Page Component
+ * Handles user authentication, form validation, and session management.
+ * Redirects to dashboard upon successful login.
+ * @component
+ */
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);

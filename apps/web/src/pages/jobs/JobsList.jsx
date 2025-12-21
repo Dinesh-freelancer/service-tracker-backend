@@ -11,6 +11,12 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * Jobs List Component
+ * Displays a paginated list of service requests (jobs) with filtering and searching capabilities.
+ * Implements role-based visibility for sensitive columns (Customer, Amount).
+ * @component
+ */
 const JobsList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
