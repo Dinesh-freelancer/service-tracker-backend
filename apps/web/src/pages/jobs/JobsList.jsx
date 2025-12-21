@@ -223,7 +223,7 @@ const JobsList = () => {
         {!loading && jobs.length > 0 && (
             <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                    Page {pagination.page} of {pagination.totalPages}
+                    Page {pagination.currentPage || pagination.page || 1} of {pagination.totalPages}
                 </span>
                 <div className="flex space-x-2">
                     <button
