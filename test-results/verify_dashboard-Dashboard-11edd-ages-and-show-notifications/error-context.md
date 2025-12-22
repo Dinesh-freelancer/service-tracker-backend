@@ -1,0 +1,85 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - status [ref=e9]: Error loading jobs
+    - complementary [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]: ServicePortal
+        - button [ref=e13]:
+          - img [ref=e14]
+      - navigation [ref=e15]:
+        - link "Dashboard" [ref=e16] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e17]
+          - generic [ref=e22]: Dashboard
+        - link "Jobs" [active] [ref=e23] [cursor=pointer]:
+          - /url: /dashboard/jobs
+          - img [ref=e24]
+          - generic [ref=e27]: Jobs
+        - link "Customers" [ref=e28] [cursor=pointer]:
+          - /url: /dashboard/customers
+          - img [ref=e29]
+          - generic [ref=e34]: Customers
+        - link "Inventory" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/inventory
+          - img [ref=e36]
+          - generic [ref=e39]: Inventory
+        - link "Reports" [ref=e40] [cursor=pointer]:
+          - /url: /dashboard/reports
+          - img [ref=e41]
+          - generic [ref=e44]: Reports
+        - link "Settings" [ref=e45] [cursor=pointer]:
+          - /url: /dashboard/settings
+          - img [ref=e46]
+          - generic [ref=e49]: Settings
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: U
+          - generic [ref=e54]:
+            - generic [ref=e55]: User
+            - generic [ref=e56]: Admin
+        - button "Logout" [ref=e57]:
+          - img [ref=e58]
+    - generic [ref=e61]:
+      - banner [ref=e62]:
+        - generic [ref=e63]:
+          - button [ref=e64]:
+            - img [ref=e65]
+          - button "Toggle theme" [ref=e69]:
+            - img [ref=e70]
+      - main [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e75]:
+            - heading "Service Requests" [level=1] [ref=e76]
+            - paragraph [ref=e77]: Manage and track all repair jobs.
+          - generic [ref=e78]:
+            - generic [ref=e79]:
+              - 'textbox "Search by Job # or Brand..." [ref=e80]'
+              - img [ref=e81]
+            - generic [ref=e84]:
+              - img [ref=e85]
+              - combobox [ref=e87]:
+                - option "All Statuses" [selected]
+                - option "Received"
+                - option "Estimated"
+                - option "Approved"
+                - option "In Progress"
+                - option "Completed"
+                - option "Delivered"
+          - table [ref=e90]:
+            - rowgroup [ref=e91]:
+              - 'row "Job # Customer Device Date Received Status Amount (₹) Actions" [ref=e92]':
+                - 'columnheader "Job #" [ref=e93]'
+                - columnheader "Customer" [ref=e94]
+                - columnheader "Device" [ref=e95]
+                - columnheader "Date Received" [ref=e96]
+                - columnheader "Status" [ref=e97]
+                - columnheader "Amount (₹)" [ref=e98]
+                - columnheader "Actions" [ref=e99]
+            - rowgroup [ref=e100]:
+              - row "No jobs found matching your criteria." [ref=e101]:
+                - cell "No jobs found matching your criteria." [ref=e102]
+  - generic [ref=e103]: ₹0k
+```

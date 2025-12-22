@@ -74,22 +74,61 @@ CREATE TABLE users (
 
 **Purpose:** Store user credentials, roles, and link to worker or customer records.
 
-### 2. **customerdetails Table**
+### 2. **organizations Table (New)**
+
+```sql
+CREATE TABLE organizations (
+  OrganizationId INT AUTO_INCREMENT PRIMARY KEY,
+  OrganizationName VARCHAR(255) NOT NULL,
+  Email VARCHAR(255),
+  PrimaryContact VARCHAR(20),
+  Address TEXT,
+  City VARCHAR(100),
+  State VARCHAR(100),
+  ZipCode VARCHAR(20),
+  GSTNumber VARCHAR(50),
+  OrganizationType ENUM('Company', 'Apartments', 'Dealers', 'Electricals', 'Other') DEFAULT 'Company',
+  Role VARCHAR(100),
+  CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+**Purpose:** Store organization details for B2B customers.
+
+### 3. **customermobilenumbers Table (New)**
+
+```sql
+CREATE TABLE customermobilenumbers (
+  MobileId INT NOT NULL AUTO_INCREMENT,
+  CustomerId INT NOT NULL,
+  MobileNumber VARCHAR(20) DEFAULT NULL,
+  PRIMARY KEY (MobileId),
+  KEY CustomerId (CustomerId),
+  CONSTRAINT customermobilenumbers_ibfk_1 FOREIGN KEY (CustomerId) REFERENCES customerdetails (CustomerId) ON DELETE CASCADE
+);
+```
+
+**Purpose:** Store multiple mobile numbers for a single customer.
+
+### 4. **customerdetails Table**
 
 ```sql
 CREATE TABLE customerdetails (
   CustomerId INT NOT NULL AUTO_INCREMENT,
   CustomerName VARCHAR(255) NOT NULL,
-  CompanyName VARCHAR(255),
+  CompanyName VARCHAR(255), -- Legacy field, use Organizations table
   Address TEXT,
   City VARCHAR(100),
   State VARCHAR(100),
   ZipCode VARCHAR(20),
-  Phone1 VARCHAR(20),
+  PrimaryContact VARCHAR(20), -- Renamed from WhatsappNumber/Phone1
   Phone2 VARCHAR(20),
-  WhatsApp VARCHAR(20),
   Email VARCHAR(255),
   Notes TEXT,
+  OrganizationId INT DEFAULT NULL,
+  CustomerType ENUM('Individual', 'OrganizationMember') DEFAULT 'Individual',
+  Designation VARCHAR(100),
   CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (CustomerId),
@@ -2053,8 +2092,10 @@ Please verify the Frontend binds to these exact keys returned by the API:
 
 ### 🟡 Partially Completed
 
-1. **Frontend Phase 1** – Internal portal views are currently placeholders.
-2. **End-to-End Testing** – Manual verification required for DB integration (Localhost environment).
+1. **Dashboard** – `✅ Completed` (Layout, Widgets, Quick Actions).
+2. **Jobs Module** – `🟡 In Progress` (List View).
+3. **Frontend Phase 1** – Internal portal views are currently placeholders.
+4. **End-to-End Testing** – Manual verification required for DB integration (Localhost environment).
 
 ### ❌ Yet to Do
 

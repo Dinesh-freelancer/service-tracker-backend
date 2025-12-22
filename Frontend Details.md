@@ -46,9 +46,11 @@ The public-facing Landing Page has been implemented.
     - **PWA:** Basic manifest configuration.
 
 - **Login Page (`/login`)**:
-    - Placeholder component connected via React Router.
+    - Fully implemented split-screen login.
+    - Unified single login form (no role tabs).
+    - Features: Dark Mode, Forgot Password Modal, Remember Me.
 
-### ❌ Upcoming Phase 2: Internal Portal Integration
+### 🟡 Phase 2 in Progress: Internal Portal Integration
 
 The following screens are planned but not yet implemented (currently placeholders):
 

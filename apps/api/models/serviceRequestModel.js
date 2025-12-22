@@ -2,14 +2,19 @@ const pool = require('../db');
 
 // Get all service requests with filters and pagination
 async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
-    let query = `SELECT * FROM servicerequest`;
-    let countQuery = `SELECT COUNT(*) as count FROM servicerequest`;
+    let query = `
+        SELECT sr.*, c.CustomerName, c.PrimaryContact, c.CustomerType, c.OrganizationId, o.OrganizationName
+        FROM servicerequest sr
+        LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
+        LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId
+    `;
+    let countQuery = `SELECT COUNT(*) as count FROM servicerequest sr`;
     let params = [];
     let whereClauses = [];
 
     // Apply filters
     if (filters.status) {
-        whereClauses.push(`Status = ?`);
+        whereClauses.push(`sr.Status = ?`);
         params.push(filters.status);
     }
 
@@ -22,7 +27,7 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
     }
 
     // Sort by DateReceived descending
-    query += ` ORDER BY DateReceived DESC LIMIT ? OFFSET ?`;
+    query += ` ORDER BY sr.DateReceived DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await pool.query(query, params);
@@ -53,7 +58,7 @@ async function addServiceRequest(jobData) {
     // Usually job number is unique, so we can fetch by it, but here we just return what was created if needed
     // Assuming JobNumber was part of input or we query by ID if auto-inc ID exists (JobId)
     // The table has JobId auto-inc.
-    const [rows] = await pool.query('SELECT * FROM servicerequest WHERE JobId = ?', [result.insertId]);
+    const [rows] = await pool.query('SELECT * FROM servicerequest WHERE JobNumber = ?', [jobData.JobNumber]);
     return rows[0];
 }
 
