@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Placeholder from './pages/Placeholder';
 import JobsList from './pages/jobs/JobsList';
 import DashboardLayout from './layout/DashboardLayout';
+import { SensitiveInfoProvider } from './context/SensitiveInfoContext';
 import './App.css';
 
 // Protected Route Wrapper
@@ -26,7 +27,9 @@ function App() {
       {/* Dashboard Routes wrapped in Layout */}
       <Route path="/dashboard" element={
           <ProtectedRoute>
-            <DashboardLayout />
+            <SensitiveInfoProvider>
+              <DashboardLayout />
+            </SensitiveInfoProvider>
           </ProtectedRoute>
       }>
           <Route index element={<Dashboard />} />

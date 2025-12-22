@@ -10,6 +10,7 @@ import {
   Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSensitiveInfo } from '../../context/SensitiveInfoContext';
 
 /**
  * Jobs List Component
@@ -27,6 +28,9 @@ const JobsList = () => {
     totalPages: 1,
     totalItems: 0
   });
+
+  // Global Sensitive Info Toggle Context
+  const { hideSensitive } = useSensitiveInfo();
 
   // State from URL or defaults
   const page = parseInt(searchParams.get('page') || '1');
@@ -46,8 +50,8 @@ const JobsList = () => {
         page,
         limit: 10,
         ...(statusFilter && { status: statusFilter }),
-        ...(searchQuery && { search: searchQuery }), // Assuming backend supports generic search param or we filter by date/id
-        hideSensitive: !isAdminOrOwner // Workers get masked data by default
+        ...(searchQuery && { search: searchQuery }),
+        hideSensitive: hideSensitive // Use state from context
       });
 
       const response = await fetch(`${apiUrl}/jobs?${query}`, {
@@ -73,7 +77,7 @@ const JobsList = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [page, statusFilter, searchQuery]);
+  }, [page, statusFilter, searchQuery, hideSensitive]); // Add hideSensitive to dependencies
 
   // Handlers
   const handleSearch = (e) => {
