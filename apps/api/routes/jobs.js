@@ -43,7 +43,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of jobs
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
     serviceRequestController.listServiceRequests);
 
 /**
@@ -68,7 +68,7 @@ router.get('/',
  *         description: Job not found
  */
 router.get('/:jobNumber',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
     serviceRequestController.getServiceRequest);
 
 /**
@@ -142,7 +142,7 @@ router.post('/',
  *         description: Job updated
  */
 router.put('/:jobNumber',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
     serviceRequestController.updateServiceRequest);
 
 module.exports = router;
