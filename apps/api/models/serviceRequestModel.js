@@ -9,21 +9,16 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
         LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId
     `;
     let countQuery = `SELECT COUNT(*) as count FROM servicerequest sr`;
+
+    // Filters object contains { sql, params } from queryHelper
     let params = [];
-    let whereClauses = [];
 
-    // Apply filters
-    if (filters.status) {
-        whereClauses.push(`sr.Status = ?`);
-        params.push(filters.status);
-    }
-
-    // Add logic for date filtering, search, etc. here
-
-    if (whereClauses.length > 0) {
-        const whereSql = ' WHERE ' + whereClauses.join(' AND ');
-        query += whereSql;
-        countQuery += whereSql;
+    // Check if filters is the processed object { sql, params }
+    if (filters.sql) {
+        // queryHelper returns "WHERE ..." or empty string
+        query += ` ${filters.sql}`;
+        countQuery += ` ${filters.sql}`;
+        params = [...(filters.params || [])];
     }
 
     // Sort by DateReceived descending
@@ -32,8 +27,8 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
 
     const [rows] = await pool.query(query, params);
 
-    // Count query
-    let countParams = params.slice(0, -2);
+    // Count query parameters (exclude limit/offset)
+    const countParams = filters.params || [];
     const [countRows] = await pool.query(countQuery, countParams);
 
     return { rows, totalCount: countRows[0].count };
@@ -55,9 +50,6 @@ async function addServiceRequest(jobData) {
         `INSERT INTO servicerequest (${fields.join(', ')}) VALUES (${placeholders})`,
         values
     );
-    // Usually job number is unique, so we can fetch by it, but here we just return what was created if needed
-    // Assuming JobNumber was part of input or we query by ID if auto-inc ID exists (JobId)
-    // The table has JobId auto-inc.
     const [rows] = await pool.query('SELECT * FROM servicerequest WHERE JobNumber = ?', [jobData.JobNumber]);
     return rows[0];
 }
