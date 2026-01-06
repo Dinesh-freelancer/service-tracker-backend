@@ -105,17 +105,21 @@ CREATE TABLE IF NOT EXISTS `leads` (
 CREATE TABLE IF NOT EXISTS `customerdetails` (
   `CustomerId` int NOT NULL AUTO_INCREMENT,
   `CustomerName` varchar(100) NOT NULL,
-  `CompanyName` varchar(100) DEFAULT NULL,
+  `CompanyName` varchar(100) DEFAULT NULL, -- For Individual customers
   `Address` varchar(255) DEFAULT NULL,
+  `City` varchar(100) DEFAULT NULL,
+  `State` varchar(100) DEFAULT NULL,
+  `Pincode` varchar(10) DEFAULT NULL,
   `PrimaryContact` varchar(20) DEFAULT NULL,
   `WhatsappSameAsMobile` tinyint(1) DEFAULT '0',
-  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Email` varchar(255) DEFAULT NULL,
+  `Designation` varchar(100) DEFAULT NULL, -- Keep this to identify the person's role
+  `Notes` text DEFAULT NULL, -- Added for specific customer preferences
   `OrganizationId` int DEFAULT NULL,
   `CustomerType` enum('Individual','OrganizationMember') DEFAULT 'Individual',
-  `Designation` varchar(100) DEFAULT NULL,
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`CustomerId`),
-  KEY `idx_customer_name` (`CustomerName`),
   CONSTRAINT `fk_customer_org` FOREIGN KEY (`OrganizationId`) REFERENCES `organizations` (`OrganizationId`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -150,6 +154,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `WorkerId` int DEFAULT NULL,
   `CustomerId` int DEFAULT NULL,
   `IsActive` tinyint(1) DEFAULT '1',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`UserId`),
   UNIQUE KEY `Username` (`Username`),
   CONSTRAINT `fk_user_worker` FOREIGN KEY (`WorkerId`) REFERENCES `worker` (`WorkerId`) ON DELETE SET NULL,
