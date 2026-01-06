@@ -38,7 +38,7 @@ const CreateJob = () => {
                 try {
                     const token = localStorage.getItem('token');
                     // Assuming endpoint /api/customers?search=... exists, or just fetch all
-                    const res = await fetch(`${apiUrl}/customers?limit=100&search=${customerSearch}`, {
+                    const res = await fetch(`${apiUrl}/customers?limit=100&search=${customerSearch}&hideSensitive=false`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const data = await res.json();
