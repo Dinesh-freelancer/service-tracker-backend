@@ -332,6 +332,38 @@ BEGIN
     END IF;
 END //
 
+-- Restore stock when a part is removed from a job
+CREATE TRIGGER `trg_restore_stock_on_part_delete`
+AFTER DELETE ON `partsused`
+FOR EACH ROW
+BEGIN
+    IF OLD.PartId IS NOT NULL THEN
+        UPDATE `inventory`
+        SET QuantityInStock = QuantityInStock + OLD.Qty
+        WHERE PartId = OLD.PartId;
+    END IF;
+END //
+
+-- Adjust stock when part quantity changes or part is swapped
+CREATE TRIGGER `trg_adjust_stock_on_part_update`
+AFTER UPDATE ON `partsused`
+FOR EACH ROW
+BEGIN
+    IF OLD.PartId IS NOT NULL THEN
+        -- Revert old quantity
+        UPDATE `inventory`
+        SET QuantityInStock = QuantityInStock + OLD.Qty
+        WHERE PartId = OLD.PartId;
+    END IF;
+
+    IF NEW.PartId IS NOT NULL THEN
+        -- Deduct new quantity
+        UPDATE `inventory`
+        SET QuantityInStock = QuantityInStock - NEW.Qty
+        WHERE PartId = NEW.PartId;
+    END IF;
+END //
+
 DELIMITER ;
 
 SET SQL_MODE=@OLD_SQL_MODE;

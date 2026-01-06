@@ -1,4 +1,5 @@
 const serviceRequestModel = require('../models/serviceRequestModel');
+const assetModel = require('../models/assetModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterServiceRequest, filterServiceRequestList } = require('../utils/responseFilter');
 const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
@@ -6,6 +7,7 @@ const { getPagination, getPaginationData } = require('../utils/paginationHelper'
 const { buildSearchFilters } = require('../utils/queryHelper');
 const NotificationService = require('../utils/notificationService');
 const authModel = require('../models/authModel');
+const pool = require('../db');
 
 /**
  * Lists service requests with pagination, filtering, and role-based masking.
@@ -19,15 +21,21 @@ async function listServiceRequests(req, res, next) {
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
-        // Allowed search fields
-        const searchableFields = ['JobNumber', 'PumpBrand', 'PumpModel', 'MotorBrand', 'MotorModel', 'SerialNumber', 'Status'];
+        // Allowed search fields (Updated for Asset-Centric model)
+        // Aliases: sr (servicerequest), a (assets), c (customer)
+        const searchableFields = [
+            'sr.JobNumber',
+            'a.InternalTag', 'a.PumpBrand', 'a.PumpModel',
+            'a.MotorBrand', 'a.MotorModel', 'a.SerialNumber',
+            'sr.Status', 'c.CustomerName'
+        ];
+
         const filters = buildSearchFilters(req.query, searchableFields);
 
         let rows, totalCount;
 
         if (role === AUTH_ROLE_CUSTOMER) {
              // In-memory pagination for customers (security first)
-             // Fetch ALL matching filters (Note: getAllServiceRequests now accepts filters)
              const result = await serviceRequestModel.getAllServiceRequests(filters);
 
              let allRows = result.rows || [];
@@ -87,19 +95,67 @@ async function getServiceRequest(req, res, next) {
 
 // Add new service request
 async function createServiceRequest(req, res, next) {
+    let connection;
     try {
-        const serviceRequest = await serviceRequestModel.addServiceRequest(
-            req.body
-        );
-        await logAudit({
-            JobNumber: serviceRequest.JobNumber,
-            ActionType: 'Created',
-            ChangedBy: req.body.CreatedBy || 'system', // Use logged-in user or system
-            Details: `ServiceRequest created. Pump: ${serviceRequest.PumpBrand} ${serviceRequest.PumpModel}, Motor: ${serviceRequest.MotorBrand} ${serviceRequest.MotorModel}`,
-        });
-        res.status(201).json(serviceRequest);
+        const { NewAsset, ...jobData } = req.body;
+        let assetId = jobData.AssetId;
+
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // Hybrid Flow: Create Asset if needed
+            if (!assetId && NewAsset) {
+                // Validate NewAsset basics
+                if (!NewAsset.PumpBrand || !NewAsset.PumpModel) {
+                    throw new Error('New Asset requires PumpBrand and PumpModel');
+                }
+
+                // Ensure CustomerId is consistent
+                NewAsset.CustomerId = jobData.CustomerId;
+
+                const createdAsset = await assetModel.createAsset(NewAsset, connection);
+                assetId = createdAsset.AssetId;
+            }
+
+            if (!assetId) {
+                throw new Error('AssetId is required or valid NewAsset data must be provided.');
+            }
+
+            // Prepare Final Job Data
+            const finalJobData = {
+                JobNumber: await serviceRequestModel.generateJobNumber(connection),
+                AssetId: assetId,
+                CustomerId: jobData.CustomerId,
+                DateReceived: jobData.DateReceived,
+                Status: 'Intake', // Default
+                ResolutionType: null,
+                Notes: jobData.Notes || ''
+            };
+
+            const serviceRequest = await serviceRequestModel.addServiceRequest(finalJobData, connection);
+
+            await connection.commit();
+
+            await logAudit({
+                JobNumber: serviceRequest.JobNumber,
+                ActionType: 'Created',
+                ChangedBy: req.user ? req.user.UserId : 'system',
+                Details: `ServiceRequest created for Asset ${serviceRequest.InternalTag || assetId}`,
+            });
+
+            res.status(201).json(serviceRequest);
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        }
     } catch (err) {
+        if (err.message && (err.message.includes('New Asset requires') || err.message.includes('AssetId is required'))) {
+            return res.status(400).json({ error: err.message });
+        }
         next(err);
+    } finally {
+        if (connection) connection.release();
     }
 }
 

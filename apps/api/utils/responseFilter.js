@@ -18,42 +18,48 @@ function filterServiceRequest(job, role, hideSensitive) {
         // Customer view: Own jobs only.
         return {
             JobNumber: job.JobNumber,
-            PumpsetBrand: job.PumpsetBrand,
-            PumpsetModel: job.PumpsetModel,
+            // Pump/Motor details now come from Asset Join
+            InternalTag: job.InternalTag,
+            PumpBrand: job.PumpBrand,
+            PumpModel: job.PumpModel,
+            MotorBrand: job.MotorBrand,
+            MotorModel: job.MotorModel,
             Status: job.Status,
             DateReceived: job.DateReceived,
             EstimatedAmount: job.EstimatedAmount,
             BilledAmount: job.BilledAmount,
             Notes: job.Notes,
-            EstimationDate: job.EstimationDate,
-            EstimateLink: job.EstimateLink
+            // Estimation/Link might be needed if they exist
+            ResolutionType: job.ResolutionType
         };
     }
 
     // Default Masked View (Worker, Admin, Owner when sensitive=true)
-    // Applies strict masking to ensure Audit Trail is triggered for raw access.
     return {
         JobNumber: job.JobNumber,
         CustomerId: STRING_HIDDEN,
         CustomerName: STRING_HIDDEN,
+        // Asset Details (Public enough for workers/admins even in masked mode?)
+        // Usually, tech details are fine. Customer info is sensitive.
+        InternalTag: job.InternalTag,
         PumpBrand: job.PumpBrand,
         PumpModel: job.PumpModel,
         MotorBrand: job.MotorBrand,
         MotorModel: job.MotorModel,
         SerialNumber: job.SerialNumber,
         HP: job.HP,
-        Warranty: job.Warranty,
+        WarrantyExpiry: job.WarrantyExpiry,
+
         DateReceived: job.DateReceived,
         Status: job.Status,
         Notes: job.Notes,
-        EstimationDate: STRING_HIDDEN,
-        EstimateLink: STRING_HIDDEN,
+
         EstimatedAmount: STRING_HIDDEN,
         BilledAmount: STRING_HIDDEN,
+
         WorkLogs: job.WorkLogs ? filterWorkLogList(job.WorkLogs, role, hideSensitive) : undefined,
         PartsUsed: STRING_HIDDEN,
         Payments: STRING_HIDDEN,
-        WindingDetails: job.WindingDetails ? filterWindingDetailsList(job.WindingDetails, role, hideSensitive, job.Status) : undefined,
         Documents: job.Documents ? filterDocumentList(job.Documents, role, hideSensitive) : undefined
     };
 }
@@ -79,20 +85,14 @@ function filterCustomer(customer, role, hideSensitive) {
 
 /**
  * Filters Winding Details.
- * Special rule: Workers (and masked Admins) can only see details if Job Status is 'Approved By Customer' or 'Work In Progress'.
  */
 function filterWindingDetails(detail, role, hideSensitive, jobStatus) {
     if (!hideSensitive) return detail;
 
     // Apply strict visibility for everyone when masking is enabled
-    // (except maybe Customers? But customers usually don't see winding details via this API or it's not defined.
-    // Assuming Customers don't use this endpoint or see limited info.
-    // If Admin is masked, they get the same restrictions as Worker to ensure safety.)
     if (true) {
         const allowedStatuses = ['Approved By Customer', 'Work In Progress'];
         if (allowedStatuses.includes(jobStatus)) {
-            // Worker sees technical details but maybe not sensitive notes?
-            // Docs: "Response for Worker (job status Approved/In Progress only) ... returns technical fields"
             return {
                 id: detail.id,
                 jobNumber: detail.jobNumber,
@@ -109,16 +109,12 @@ function filterWindingDetails(detail, role, hideSensitive, jobStatus) {
                 slot_turns_run: detail.slot_turns_run,
                 slot_turns_start: detail.slot_turns_start,
                 slot_turns_3phase: detail.slot_turns_3phase,
-                // Hide wire dimensions (Cost related? No, technical. But docs example shows them hidden/missing in the limited view?)
-                // Docs example for Worker: id, jobNumber, hp, phase, turns_run, turns_start, slot_turns_run.
-                // It does NOT show wire_id/od. Let's exclude them to match example.
                 notes: detail.notes
             };
         } else {
-            // If status is not allowed, return minimal or hidden
              return {
                 id: detail.id,
-                jobNumber: detail.jobNumber, // Keep ID/JobNumber for reference
+                jobNumber: detail.jobNumber,
                 message: "Winding details not available at this stage"
             };
         }
@@ -139,7 +135,6 @@ function filterInventory(item, role, hideSensitive) {
         Unit: item.Unit,
         QuantityInStock: item.QuantityInStock,
         LowStockThreshold: item.LowStockThreshold,
-        // Hide prices
         SupplierId: STRING_HIDDEN
     };
 }
@@ -154,9 +149,8 @@ function filterWorkLog(log, role, hideSensitive) {
     return {
         WorkLogId: log.WorkLogId,
         JobNumber: log.JobNumber,
-        SubStatus: log.SubStatus,
-        AssignedWorker: log.AssignedWorker,
-        WorkerName: log.WorkerName
+        WorkDone: log.WorkDone, // Updated from SubStatus to WorkDone as per schema
+        WorkerId: log.WorkerId
     };
 }
 
@@ -172,7 +166,7 @@ function filterPartsUsed(part, role, hideSensitive) {
         JobNumber: part.JobNumber,
         PartName: part.PartName,
         Qty: part.Qty,
-        Unit: part.Unit
+        // Hide prices
     };
 }
 
@@ -186,6 +180,7 @@ function filterDocument(doc, role, hideSensitive) {
     return {
         DocumentId: doc.DocumentId,
         JobNumber: doc.JobNumber,
+        AssetId: doc.AssetId,
         DocumentType: doc.DocumentType,
         EmbedTag: STRING_HIDDEN, // Content hidden
         CreatedAt: doc.CreatedAt
@@ -233,24 +228,19 @@ function filterDocumentList(list, role, hideSensitive) {
 function filterPayment(payment, role, hideSensitive) {
     if (!hideSensitive) return payment;
 
-    // Customer view handled by controller logic/RLS mostly, but if we need fields filtering:
-    // If Customer is viewing their own payment, they probably can see the amount.
-    // So if role is Customer, pass through (assuming RLS is passed).
-    const { AUTH_ROLE_CUSTOMER } = require('./constants'); // Require here to avoid top-level cyclic issues if any
+    const { AUTH_ROLE_CUSTOMER } = require('./constants');
     if (role === AUTH_ROLE_CUSTOMER) {
         return payment;
     }
 
-    // Default Masked View (Admin/Owner safe mode, Worker blocked at controller level anyway)
-    // Mask sensitive financials.
+    // Default Masked View
     return {
         PaymentId: payment.PaymentId,
         JobNumber: payment.JobNumber,
         Amount: STRING_HIDDEN,
         PaymentDate: STRING_HIDDEN,
         PaymentType: STRING_HIDDEN,
-        PaymentMode: STRING_HIDDEN,
-        Notes: STRING_HIDDEN
+        PaymentMode: STRING_HIDDEN
     };
 }
 
