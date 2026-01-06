@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Search,
   Filter,
@@ -7,7 +7,8 @@ import {
   ChevronRight,
   Eye,
   MoreVertical,
-  Loader2
+  Loader2,
+  Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSensitiveInfo } from '../../context/SensitiveInfoContext';
@@ -20,6 +21,7 @@ import { useSensitiveInfo } from '../../context/SensitiveInfoContext';
  */
 const JobsList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -114,7 +116,16 @@ const JobsList = () => {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Service Requests</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Manage and track all repair jobs.</p>
         </div>
-        {/* Placeholder for "Create Job" button if we add it later */}
+
+        {isAdminOrOwner && (
+            <button
+                onClick={() => navigate('/dashboard/jobs/new')}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm shadow-blue-500/20"
+            >
+                <Plus size={18} />
+                Create Job
+            </button>
+        )}
       </div>
 
       {/* Filters & Search */}
@@ -158,6 +169,7 @@ const JobsList = () => {
                 <thead>
                     <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">
                         <th className="p-4 font-semibold">Job #</th>
+                        <th className="p-4 font-semibold">Internal Tag</th>
                         {isAdminOrOwner && <th className="p-4 font-semibold">Customer</th>}
                         <th className="p-4 font-semibold">Device</th>
                         <th className="p-4 font-semibold">Date Received</th>
@@ -188,6 +200,9 @@ const JobsList = () => {
                                 <td className="p-4 font-medium text-slate-900 dark:text-white">
                                     {job.JobNumber}
                                 </td>
+                                <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">
+                                    {job.InternalTag || '-'}
+                                </td>
                                 {isAdminOrOwner && (
                                     <td className="p-4 text-slate-600 dark:text-slate-300">
                                         <div className="font-medium">
@@ -216,7 +231,9 @@ const JobsList = () => {
                                     </td>
                                 )}
                                 <td className="p-4 text-center">
-                                    <button className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details">
+                                    <button
+                                        onClick={() => navigate(`/dashboard/jobs/${job.JobNumber}`)}
+                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details">
                                         <Eye size={18} />
                                     </button>
                                 </td>

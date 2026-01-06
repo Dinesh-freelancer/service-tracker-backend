@@ -5,6 +5,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Placeholder from './pages/Placeholder';
 import JobsList from './pages/jobs/JobsList';
+import CreateJob from './pages/jobs/CreateJob';
+import JobDetails from './pages/jobs/JobDetails';
 import DashboardLayout from './layout/DashboardLayout';
 import { SensitiveInfoProvider } from './context/SensitiveInfoContext';
 import './App.css';
@@ -36,6 +38,8 @@ function App() {
 
           {/* Placeholder Routes for Sidebar Links */}
           <Route path="jobs" element={<JobsList />} />
+          <Route path="jobs/new" element={<CreateJob />} />
+          <Route path="jobs/:jobNumber" element={<JobDetails />} />
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Placeholder />} />
           <Route path="reports" element={<Placeholder />} />

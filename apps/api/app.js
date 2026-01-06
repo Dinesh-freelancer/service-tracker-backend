@@ -97,6 +97,9 @@ app.use('/api/documents', documentRoutes);
 const notificationRoutes = require('./routes/notifications');
 app.use('/api/notifications', notificationRoutes);
 
+const assetRoutes = require('./routes/assets');
+app.use('/api/assets', assetRoutes);
+
 const leadRoutes = require('./routes/leads');
 app.use('/api/leads', leadRoutes);
 
