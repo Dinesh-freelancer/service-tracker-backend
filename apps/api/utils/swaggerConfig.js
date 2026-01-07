@@ -33,9 +33,9 @@ const options = {
                 AssetId: { type: 'integer' },
                 CustomerId: { type: 'integer' },
                 InternalTag: { type: 'string' },
-                PumpBrand: { type: 'string' },
+                Brand: { type: 'string' },
+                AssetType: { type: 'string', enum: ['Pumpset', 'Motor Only', 'Pump Only'] },
                 PumpModel: { type: 'string' },
-                MotorBrand: { type: 'string' },
                 MotorModel: { type: 'string' },
                 SerialNumber: { type: 'string' },
                 IsActive: { type: 'boolean' }

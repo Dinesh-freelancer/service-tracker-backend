@@ -246,18 +246,22 @@ const CreateJob = () => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-medium text-slate-500 mb-1">Pump Brand *</label>
-                                                <input {...register('PumpBrand', { required: isNewAsset })} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
-                                                {errors.PumpBrand && <span className="text-red-500 text-xs">Required</span>}
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Asset Type</label>
+                                                <select {...register('AssetType')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                                                    <option value="Pumpset">Pumpset (Combined)</option>
+                                                    <option value="Motor Only">Motor Only</option>
+                                                    <option value="Pump Only">Pump Only</option>
+                                                </select>
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-slate-500 mb-1">Pump Model *</label>
-                                                <input {...register('PumpModel', { required: isNewAsset })} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
-                                                {errors.PumpModel && <span className="text-red-500 text-xs">Required</span>}
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Brand *</label>
+                                                <input {...register('Brand', { required: isNewAsset })} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="Manufacturer (e.g. Kirloskar)" />
+                                                {errors.Brand && <span className="text-red-500 text-xs">Required</span>}
                                             </div>
+
                                             <div>
-                                                <label className="block text-xs font-medium text-slate-500 mb-1">Motor Brand</label>
-                                                <input {...register('MotorBrand')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Pump Model</label>
+                                                <input {...register('PumpModel')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Motor Model</label>

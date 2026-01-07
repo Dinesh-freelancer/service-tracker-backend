@@ -214,8 +214,8 @@ const JobsList = () => {
                                     </td>
                                 )}
                                 <td className="p-4 text-slate-600 dark:text-slate-300">
-                                    <div>{job.PumpBrand || job.MotorBrand}</div>
-                                    <div className="text-xs text-slate-400">{job.PumpModel || job.MotorModel} - {job.HP}HP</div>
+                                    <div>{job.Brand}</div>
+                                    <div className="text-xs text-slate-400">{job.PumpModel} / {job.MotorModel} - {job.HP}HP</div>
                                 </td>
                                 <td className="p-4 text-slate-500 dark:text-slate-400">
                                     {new Date(job.DateReceived).toLocaleDateString()}

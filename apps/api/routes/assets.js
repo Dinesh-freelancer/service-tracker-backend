@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const assetController = require('../controllers/assetController');
-const { authorize } = require('../middleware/authMiddleware');
-const { validateAsset } = require('../middleware/validationMiddleware'); // Need to create this
+const { authenticateToken, authorize } = require('../middleware/authMiddleware');
+const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+const { validateAsset } = require('../middleware/validationMiddleware');
 const { AUTH_ROLE_ADMIN, AUTH_ROLE_WORKER, AUTH_ROLE_CUSTOMER, AUTH_ROLE_OWNER } = require('../utils/constants');
+
+// Apply global middleware for this router
+router.use(authenticateToken);
+router.use(sensitiveInfoToggle);
 
 // Shared roles
 const ALL_ROLES = [AUTH_ROLE_ADMIN, AUTH_ROLE_OWNER, AUTH_ROLE_WORKER, AUTH_ROLE_CUSTOMER];

@@ -57,11 +57,12 @@ async function searchAssets(queryStr) {
          FROM assets a
          JOIN customerdetails c ON a.CustomerId = c.CustomerId
          WHERE a.InternalTag LIKE ?
-            OR a.PumpBrand LIKE ?
+            OR a.Brand LIKE ?
             OR a.PumpModel LIKE ?
+            OR a.MotorModel LIKE ?
             OR a.SerialNumber LIKE ?
          LIMIT 20`,
-        [term, term, term, term]
+        [term, term, term, term, term]
     );
     return rows;
 }

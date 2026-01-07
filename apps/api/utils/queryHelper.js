@@ -34,7 +34,7 @@ function buildSearchFilters(query, searchableFields = []) {
                 // Determine table alias for common fields to avoid ambiguity
                 let column = key;
                 if (key === 'Status' || key === 'JobNumber') column = `sr.${key}`;
-                else if (key === 'InternalTag') column = `a.${key}`;
+                else if (key === 'InternalTag' || key === 'Brand' || key === 'AssetType') column = `a.${key}`;
                 else if (key === 'CustomerName') column = `c.${key}`;
 
                 sqlParts.push(`${column} = ?`);

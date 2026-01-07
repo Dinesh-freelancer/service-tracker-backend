@@ -48,7 +48,7 @@ describe('Jobs API', () => {
         it('should return paginated list of jobs', async () => {
             // Mock DB response (pool.query used for list)
             pool.query.mockResolvedValueOnce([
-                [{ JobNumber: 'JOB123', InternalTag: 'TAG1', PumpBrand: 'P1' }], // rows
+                [{ JobNumber: 'JOB123', InternalTag: 'TAG1', Brand: 'B1' }], // rows
                 [] // fields
             ]);
             // Mock count query
@@ -121,7 +121,7 @@ describe('Jobs API', () => {
             const payload = {
                 CustomerId: 1,
                 NewAsset: {
-                    PumpBrand: 'BrandNew',
+                    Brand: 'BrandNew',
                     PumpModel: 'ModelNew'
                 },
                 DateReceived: new Date().toISOString(),
@@ -142,7 +142,7 @@ describe('Jobs API', () => {
 
              const payload = {
                 CustomerId: 1,
-                NewAsset: { PumpBrand: 'P', PumpModel: 'M' },
+                NewAsset: { Brand: 'P', PumpModel: 'M' },
                 DateReceived: new Date().toISOString()
             };
 

@@ -80,12 +80,15 @@ const JobDetails = () => {
                                 <div className="font-mono font-medium text-slate-900 dark:text-white">{job.InternalTag || 'N/A'}</div>
                             </div>
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
-                                <div className="text-xs text-slate-500 uppercase">Pump</div>
-                                <div className="font-medium text-slate-900 dark:text-white">{job.PumpBrand} {job.PumpModel}</div>
+                                <div className="text-xs text-slate-500 uppercase">Brand / Type</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{job.Brand} <span className="text-xs text-slate-500">({job.AssetType})</span></div>
                             </div>
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
-                                <div className="text-xs text-slate-500 uppercase">Motor</div>
-                                <div className="font-medium text-slate-900 dark:text-white">{job.MotorBrand} {job.MotorModel}</div>
+                                <div className="text-xs text-slate-500 uppercase">Models</div>
+                                <div className="font-medium text-slate-900 dark:text-white text-xs">
+                                    {job.PumpModel && <div>Pump: {job.PumpModel}</div>}
+                                    {job.MotorModel && <div>Motor: {job.MotorModel}</div>}
+                                </div>
                             </div>
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                 <div className="text-xs text-slate-500 uppercase">Serial #</div>

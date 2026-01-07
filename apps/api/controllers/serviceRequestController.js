@@ -25,8 +25,8 @@ async function listServiceRequests(req, res, next) {
         // Aliases: sr (servicerequest), a (assets), c (customer)
         const searchableFields = [
             'sr.JobNumber',
-            'a.InternalTag', 'a.PumpBrand', 'a.PumpModel',
-            'a.MotorBrand', 'a.MotorModel', 'a.SerialNumber',
+            'a.InternalTag', 'a.Brand', 'a.PumpModel',
+            'a.MotorModel', 'a.SerialNumber',
             'sr.Status', 'c.CustomerName'
         ];
 
@@ -107,12 +107,14 @@ async function createServiceRequest(req, res, next) {
             // Hybrid Flow: Create Asset if needed
             if (!assetId && NewAsset) {
                 // Validate NewAsset basics
-                if (!NewAsset.PumpBrand || !NewAsset.PumpModel) {
-                    throw new Error('New Asset requires PumpBrand and PumpModel');
+                if (!NewAsset.Brand) {
+                    throw new Error('New Asset requires Brand');
                 }
 
                 // Ensure CustomerId is consistent
                 NewAsset.CustomerId = jobData.CustomerId;
+                // Default AssetType if not provided
+                if (!NewAsset.AssetType) NewAsset.AssetType = 'Pumpset';
 
                 const createdAsset = await assetModel.createAsset(NewAsset, connection);
                 assetId = createdAsset.AssetId;

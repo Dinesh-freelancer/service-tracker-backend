@@ -127,9 +127,9 @@ CREATE TABLE IF NOT EXISTS `assets` (
   `AssetId` int NOT NULL AUTO_INCREMENT,
   `CustomerId` int NOT NULL,
   `InternalTag` varchar(50) NOT NULL UNIQUE,
-  `PumpBrand` varchar(100) NOT NULL,
-  `PumpModel` varchar(100) NOT NULL,
-  `MotorBrand` varchar(100) DEFAULT NULL,
+  `Brand` varchar(100) NOT NULL,
+  `AssetType` enum('Pumpset', 'Motor Only', 'Pump Only') DEFAULT 'Pumpset',
+  `PumpModel` varchar(100) DEFAULT NULL,
   `MotorModel` varchar(100) DEFAULT NULL,
   `HP` decimal(10,2) DEFAULT NULL,
   `SerialNumber` varchar(100) DEFAULT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS `assets` (
   `IsActive` tinyint(1) DEFAULT '1',
   `CreatedAt` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`AssetId`),
-  INDEX `idx_brand_serial` (`PumpBrand`, `SerialNumber`),
+  INDEX `idx_brand_serial` (`Brand`, `SerialNumber`),
   CONSTRAINT `fk_asset_customer` FOREIGN KEY (`CustomerId`) REFERENCES `customerdetails` (`CustomerId`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

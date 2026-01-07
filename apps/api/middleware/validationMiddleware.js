@@ -53,8 +53,8 @@ const createServiceRequestValidators = [
 
 const validateAsset = [
     body('CustomerId').notEmpty().isInt().withMessage('Customer ID is required'),
-    body('PumpBrand').notEmpty().withMessage('Pump Brand is required'),
-    body('PumpModel').notEmpty().withMessage('Pump Model is required'),
+    body('Brand').notEmpty().withMessage('Brand is required'),
+    body('AssetType').optional().isIn(['Pumpset', 'Motor Only', 'Pump Only']).withMessage('Invalid Asset Type'),
     validateRequest // Auto-execute validation check
 ];
 

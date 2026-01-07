@@ -42,9 +42,9 @@ function filterServiceRequest(job, role, hideSensitive) {
         // Asset Details (Public enough for workers/admins even in masked mode?)
         // Usually, tech details are fine. Customer info is sensitive.
         InternalTag: job.InternalTag,
-        PumpBrand: job.PumpBrand,
+        Brand: job.Brand,
+        AssetType: job.AssetType,
         PumpModel: job.PumpModel,
-        MotorBrand: job.MotorBrand,
         MotorModel: job.MotorModel,
         SerialNumber: job.SerialNumber,
         HP: job.HP,

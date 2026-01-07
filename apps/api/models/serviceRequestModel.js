@@ -7,7 +7,7 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
         SELECT sr.*,
                c.CustomerName, c.PrimaryContact, c.CustomerType, c.OrganizationId,
                o.OrganizationName,
-               a.InternalTag, a.PumpBrand, a.PumpModel, a.MotorBrand, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry
+               a.InternalTag, a.Brand, a.AssetType, a.PumpModel, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry
         FROM servicerequest sr
         LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
         LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId
@@ -52,7 +52,7 @@ async function getServiceRequestByJobNumber(jobNumber, connection = null) {
         `SELECT sr.*,
                 c.CustomerName, c.PrimaryContact, c.CustomerType, c.OrganizationId,
                 o.OrganizationName,
-                a.InternalTag, a.PumpBrand, a.PumpModel, a.MotorBrand, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry, a.InstallationDate
+                a.InternalTag, a.Brand, a.AssetType, a.PumpModel, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry, a.InstallationDate
          FROM servicerequest sr
          LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
          LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId
