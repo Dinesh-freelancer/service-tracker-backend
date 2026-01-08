@@ -283,6 +283,33 @@ CREATE TABLE IF NOT EXISTS `attendance` (
   CONSTRAINT `fk_att_worker` FOREIGN KEY (`WorkerId`) REFERENCES `worker` (`WorkerId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `NotificationId` int NOT NULL AUTO_INCREMENT,
+  `UserId` int NOT NULL,
+  `Type` enum('JobUpdate','LowStock','Payment','System','JobAssignment') NOT NULL,
+  `Title` varchar(255) NOT NULL,
+  `Message` text,
+  `ReferenceId` varchar(50) DEFAULT NULL,
+  `IsRead` tinyint(1) DEFAULT '0',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`NotificationId`),
+  KEY `idx_user` (`UserId`),
+  KEY `idx_isread` (`IsRead`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `users` (`UserId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `auditdetails` (
+  `AuditId` int NOT NULL AUTO_INCREMENT,
+  `JobNumber` varchar(50) DEFAULT NULL,
+  `ChangedDateTime` datetime DEFAULT CURRENT_TIMESTAMP,
+  `ActionType` varchar(50) DEFAULT NULL,
+  `ChangedBy` varchar(100) DEFAULT NULL,
+  `Details` text,
+  PRIMARY KEY (`AuditId`),
+  KEY `idx_audit_job` (`JobNumber`),
+  CONSTRAINT `auditdetails_ibfk_1` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- -----------------------------------------------------
 -- LEVEL 4: FINAL CHILD TABLES
 -- -----------------------------------------------------
@@ -298,6 +325,36 @@ CREATE TABLE IF NOT EXISTS `purchaseitems` (
   CONSTRAINT `fk_pi_purchase` FOREIGN KEY (`PurchaseId`) REFERENCES `purchases` (`PurchaseId`) ON DELETE CASCADE,
   CONSTRAINT `fk_pi_inventory` FOREIGN KEY (`PartId`) REFERENCES `inventory` (`PartId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `windingdetails` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `jobNumber` varchar(50) NOT NULL,
+  `hp` decimal(5,2) NOT NULL,
+  `kw` decimal(5,2) DEFAULT NULL,
+  `phase` enum('1-PHASE','3-PHASE') NOT NULL,
+  `connection_type` enum('STAR','DELTA','NONE') DEFAULT 'NONE',
+  `swg_run` int DEFAULT NULL,
+  `swg_start` int DEFAULT NULL,
+  `swg_3phase` int DEFAULT NULL,
+  `wire_id_run` decimal(5,3) DEFAULT NULL,
+  `wire_od_run` decimal(5,3) DEFAULT NULL,
+  `wire_id_start` decimal(5,3) DEFAULT NULL,
+  `wire_od_start` decimal(5,3) DEFAULT NULL,
+  `wire_id_3phase` decimal(5,3) DEFAULT NULL,
+  `wire_od_3phase` decimal(5,3) DEFAULT NULL,
+  `turns_run` int DEFAULT NULL,
+  `turns_start` int DEFAULT NULL,
+  `turns_3phase` int DEFAULT NULL,
+  `slot_turns_run` json DEFAULT NULL,
+  `slot_turns_start` json DEFAULT NULL,
+  `slot_turns_3phase` json DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_jobNumber` (`jobNumber`),
+  CONSTRAINT `fk_winding_job` FOREIGN KEY (`jobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
 -- TRIGGERS
