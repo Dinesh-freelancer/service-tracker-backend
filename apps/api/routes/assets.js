@@ -37,7 +37,7 @@ const STAFF_ROLES = [AUTH_ROLE_ADMIN, AUTH_ROLE_OWNER, AUTH_ROLE_WORKER];
  *       200:
  *         description: List of assets
  */
-router.get('/', authorize(ALL_ROLES), assetController.listAssets);
+router.get('/', authorize(...ALL_ROLES), assetController.listAssets);
 
 /**
  * @swagger
@@ -55,7 +55,7 @@ router.get('/', authorize(ALL_ROLES), assetController.listAssets);
  *       200:
  *         description: Asset details
  */
-router.get('/:id', authorize(ALL_ROLES), assetController.getAsset);
+router.get('/:id', authorize(...ALL_ROLES), assetController.getAsset);
 
 /**
  * @swagger
@@ -87,7 +87,7 @@ router.get('/:id', authorize(ALL_ROLES), assetController.getAsset);
  *       201:
  *         description: Asset created
  */
-router.post('/', authorize(STAFF_ROLES), validateAsset, assetController.createAsset);
+router.post('/', authorize(...STAFF_ROLES), validateAsset, assetController.createAsset);
 
 /**
  * @swagger
@@ -111,6 +111,6 @@ router.post('/', authorize(STAFF_ROLES), validateAsset, assetController.createAs
  *       200:
  *         description: Asset updated
  */
-router.put('/:id', authorize(STAFF_ROLES), assetController.updateAsset);
+router.put('/:id', authorize(...STAFF_ROLES), assetController.updateAsset);
 
 module.exports = router;
