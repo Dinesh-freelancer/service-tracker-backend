@@ -4,10 +4,14 @@ const purchaseController = require('../controllers/purchaseController');
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
 const constants = require('../utils/constants');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
+
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 // All routes protected and accessible by Admin & Owner only
-router.use(authenticateToken, authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER));
+router.use(authorize(...ADMIN_OWNER));
 
 /**
  * @swagger

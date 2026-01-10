@@ -4,8 +4,13 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 const constants = require('../utils/constants');
 const attendanceController = require('../controllers/attendanceController');
+
 router.use(authenticateToken)
 router.use(sensitiveInfoToggle);
+
+const ALL_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -38,7 +43,7 @@ router.use(sensitiveInfoToggle);
  */
 router.get(
     '/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
+    authorize(...ALL_ROLES),
     attendanceController.listAttendance);
 
 /**
@@ -63,7 +68,7 @@ router.get(
  *         description: Not found
  */
 router.get('/:attendanceId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
+    authorize(...ALL_ROLES),
     attendanceController.getAttendance);
 
 /**
@@ -104,7 +109,7 @@ router.get('/:attendanceId',
  *         description: Created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     attendanceController.createAttendance);
 
 module.exports = router;

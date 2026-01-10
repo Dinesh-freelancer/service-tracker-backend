@@ -9,6 +9,15 @@ const { validateRequest, createServiceRequestValidators } = require('../middlewa
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+// Roles
+const ALL_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER, constants.AUTH_ROLE_CUSTOMER];
+const STAFF_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
+// Admin/Owner for sensitive actions if needed, but per request, consistency is key.
+// Actually, createServiceRequest was Admin/Owner only. assets.js lets Workers create.
+// I will keep list/get as ALL_ROLES (or at least STAFF_ROLES + CUSTOMER if customer is handled in controller).
+// Controller handles customer logic. So ALL_ROLES is fine.
+// For create/update, I'll use STAFF_ROLES to align with assets.js.
+
 /**
  * @swagger
  * tags:
@@ -43,7 +52,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of jobs
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
+    authorize(...ALL_ROLES),
     serviceRequestController.listServiceRequests);
 
 /**
@@ -68,7 +77,7 @@ router.get('/',
  *         description: Job not found
  */
 router.get('/:jobNumber',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
+    authorize(...ALL_ROLES),
     serviceRequestController.getServiceRequest);
 
 /**
@@ -107,7 +116,7 @@ router.get('/:jobNumber',
  *         description: Job created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...STAFF_ROLES),
     createServiceRequestValidators,
     validateRequest,
     serviceRequestController.createServiceRequest);
@@ -142,7 +151,7 @@ router.post('/',
  *         description: Job updated
  */
 router.put('/:jobNumber',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER),
+    authorize(...STAFF_ROLES),
     serviceRequestController.updateServiceRequest);
 
 module.exports = router;

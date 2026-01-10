@@ -8,6 +8,8 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -35,7 +37,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of parts used
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     partsUsedController.listPartsUsed);
 
 /**
@@ -60,7 +62,7 @@ router.get('/',
  *         description: Not found
  */
 router.get('/:partUsedId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     partsUsedController.getPartUsed);
 
 /**
@@ -101,7 +103,7 @@ router.get('/:partUsedId',
  *         description: Recorded successfully
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     partsUsedController.createPartUsed);
 
 module.exports = router;

@@ -8,6 +8,8 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -35,7 +37,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of payments
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     paymentsController.listPayments);
 
 /**
@@ -60,7 +62,7 @@ router.get('/',
  *         description: Payment not found
  */
 router.get('/:paymentId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     paymentsController.getPayment);
 
 /**
@@ -100,7 +102,7 @@ router.get('/:paymentId',
  *         description: Payment created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     paymentsController.createPayment);
 
 module.exports = router;

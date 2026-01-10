@@ -4,8 +4,12 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const constants = require('../utils/constants');
 const workerController = require('../controllers/workerController');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
+
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -28,7 +32,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of workers
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     workerController.listWorkers);
 
 /**
@@ -53,7 +57,7 @@ router.get('/',
  *         description: Not found
  */
 router.get('/:workerId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     workerController.getWorker);
 
 /**
@@ -91,7 +95,7 @@ router.get('/:workerId',
  *         description: Created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     workerController.createWorker);
 
 module.exports = router;

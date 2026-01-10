@@ -8,6 +8,8 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -43,7 +45,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of work logs
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     workLogController.listWorkLogs);
 
 /**
@@ -68,7 +70,7 @@ router.get('/',
  *         description: Work log not found
  */
 router.get('/:workLogId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     workLogController.getWorkLog);
 
 /**
@@ -109,7 +111,7 @@ router.get('/:workLogId',
  *         description: Work log created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     workLogController.createWorkLog);
 
 module.exports = router;

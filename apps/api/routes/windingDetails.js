@@ -4,8 +4,12 @@ const controller = require('../controllers/windingDetailsController');
 const constants = require('../utils/constants');
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
+
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -82,7 +86,7 @@ router.get('/job/:jobNumber', authenticateToken, controller.getByJobNumber);
  *       201:
  *         description: Created
  */
-router.post('/', authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER), controller.createWindingDetail);
+router.post('/', authorize(...ADMIN_OWNER), controller.createWindingDetail);
 
 /**
  * @swagger
@@ -102,7 +106,7 @@ router.post('/', authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER)
  *       200:
  *         description: Updated
  */
-router.put('/:id', authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER), controller.updateWindingDetail);
+router.put('/:id', authorize(...ADMIN_OWNER), controller.updateWindingDetail);
 
 /**
  * @swagger
@@ -122,6 +126,6 @@ router.put('/:id', authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNE
  *       204:
  *         description: Deleted
  */
-router.delete('/:id', authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER), controller.deleteWindingDetail);
+router.delete('/:id', authorize(...ADMIN_OWNER), controller.deleteWindingDetail);
 
 module.exports = router;

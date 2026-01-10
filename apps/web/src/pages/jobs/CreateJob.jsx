@@ -10,7 +10,8 @@ const CreateJob = () => {
         defaultValues: {
             DateReceived: new Date().toISOString().split('T')[0],
             Notes: ''
-        }
+        },
+        shouldUnregister: false // Keep values when step changes (inputs unmount)
     });
 
     // Steps: 1. Select Customer, 2. Select/Create Asset, 3. Job Details
