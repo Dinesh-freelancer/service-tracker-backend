@@ -1,32 +1,12 @@
 const workerModel = require('../models/workerModel');
-const { STRING_HIDDEN } = require('../utils/constants');
+const { logAudit } = require('../utils/auditLogger');
 
 /**
  * Lists all workers.
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @param {Function} next - The next middleware function.
  */
 async function listWorkers(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
-        let workers = await workerModel.getAllWorkers();
-        if (hideSensitive) {
-            workers = workers.map(item => ({
-                "WorkerId": item.WorkerId,
-                "WorkerName": STRING_HIDDEN,
-                "MobileNumber": STRING_HIDDEN,
-                "AlternateNumber": STRING_HIDDEN,
-                "WhatsappNumber": STRING_HIDDEN,
-                "Address": STRING_HIDDEN,
-                "DateOfJoining": STRING_HIDDEN,
-                "Skills": STRING_HIDDEN,
-                "IsActive": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            }));
-        }
+        const workers = await workerModel.getAllWorkers();
         res.json(workers);
     } catch (err) {
         next(err);
@@ -35,31 +15,11 @@ async function listWorkers(req, res, next) {
 
 /**
  * Retrieves a worker by ID.
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @param {Function} next - The next middleware function.
  */
 async function getWorker(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         let worker = await workerModel.getWorkerById(req.params.workerId);
         if (!worker) return res.status(404).json({ error: 'Worker not found' });
-        if(hideSensitive){
-            worker = {
-                "WorkerId": worker.WorkerId,
-                "WorkerName": STRING_HIDDEN,
-                "MobileNumber": STRING_HIDDEN,
-                "AlternateNumber": STRING_HIDDEN,
-                "WhatsappNumber": STRING_HIDDEN,
-                "Address": STRING_HIDDEN,
-                "DateOfJoining": STRING_HIDDEN,
-                "Skills": STRING_HIDDEN,
-                "IsActive": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN
-            }
-        }
         res.json(worker);
     } catch (err) {
         next(err);
@@ -67,15 +27,58 @@ async function getWorker(req, res, next) {
 }
 
 /**
- * Creates a new worker.
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @param {Function} next - The next middleware function.
+ * Creates a new worker (optionally with login).
  */
 async function createWorker(req, res, next) {
     try {
-        const worker = await workerModel.addWorker(req.body);
-        res.status(201).json(worker);
+        const { Username, Password, ...workerData } = req.body;
+        let result;
+
+        if (Username && Password) {
+            result = await workerModel.addWorkerWithUser(workerData, { Username, Password });
+        } else {
+            result = await workerModel.addWorker(workerData);
+        }
+
+        await logAudit({
+            ActionType: 'Worker Created',
+            ChangedBy: req.user.UserId,
+            Details: `Created worker ${workerData.WorkerName}`
+        });
+
+        res.status(201).json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function updateWorker(req, res, next) {
+    try {
+        const result = await workerModel.updateWorker(req.params.id, req.body);
+
+        await logAudit({
+            ActionType: 'Worker Updated',
+            ChangedBy: req.user.UserId,
+            Details: `Updated worker ID ${req.params.id}`
+        });
+
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function deleteWorker(req, res, next) {
+    try {
+        await workerModel.deleteWorker(req.params.id);
+
+        await logAudit({
+            ActionType: 'Worker Deleted',
+            ChangedBy: req.user.UserId,
+            Details: `Deleted (Soft) worker ID ${req.params.id}`
+        });
+
+        res.status(204).send();
     } catch (err) {
         next(err);
     }
@@ -84,5 +87,7 @@ async function createWorker(req, res, next) {
 module.exports = {
     listWorkers,
     getWorker,
-    createWorker
+    createWorker,
+    updateWorker,
+    deleteWorker
 };

@@ -6,10 +6,8 @@ import {
   Users,
   Plus,
   Search,
-  MoreVertical,
   Edit2,
   Trash2,
-  Shield,
   ShieldAlert,
   ShieldCheck,
   User as UserIcon,
@@ -27,10 +25,15 @@ const userSchema = z.object({
   Username: z.string().min(3, 'Username must be at least 3 characters'),
   Role: z.enum(['Admin', 'Owner', 'Worker', 'Customer']),
   Password: z.string().min(6, 'Password must be at least 6 characters').optional().or(z.literal('')),
+  // Link Fields
+  LinkType: z.enum(['None', 'Worker', 'Customer']).optional(),
+  LinkId: z.string().optional() // Will be parsed to int
 });
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
+  const [workers, setWorkers] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -42,10 +45,12 @@ const UserManagement = () => {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   const token = localStorage.getItem('token');
 
-  const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm({
     resolver: zodResolver(userSchema),
-    defaultValues: { Role: 'Worker' }
+    defaultValues: { Role: 'Worker', LinkType: 'None' }
   });
+
+  const linkType = watch('LinkType');
 
   // Fetch Users
   const fetchUsers = async () => {
@@ -64,9 +69,29 @@ const UserManagement = () => {
     }
   };
 
+  const fetchProfiles = async () => {
+      try {
+          const [wRes, cRes] = await Promise.all([
+              fetch(`${apiUrl}/workers`, { headers: { Authorization: `Bearer ${token}` } }),
+              fetch(`${apiUrl}/customers?limit=1000`, { headers: { Authorization: `Bearer ${token}` } }) // Fetch all for dropdown
+          ]);
+          if (wRes.ok) setWorkers(await wRes.json());
+          if (cRes.ok) {
+              const cData = await cRes.json();
+              setCustomers(cData.data || []);
+          }
+      } catch (err) {
+          console.error("Failed to fetch profiles", err);
+      }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+      if (isEditOpen) fetchProfiles();
+  }, [isEditOpen]);
 
   // Filter Users
   const filteredUsers = users.filter(u =>
@@ -106,7 +131,20 @@ const UserManagement = () => {
     setSelectedUser(user);
     setValue('Username', user.Username);
     setValue('Role', user.Role);
-    setValue('Password', ''); // Don't fill password
+    setValue('Password', '');
+
+    // Set Link Fields
+    if (user.WorkerId) {
+        setValue('LinkType', 'Worker');
+        setValue('LinkId', String(user.WorkerId));
+    } else if (user.CustomerId) {
+        setValue('LinkType', 'Customer');
+        setValue('LinkId', String(user.CustomerId));
+    } else {
+        setValue('LinkType', 'None');
+        setValue('LinkId', '');
+    }
+
     setIsEditOpen(true);
   };
 
@@ -114,6 +152,18 @@ const UserManagement = () => {
     try {
       const payload = { Role: data.Role };
       if (data.Password) payload.Password = data.Password;
+
+      // Handle Linking
+      if (data.LinkType === 'Worker') {
+          payload.WorkerId = parseInt(data.LinkId);
+          payload.CustomerId = null;
+      } else if (data.LinkType === 'Customer') {
+          payload.CustomerId = parseInt(data.LinkId);
+          payload.WorkerId = null;
+      } else {
+          payload.WorkerId = null;
+          payload.CustomerId = null;
+      }
 
       const res = await fetch(`${apiUrl}/users/${selectedUser.UserId}`, {
         method: 'PUT',
@@ -292,6 +342,7 @@ const UserManagement = () => {
             <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded text-sm text-slate-600 dark:text-slate-400">
                 Editing Role and Password for <strong>{selectedUser?.Username}</strong>.
             </div>
+
             <div>
                 <label className="block text-sm font-medium mb-1 dark:text-slate-300">Role</label>
                 <select {...register('Role')} className="w-full p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800">
@@ -301,7 +352,40 @@ const UserManagement = () => {
                     <option value="Customer">Customer</option>
                 </select>
             </div>
+
+            {/* Profile Linking */}
+            <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
+                <h4 className="text-sm font-semibold mb-2 text-slate-900 dark:text-white">Link Profile</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs text-slate-500 mb-1">Profile Type</label>
+                        <select {...register('LinkType')} className="w-full p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm">
+                            <option value="None">None</option>
+                            <option value="Worker">Worker</option>
+                            <option value="Customer">Customer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs text-slate-500 mb-1">Select Profile</label>
+                        <select
+                            {...register('LinkId')}
+                            className="w-full p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+                            disabled={linkType === 'None'}
+                        >
+                            <option value="">-- Select --</option>
+                            {linkType === 'Worker' && workers.map(w => (
+                                <option key={w.WorkerId} value={w.WorkerId}>{w.WorkerName}</option>
+                            ))}
+                            {linkType === 'Customer' && customers.map(c => (
+                                <option key={c.CustomerId} value={c.CustomerId}>{c.CustomerName}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <Input label="New Password (Optional)" type="password" placeholder="Leave blank to keep current" {...register('Password')} />
+
             <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
                 <Button type="submit">Save Changes</Button>

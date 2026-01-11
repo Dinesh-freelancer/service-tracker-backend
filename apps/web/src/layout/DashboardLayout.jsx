@@ -14,7 +14,8 @@ import {
   Bell,
   Eye,
   EyeOff,
-  Shield
+  Shield,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
@@ -51,6 +52,7 @@ const DashboardLayout = () => {
     const adminItems = [
       { name: 'Jobs', icon: Briefcase, path: '/dashboard/jobs' },
       { name: 'Customers', icon: Users, path: '/dashboard/customers' },
+      { name: 'Workers', icon: User, path: '/dashboard/workers' },
       { name: 'Inventory', icon: ShoppingBag, path: '/dashboard/inventory' },
       { name: 'Reports', icon: FileText, path: '/dashboard/reports' },
       { name: 'Settings', icon: Settings, path: '/dashboard/settings' },

@@ -9,6 +9,7 @@ import CreateJob from './pages/jobs/CreateJob';
 import JobDetails from './pages/jobs/JobDetails';
 import DashboardLayout from './layout/DashboardLayout';
 import UserManagement from './pages/settings/UserManagement';
+import Workers from './pages/admin/Workers';
 import './App.css';
 
 // Protected Route Wrapper
@@ -39,6 +40,7 @@ function App() {
           <Route path="jobs/new" element={<CreateJob />} />
           <Route path="jobs/:jobNumber" element={<JobDetails />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="workers" element={<Workers />} />
 
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Placeholder />} />
