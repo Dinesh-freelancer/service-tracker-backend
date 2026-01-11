@@ -191,6 +191,8 @@ The "Hide Sensitive Info" toggle has been removed in favor of strict role-based 
    - **Job List:** Updated with Internal Tag and Column Visibility (Worker sees Customer, Admin sees Amount).
    - **Job Details:** Full tabbed interface (Docs, Parts, History).
    - **Inventory:** List view masks Cost Price for Admin/Worker.
+   - **User Management:** Admin/Owner page for creating system logins and linking to profiles.
+   - **Workers:** Staff Directory with seamless login creation.
 
 ### ❌ Yet to Do
 

@@ -60,11 +60,11 @@ router.get('/:workerId', workerController.getWorker);
  *             type: object
  *             required:
  *               - WorkerName
- *               - Phone
+ *               - MobileNumber
  *             properties:
  *               WorkerName:
  *                 type: string
- *               Phone:
+ *               MobileNumber:
  *                 type: string
  *               Skills:
  *                 type: string

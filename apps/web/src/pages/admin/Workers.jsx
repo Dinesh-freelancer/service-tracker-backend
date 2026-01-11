@@ -22,7 +22,7 @@ import Button from '../../components/ui/Button';
 // Validation Schemas
 const workerSchema = z.object({
   WorkerName: z.string().min(2, 'Name is required'),
-  Phone: z.string().min(10, 'Valid phone required'),
+  MobileNumber: z.string().min(10, 'Valid phone required'),
   Skills: z.string().optional(),
   Address: z.string().optional(),
   DateOfJoining: z.string().optional(),
@@ -94,7 +94,7 @@ const Workers = () => {
       // Clean payload
       const payload = {
           WorkerName: data.WorkerName,
-          Phone: data.Phone,
+          MobileNumber: data.MobileNumber,
           Skills: data.Skills,
           Address: data.Address,
           DateOfJoining: data.DateOfJoining
@@ -128,7 +128,7 @@ const Workers = () => {
   const onEditClick = (worker) => {
     setSelectedWorker(worker);
     setValue('WorkerName', worker.WorkerName);
-    setValue('Phone', worker.Phone || worker.MobileNumber);
+    setValue('MobileNumber', worker.MobileNumber || worker.Phone);
     setValue('Skills', worker.Skills);
     setValue('Address', worker.Address);
     setValue('DateOfJoining', worker.DateOfJoining ? worker.DateOfJoining.split('T')[0] : '');
@@ -140,7 +140,7 @@ const Workers = () => {
     try {
       const payload = {
           WorkerName: data.WorkerName,
-          Phone: data.Phone,
+          MobileNumber: data.MobileNumber,
           Skills: data.Skills,
           Address: data.Address,
           DateOfJoining: data.DateOfJoining
@@ -281,7 +281,7 @@ const Workers = () => {
       <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Staff Member">
         <form onSubmit={handleSubmit(onSubmitAdd)} className="space-y-4">
             <Input label="Full Name *" {...register('WorkerName')} error={errors.WorkerName?.message} />
-            <Input label="Phone Number *" {...register('Phone')} error={errors.Phone?.message} />
+            <Input label="Phone Number *" {...register('MobileNumber')} error={errors.MobileNumber?.message} />
             <Input label="Skills (e.g. Winding, Fitting)" {...register('Skills')} />
             <Input label="Address" {...register('Address')} />
             <Input label="Date of Joining" type="date" {...register('DateOfJoining')} />
@@ -311,7 +311,7 @@ const Workers = () => {
       <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Edit Staff Member">
         <form onSubmit={handleSubmit(onSubmitEdit)} className="space-y-4">
             <Input label="Full Name *" {...register('WorkerName')} error={errors.WorkerName?.message} />
-            <Input label="Phone Number *" {...register('Phone')} error={errors.Phone?.message} />
+            <Input label="Phone Number *" {...register('MobileNumber')} error={errors.MobileNumber?.message} />
             <Input label="Skills" {...register('Skills')} />
             <Input label="Address" {...register('Address')} />
             <Input label="Date of Joining" type="date" {...register('DateOfJoining')} />

@@ -70,7 +70,11 @@ The public-facing Landing Page has been implemented.
         - **Audit Log:** View history trail.
         - **Asset Details:** View linked asset specs.
 
-3. **Inventory** (Partial)
+3. **User Management & HR**
+    - **Workers Directory:** List staff, view attendance, create profiles. Support for seamless User Login creation.
+    - **User Management:** Create/Edit System Logins. Link Users to Worker/Customer Profiles.
+
+4. **Inventory** (Partial)
     - List View (Cost Price hidden for Non-Owners).
 
 ### 🟡 Pending Integration
@@ -79,8 +83,8 @@ The public-facing Landing Page has been implemented.
     - My Jobs, My Documents, Profile.
 2. **Winding Details**
     - Technical specifications for motor winding.
-3. **Workers & Attendance**
-    - Staff management and tracking.
+3. **Attendance**
+    - Detailed tracking (Calendar/Check-in).
 4. **Reports**
     - Financial and operational reports (Restricted to Owner).
 5. **Settings**
