@@ -1,6 +1,7 @@
 const request = require('supertest');
 const express = require('express');
 const jobRoutes = require('../routes/jobs');
+const { STRING_HIDDEN } = require('../utils/constants');
 
 // Mock Connection Object
 const mockConnection = {
@@ -11,6 +12,8 @@ const mockConnection = {
     query: jest.fn()
 };
 
+let mockUser = { UserId: 1, Role: 'Admin' };
+
 // Mock dependencies
 jest.mock('../db', () => ({
     query: jest.fn(),
@@ -19,7 +22,7 @@ jest.mock('../db', () => ({
 }));
 jest.mock('../middleware/authMiddleware', () => ({
     authenticateToken: (req, res, next) => {
-        req.user = { UserId: 1, Role: 'Admin' };
+        req.user = mockUser;
         next();
     },
     authorize: (...roles) => (req, res, next) => next()
@@ -38,6 +41,7 @@ app.use('/api/jobs', jobRoutes);
 describe('Jobs API', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockUser = { UserId: 1, Role: 'Admin' }; // Reset Role
         // Reset pool query default
         pool.query.mockResolvedValue([ [], [] ]);
         // Reset connection query default
@@ -91,6 +95,26 @@ describe('Jobs API', () => {
             expect(res.body.Parts).toHaveLength(1);
             expect(res.body).toHaveProperty('Documents');
             expect(res.body.Documents).toHaveLength(1);
+        });
+
+        it('should hide Customer Name for Workers', async () => {
+            mockUser.Role = 'Worker';
+
+            // 1. Job Data
+            pool.query.mockResolvedValueOnce([
+                [{ JobNumber: 'JOB123', CustomerId: 1, CustomerName: 'Secret Customer', PrimaryContact: '12345' }],
+                []
+            ]);
+            // 2. Parallel queries (History, Parts, Docs)
+            pool.query.mockResolvedValueOnce([ [], [] ]);
+            pool.query.mockResolvedValueOnce([ [], [] ]);
+            pool.query.mockResolvedValueOnce([ [], [] ]);
+
+            const res = await request(app).get('/api/jobs/JOB123');
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.CustomerName).toBe(STRING_HIDDEN);
+            expect(res.body.PrimaryContact).toBe(STRING_HIDDEN);
         });
     });
 

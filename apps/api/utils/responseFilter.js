@@ -38,7 +38,11 @@ function filterServiceRequest(job, role) {
     const filtered = {
         JobNumber: job.JobNumber,
         CustomerId: job.CustomerId,
-        CustomerName: job.CustomerName, // Visible to all Staff
+        // Worker must not see Customer Name or Details
+        CustomerName: (role === AUTH_ROLE_WORKER) ? STRING_HIDDEN : job.CustomerName,
+        PrimaryContact: (role === AUTH_ROLE_WORKER) ? STRING_HIDDEN : job.PrimaryContact,
+        OrganizationName: (role === AUTH_ROLE_WORKER) ? STRING_HIDDEN : job.OrganizationName,
+        CustomerType: job.CustomerType,
         InternalTag: job.InternalTag,
         Brand: job.Brand,
         AssetType: job.AssetType,
@@ -83,10 +87,26 @@ function filterServiceRequest(job, role) {
  * Filters a Customer object.
  */
 function filterCustomer(customer, role) {
-    const isStaff = [AUTH_ROLE_OWNER, AUTH_ROLE_ADMIN, AUTH_ROLE_WORKER].includes(role);
+    const isOwnerOrAdmin = [AUTH_ROLE_OWNER, AUTH_ROLE_ADMIN].includes(role);
 
-    if (isStaff) {
-        return customer; // Staff see full details (Phone, Address)
+    if (isOwnerOrAdmin) {
+        return customer; // Admin/Owner see full details
+    }
+
+    if (role === AUTH_ROLE_WORKER) {
+        // Workers see nothing about the customer
+        return {
+            CustomerId: customer.CustomerId,
+            CustomerName: STRING_HIDDEN,
+            CompanyName: STRING_HIDDEN,
+            Address: STRING_HIDDEN,
+            City: STRING_HIDDEN,
+            State: STRING_HIDDEN,
+            Pincode: STRING_HIDDEN,
+            PrimaryContact: STRING_HIDDEN,
+            Email: STRING_HIDDEN,
+            WhatsappNumber: STRING_HIDDEN
+        };
     }
 
     // Fallback (shouldn't happen for Customers fetching others)
