@@ -13,7 +13,8 @@ import {
   ShoppingBag,
   Bell,
   Eye,
-  EyeOff
+  EyeOff,
+  Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
@@ -65,7 +66,10 @@ const DashboardLayout = () => {
       { name: 'Documents', icon: FileText, path: '/dashboard/documents' },
     ];
 
-    if (role === 'Admin' || role === 'Owner') return [...commonItems, ...adminItems];
+    if (role === 'Owner') {
+        return [...commonItems, ...adminItems, { name: 'Users', icon: Shield, path: '/dashboard/users' }];
+    }
+    if (role === 'Admin') return [...commonItems, ...adminItems];
     if (role === 'Worker') return [...commonItems, ...workerItems];
     if (role === 'Customer') return [...commonItems, ...customerItems];
     return commonItems;

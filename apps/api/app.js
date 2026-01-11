@@ -82,6 +82,9 @@ app.use('/api/summary-reports', summaryReportRoutes);
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+const userRoutes = require('./routes/users');
+app.use('/api/users', userRoutes);
+
 const supplierRoutes = require('./routes/supplierRoutes');
 app.use('/api/suppliers', supplierRoutes);
 

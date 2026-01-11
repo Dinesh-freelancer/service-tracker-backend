@@ -9,3 +9,5 @@
   ➜  Network: use --host to expose
 4:08:59 AM [vite] hmr update /src/layout/DashboardLayout.jsx, /src/index.css, /src/App.css
 4:09:16 AM [vite] hmr update /src/pages/jobs/JobsList.jsx, /src/index.css, /src/App.css
+5:10:09 AM [vite] hmr update /src/layout/DashboardLayout.jsx, /src/index.css, /src/App.css
+5:10:28 AM [vite] hmr update /src/App.jsx, /src/index.css, /src/App.css
