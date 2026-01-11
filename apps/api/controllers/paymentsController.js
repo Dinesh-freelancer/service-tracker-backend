@@ -12,11 +12,10 @@ const { filterPayment, filterPaymentList } = require('../utils/responseFilter');
  */
 async function listPayments(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
 
         // Workers should not see payments
-        if (hideSensitive && role === AUTH_ROLE_WORKER) {
+        if (role === AUTH_ROLE_WORKER) {
             return res.json([]);
         }
 
@@ -37,7 +36,7 @@ async function listPayments(req, res, next) {
         const jobNumber = req.query.jobNumber || null;
         let payments = await paymentsModel.getAllPayments(jobNumber);
 
-        payments = filterPaymentList(payments, role, hideSensitive);
+        payments = filterPaymentList(payments, role);
 
         res.json(payments);
     } catch (err) {
@@ -53,10 +52,9 @@ async function listPayments(req, res, next) {
  */
 async function getPayment(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
 
-        if (hideSensitive && role === AUTH_ROLE_WORKER) {
+        if (role === AUTH_ROLE_WORKER) {
              await logAudit({
                 ActionType: 'Unauthorized Payment Access',
                 ChangedBy: req.user.UserId,
@@ -79,7 +77,7 @@ async function getPayment(req, res, next) {
             }
         }
 
-        payment = filterPayment(payment, role, hideSensitive);
+        payment = filterPayment(payment, role);
 
         res.json(payment);
     } catch (err) {

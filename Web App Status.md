@@ -116,20 +116,20 @@ CREATE TABLE servicerequest_history (
 
 ## Authentication \& Authorization
 
-### JWT Configuration
+### Roles \& Permissions (RBAC)
 
-- **JWT_SECRET:** Stored in environment variables
-- **Token Expiry:** 24 hours
-- **Token Structure:** `{ UserId, Role }`
+The "Hide Sensitive Info" toggle has been removed in favor of strict role-based access.
 
-### Roles \& Permissions
+| Feature Area | Owner | Admin (Manager) | Worker |
+| :--- | :--- | :--- | :--- |
+| **Operational** (Jobs, Inventory Levels) | Full Access | Full Access | View/Technical |
+| **Customer PII** (Name, Phone) | Visible | Visible | Visible |
+| **Billing** (Selling Price, Bill Amount) | Visible | Visible | Hidden |
+| **Finance** (Cost Price, Profit Reports) | **Visible** | **Hidden** | Hidden |
+| **Payments** | Full Access | Record/View | No Access |
+| **System** (Settings, User Mgmt) | Full Access | Limited | No Access |
 
-| Role | Access Level | Key Permissions |
-| :-- | :-- | :-- |
-| Admin | Full | All operations, user management, settings |
-| Owner | Full | All operations (same as Admin) |
-| Worker | Partial | View jobs, work logs, inventory (limited) |
-| Customer | Minimal | View own jobs, quotes, invoices, payments |
+**Rationale (Scenario A):** Admins operate the shop floor and collect payments (Bill Amount) but do not need to know procurement costs or business profit margins.
 
 ***
 
@@ -147,16 +147,12 @@ CREATE TABLE servicerequest_history (
 
 ### Service Request (Job) Endpoints
 
-#### `GET /api/jobs`
-- **Returns:** Jobs list with JOINed Asset details (InternalTag, PumpBrand, etc.).
+#### `GET /api/jobs/:jobNumber`
+- **Returns:** Composite Object `{ ...Job, History: [], Parts: [], Documents: [] }`
+- **Filtering:** Financial fields (`CostPrice`, `EstimatedAmount`) are masked based on Role.
 
-#### `POST /api/jobs`
-- **Hybrid Flow:**
-  - **Option A (Existing Asset):** `{ AssetId: 123, DateReceived: ... }`
-  - **Option B (New Asset):** `{ NewAsset: { PumpBrand: ..., ... }, CustomerId: ..., DateReceived: ... }`
-- **Returns:** Created Job.
-
-*(Other endpoints for Customers, Inventory, WorkLogs remain standard)*
+#### `PUT /api/jobs/:jobNumber`
+- **Status Update:** Logic enforces `ResolutionType` when Status is set to 'Completed' or 'Cancelled'.
 
 ***
 
@@ -172,17 +168,10 @@ CREATE TABLE servicerequest_history (
 
 2. **Job Details:**
    - **Asset Info Section:** Displays permanent details (Tag, Serial, Specs) from `assets` table.
-   - **Job Info Section:** Displays current issue, status, notes from `servicerequest` table.
-   - **Documents:** Split into "Job Specific" (Quote/Invoice) and "Asset History" (Manuals/Past Photos).
-
-### Role-Specific Constraints
-
-#### 👷 Worker Role
-- **Visible:** `JobNumber`, `InternalTag`, `PumpBrand`, `Status`, `WorkLogs`.
-- **Hidden:** `CustomerName`, `EstimatedAmount`.
-
-#### 👤 Customer Role
-- **Visible:** Own jobs, own assets, financial estimates.
+   - **Job Info Section:** Displays current issue, status, notes.
+   - **Parts Used:** Interactive search (Inventory) and list. **Cost Price** is hidden for non-Owners.
+   - **Status Workflow:** Update Status with Resolution Type validation.
+   - **Audit Log:** View history trail from `servicerequest_history`.
 
 ***
 
@@ -191,23 +180,21 @@ CREATE TABLE servicerequest_history (
 ### ✅ Completed
 
 1. **Database Architecture:**
-   - Reconstructed schema with `assets`, `servicerequest_history`, `organizations`.
+   - Reconstructed schema with `assets`, `servicerequest_history`.
    - Implemented triggers for Stock Management (Delete/Update) and Status Auditing.
 2. **Backend Logic:**
    - `AssetModel` & `AssetController` created.
-   - `ServiceRequest` logic refactored to use `AssetId` and support Hybrid Creation.
-   - Search logic updated to join `assets` table (search by Internal Tag).
+   - `ServiceRequest` logic refactored to use `AssetId`.
+   - **RBAC Implementation:** `responseFilter.js` strictly enforces visibility (Admin vs Owner). `hideSensitive` toggle logic removed.
 3. **Frontend Features:**
-   - **Create Job:** New wizard-style flow (Customer -> Asset -> Job).
-   - **Job List:** Updated with Internal Tag column and advanced search.
-   - **Job Details:** Comprehensive view with Asset details and split Document tabs.
-
-### 🟡 Partially Completed
-
-1. **Testing:** Unit tests need updates to match new schema.
+   - **Dashboard:** Role-based Sidebar.
+   - **Job List:** Updated with Internal Tag and Column Visibility (Worker sees Customer, Admin sees Amount).
+   - **Job Details:** Full tabbed interface (Docs, Parts, History).
+   - **Inventory:** List view masks Cost Price for Admin/Worker.
 
 ### ❌ Yet to Do
 
-1. **End-to-End Testing:** Full flow verification on production DB.
+1. **Reports Module:** Full implementation of Financial Reports (Owner only).
+2. **Customer Portal:** Self-service views.
 
 ***

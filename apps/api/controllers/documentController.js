@@ -21,11 +21,10 @@ async function createDocument(req, res, next) {
 
 async function getDocumentsByJob(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let docs = await documentModel.getDocumentsByJob(req.params.jobNumber);
 
-        docs = filterDocumentList(docs, role, hideSensitive);
+        docs = filterDocumentList(docs, role);
 
         res.json(docs);
     } catch (err) {
@@ -35,7 +34,6 @@ async function getDocumentsByJob(req, res, next) {
 
 async function getDocumentsByCustomer(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let docs = await documentModel.getDocumentsByCustomer(req.params.customerId);
 
@@ -43,7 +41,7 @@ async function getDocumentsByCustomer(req, res, next) {
         // (though usually this endpoint is for Admins or the Customer themselves).
         // If it's the customer, filterDocumentList (via filterDocument) generally passes it through
         // unless specific logic for Customers is added.
-        docs = filterDocumentList(docs, role, hideSensitive);
+        docs = filterDocumentList(docs, role);
 
         res.json(docs);
     } catch (err) {

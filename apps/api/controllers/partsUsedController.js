@@ -7,11 +7,10 @@ const InventoryModel = require('../models/inventoryModel');
 async function listPartsUsed(req, res, next) {
     try {
         const jobNumber = req.query.jobNumber || null;
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let parts = await partsUsedModel.getAllPartsUsed(jobNumber);
 
-        parts = filterPartsUsedList(parts, role, hideSensitive);
+        parts = filterPartsUsedList(parts, role);
 
         res.json(parts);
     } catch (err) {
@@ -22,12 +21,11 @@ async function listPartsUsed(req, res, next) {
 // Get part used by id
 async function getPartUsed(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let partUsed = await partsUsedModel.getPartUsedById(req.params.partUsedId);
         if (!partUsed) return res.status(404).json({ error: 'Parts entry not found' });
 
-        partUsed = filterPartsUsed(partUsed, role, hideSensitive);
+        partUsed = filterPartsUsed(partUsed, role);
 
         res.json(partUsed);
     } catch (err) {

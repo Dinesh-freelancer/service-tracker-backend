@@ -8,7 +8,7 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
-const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+const OWNER_ONLY = [constants.AUTH_ROLE_OWNER];
 
 /**
  * @swagger
@@ -32,7 +32,7 @@ const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
  *         description: List of job financials
  */
 router.get('/all-jobs',
-    authorize(...ADMIN_OWNER),
+    authorize(...OWNER_ONLY),
     financialReportController.summaryAllJobs);
 
 /**
@@ -55,7 +55,7 @@ router.get('/all-jobs',
  *         description: Customer financial details
  */
 router.get('/customer/:customerId',
-    authorize(...ADMIN_OWNER),
+    authorize(...OWNER_ONLY),
     financialReportController.summaryByCustomer);
 
 /**
@@ -73,7 +73,7 @@ router.get('/customer/:customerId',
  *         description: Financial totals
  */
 router.get('/totals',
-    authorize(...ADMIN_OWNER),
+    authorize(...OWNER_ONLY),
     financialReportController.financialTotals);
 
 module.exports = router;

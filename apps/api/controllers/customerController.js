@@ -12,7 +12,6 @@ const { buildSearchFilters } = require('../utils/queryHelper');
  */
 async function listCustomers(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
@@ -38,7 +37,7 @@ async function listCustomers(req, res, next) {
             totalCount = result.totalCount;
         }
 
-        const filteredCustomers = filterCustomerList(rows, role, hideSensitive);
+        const filteredCustomers = filterCustomerList(rows, role);
         const response = getPaginationData(filteredCustomers, page, limit, totalCount);
 
         res.json(response);
@@ -50,7 +49,6 @@ async function listCustomers(req, res, next) {
 // Get customer by ID
 async function getCustomer(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let customer = await customerModel.getCustomerById(req.params.id);
 
@@ -64,7 +62,7 @@ async function getCustomer(req, res, next) {
             }
         }
 
-        customer = filterCustomer(customer, role, hideSensitive);
+        customer = filterCustomer(customer, role);
 
         res.json(customer);
     } catch (err) {

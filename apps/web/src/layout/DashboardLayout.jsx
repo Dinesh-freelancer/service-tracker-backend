@@ -18,7 +18,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
 import toast, { Toaster } from 'react-hot-toast';
-import { useSensitiveInfo } from '../context/SensitiveInfoContext';
 
 /**
  * Dashboard Layout Component
@@ -33,7 +32,6 @@ const DashboardLayout = () => {
   const role = localStorage.getItem('role') || 'Worker'; // Default to Worker if not found
   const username = localStorage.getItem('rememberedUsername') || 'User';
 
-  const { hideSensitive, toggleSensitive } = useSensitiveInfo();
   const isAdminOrOwner = role === 'Admin' || role === 'Owner';
 
   const handleLogout = () => {
@@ -202,15 +200,6 @@ const DashboardLayout = () => {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-                {isAdminOrOwner && (
-                    <button
-                      onClick={toggleSensitive}
-                      className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full relative"
-                      title={hideSensitive ? "Show Sensitive Info" : "Hide Sensitive Info"}
-                    >
-                      {hideSensitive ? <Eye size={20} /> : <EyeOff size={20} />}
-                    </button>
-                )}
                 <button
                     onClick={() => toast('No new notifications', { icon: '🔔' })}
                     className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full relative"

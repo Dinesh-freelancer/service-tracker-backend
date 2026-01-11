@@ -11,7 +11,6 @@ import {
   Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useSensitiveInfo } from '../../context/SensitiveInfoContext';
 
 /**
  * Jobs List Component
@@ -31,9 +30,6 @@ const JobsList = () => {
     totalItems: 0
   });
 
-  // Global Sensitive Info Toggle Context
-  const { hideSensitive } = useSensitiveInfo();
-
   // State from URL or defaults
   const page = parseInt(searchParams.get('page') || '1');
   const statusFilter = searchParams.get('status') || '';
@@ -52,8 +48,7 @@ const JobsList = () => {
         page,
         limit: 10,
         ...(statusFilter && { status: statusFilter }),
-        ...(searchQuery && { search: searchQuery }),
-        hideSensitive: hideSensitive // Use state from context
+        ...(searchQuery && { search: searchQuery })
       });
 
       const response = await fetch(`${apiUrl}/jobs?${query}`, {
@@ -79,7 +74,7 @@ const JobsList = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [page, statusFilter, searchQuery, hideSensitive]); // Add hideSensitive to dependencies
+  }, [page, statusFilter, searchQuery]);
 
   // Handlers
   const handleSearch = (e) => {
@@ -170,7 +165,7 @@ const JobsList = () => {
                     <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">
                         <th className="p-4 font-semibold">Job #</th>
                         <th className="p-4 font-semibold">Internal Tag</th>
-                        {isAdminOrOwner && <th className="p-4 font-semibold">Customer</th>}
+                        <th className="p-4 font-semibold">Customer</th>
                         <th className="p-4 font-semibold">Device</th>
                         <th className="p-4 font-semibold">Date Received</th>
                         <th className="p-4 font-semibold text-center">Status</th>
@@ -203,16 +198,14 @@ const JobsList = () => {
                                 <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">
                                     {job.InternalTag || '-'}
                                 </td>
-                                {isAdminOrOwner && (
-                                    <td className="p-4 text-slate-600 dark:text-slate-300">
-                                        <div className="font-medium">
-                                            {job.CustomerType === 'OrganizationMember' && job.OrganizationName
-                                                ? `${job.OrganizationName} - ${job.CustomerName}`
-                                                : job.CustomerName}
-                                        </div>
-                                        <div className="text-xs text-slate-400">{job.PrimaryContact || 'No Contact'}</div>
-                                    </td>
-                                )}
+                                <td className="p-4 text-slate-600 dark:text-slate-300">
+                                    <div className="font-medium">
+                                        {job.CustomerType === 'OrganizationMember' && job.OrganizationName
+                                            ? `${job.OrganizationName} - ${job.CustomerName}`
+                                            : job.CustomerName}
+                                    </div>
+                                    <div className="text-xs text-slate-400">{job.PrimaryContact || 'No Contact'}</div>
+                                </td>
                                 <td className="p-4 text-slate-600 dark:text-slate-300">
                                     <div>{job.Brand}</div>
                                     <div className="text-xs text-slate-400">{job.PumpModel} / {job.MotorModel} - {job.HP}HP</div>

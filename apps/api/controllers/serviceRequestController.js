@@ -19,7 +19,6 @@ const pool = require('../db');
  */
 async function listServiceRequests(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
@@ -59,7 +58,7 @@ async function listServiceRequests(req, res, next) {
             totalCount = result.totalCount;
         }
 
-        const filteredRows = filterServiceRequestList(rows, role, hideSensitive);
+        const filteredRows = filterServiceRequestList(rows, role);
         const response = getPaginationData(filteredRows, page, limit, totalCount);
 
         res.json(response);
@@ -71,7 +70,6 @@ async function listServiceRequests(req, res, next) {
 // Get by job number
 async function getServiceRequest(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         const jobNumber = req.params.jobNumber;
 
@@ -97,7 +95,7 @@ async function getServiceRequest(req, res, next) {
         serviceRequest.Parts = parts || [];
         serviceRequest.Documents = documents || [];
 
-        serviceRequest = filterServiceRequest(serviceRequest, role, hideSensitive);
+        serviceRequest = filterServiceRequest(serviceRequest, role);
 
         res.json(serviceRequest);
     } catch (err) {
