@@ -1,5 +1,7 @@
 const serviceRequestModel = require('../models/serviceRequestModel');
 const assetModel = require('../models/assetModel');
+const partsUsedModel = require('../models/partsUsedModel');
+const documentModel = require('../models/documentModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterServiceRequest, filterServiceRequestList } = require('../utils/responseFilter');
 const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
@@ -71,10 +73,9 @@ async function getServiceRequest(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
-        let serviceRequest =
-            await serviceRequestModel.getServiceRequestByJobNumber(
-                req.params.jobNumber
-            );
+        const jobNumber = req.params.jobNumber;
+
+        let serviceRequest = await serviceRequestModel.getServiceRequestByJobNumber(jobNumber);
         if (!serviceRequest)
             return res.status(404).json({ error: 'Service request not found' });
 
@@ -84,6 +85,17 @@ async function getServiceRequest(req, res, next) {
                 return res.status(403).json({ error: 'Access denied' });
             }
         }
+
+        // Fetch related data in parallel
+        const [history, parts, documents] = await Promise.all([
+            serviceRequestModel.getHistoryByJobNumber(jobNumber),
+            partsUsedModel.getAllPartsUsed(jobNumber),
+            documentModel.getDocumentsByJob(jobNumber)
+        ]);
+
+        serviceRequest.History = history || [];
+        serviceRequest.Parts = parts || [];
+        serviceRequest.Documents = documents || [];
 
         serviceRequest = filterServiceRequest(serviceRequest, role, hideSensitive);
 
@@ -171,6 +183,16 @@ async function updateServiceRequest(req, res, next) {
         const existingJob = await serviceRequestModel.getServiceRequestByJobNumber(jobNumber);
         if (!existingJob) {
             return res.status(404).json({ message: 'Job not found' });
+        }
+
+        // Validate ResolutionType for terminal statuses
+        const terminalStatuses = ['Completed', 'Cancelled', 'Rejected', 'Fulfilled'];
+        if (updates.Status && terminalStatuses.includes(updates.Status)) {
+            // If ResolutionType is not provided in update, and not present in existing, and not 'Fulfilled' (maybe ok without?)
+            // Actually, we should check if 'ResolutionType' is in updates.
+            if (!updates.ResolutionType && !existingJob.ResolutionType) {
+                 return res.status(400).json({ error: `ResolutionType is required when status is ${updates.Status}` });
+            }
         }
 
         const result = await serviceRequestModel.updateServiceRequest(jobNumber, updates);

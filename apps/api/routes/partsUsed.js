@@ -9,6 +9,7 @@ router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
 const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+const WORKER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
 
 /**
  * @swagger
@@ -37,7 +38,7 @@ const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
  *         description: List of parts used
  */
 router.get('/',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     partsUsedController.listPartsUsed);
 
 /**
@@ -62,7 +63,7 @@ router.get('/',
  *         description: Not found
  */
 router.get('/:partUsedId',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     partsUsedController.getPartUsed);
 
 /**
@@ -103,7 +104,7 @@ router.get('/:partUsedId',
  *         description: Recorded successfully
  */
 router.post('/',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     partsUsedController.createPartUsed);
 
 module.exports = router;

@@ -6,12 +6,17 @@ import toast from 'react-hot-toast';
 
 const CreateJob = () => {
     const navigate = useNavigate();
-    const { register, handleSubmit, watch, control, setValue, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, control, setValue, getValues, formState: { errors } } = useForm({
         defaultValues: {
             DateReceived: new Date().toISOString().split('T')[0],
-            Notes: ''
-        },
-        shouldUnregister: false // Keep values when step changes (inputs unmount)
+            Notes: '',
+            Brand: '',
+            PumpModel: '',
+            MotorModel: '',
+            SerialNumber: '',
+            HP: '',
+            AssetType: 'Pumpset'
+        }
     });
 
     // Steps: 1. Select Customer, 2. Select/Create Asset, 3. Job Details
@@ -96,7 +101,11 @@ const CreateJob = () => {
         }
     };
 
-    const onSubmit = async (data) => {
+    const onSubmit = async () => {
+        // Use getValues() to ensure we capture all form state regardless of unmounting behavior
+        // The handleSubmit wrapper has already validated the fields.
+        const data = getValues();
+
         try {
             const token = localStorage.getItem('token');
 
@@ -110,9 +119,9 @@ const CreateJob = () => {
             if (isNewAsset) {
                 payload.NewAsset = {
                     InternalTag: data.InternalTag, // Optional, auto-generated if empty
-                    PumpBrand: data.PumpBrand,
+                    Brand: data.Brand,
+                    AssetType: data.AssetType || 'Pumpset',
                     PumpModel: data.PumpModel,
-                    MotorBrand: data.MotorBrand,
                     MotorModel: data.MotorModel,
                     SerialNumber: data.SerialNumber,
                     HP: data.HP,
@@ -182,7 +191,7 @@ const CreateJob = () => {
                 <div className="col-span-1 md:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
 
                     {/* Step 1: Customer Selection */}
-                    {step === 1 && (
+                    <div className={step === 1 ? 'space-y-4' : 'hidden'}>
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Find Customer</h3>
                             <div className="relative">
@@ -214,10 +223,10 @@ const CreateJob = () => {
                                 )}
                             </div>
                         </div>
-                    )}
+                    </div>
 
                     {/* Step 2: Asset Selection */}
-                    {step === 2 && (
+                    <div className={step === 2 ? 'space-y-6' : 'hidden'}>
                         <div className="space-y-6">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Select Equipment (Asset)</h3>
 
@@ -240,8 +249,7 @@ const CreateJob = () => {
                                     </select>
 
                                     {/* New Asset Form */}
-                                    {isNewAsset && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-2">
+                                    <div className={isNewAsset ? "grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-2" : "hidden"}>
                                             <div className="md:col-span-2">
                                                 <h4 className="font-medium text-blue-600 mb-2">New Asset Details</h4>
                                             </div>
@@ -256,8 +264,7 @@ const CreateJob = () => {
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Brand *</label>
-                                                <input {...register('Brand', { required: isNewAsset })} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="Manufacturer (e.g. Kirloskar)" />
-                                                {errors.Brand && <span className="text-red-500 text-xs">Required</span>}
+                                                <input {...register('Brand')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="Manufacturer (e.g. Kirloskar)" />
                                             </div>
 
                                             <div>
@@ -276,8 +283,7 @@ const CreateJob = () => {
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">HP / Power</label>
                                                 <input {...register('HP')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
                                             </div>
-                                        </div>
-                                    )}
+                                    </div>
 
                                     <div className="flex justify-end pt-4">
                                         <button
@@ -291,10 +297,10 @@ const CreateJob = () => {
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
 
                     {/* Step 3: Job Details */}
-                    {step === 3 && (
+                    <div className={step === 3 ? 'block' : 'hidden'}>
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Job Details</h3>
 
@@ -334,7 +340,7 @@ const CreateJob = () => {
                                 </button>
                             </div>
                         </form>
-                    )}
+                    </div>
 
                 </div>
             </div>

@@ -108,10 +108,19 @@ async function generateJobNumber(connection = null) {
     return `${dateStr}${String(nextNum).padStart(3, '0')}`;
 }
 
+async function getHistoryByJobNumber(jobNumber) {
+    const [rows] = await pool.query(
+        `SELECT * FROM servicerequest_history WHERE JobNumber = ? ORDER BY ChangedAt DESC`,
+        [jobNumber]
+    );
+    return rows;
+}
+
 module.exports = {
     getAllServiceRequests,
     getServiceRequestByJobNumber,
     addServiceRequest,
     updateServiceRequest,
-    generateJobNumber
+    generateJobNumber,
+    getHistoryByJobNumber
 };

@@ -65,6 +65,35 @@ describe('Jobs API', () => {
         });
     });
 
+    describe('GET /api/jobs/:jobNumber', () => {
+        it('should return job details with history, parts, and documents', async () => {
+            // 1. serviceRequestModel.getServiceRequestByJobNumber
+            pool.query.mockResolvedValueOnce([
+                [{ JobNumber: 'JOB123', CustomerId: 1, Brand: 'P1' }],
+                []
+            ]);
+
+            // 2. Promise.all parallel queries:
+            // history
+            pool.query.mockResolvedValueOnce([ [{ HistoryId: 1, StatusTo: 'Intake' }], [] ]);
+            // parts
+            pool.query.mockResolvedValueOnce([ [{ PartName: 'Bearing' }], [] ]);
+            // documents
+            pool.query.mockResolvedValueOnce([ [{ DocumentType: 'Photo' }], [] ]);
+
+            const res = await request(app).get('/api/jobs/JOB123');
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveProperty('JobNumber', 'JOB123');
+            expect(res.body).toHaveProperty('History');
+            expect(res.body.History).toHaveLength(1);
+            expect(res.body).toHaveProperty('Parts');
+            expect(res.body.Parts).toHaveLength(1);
+            expect(res.body).toHaveProperty('Documents');
+            expect(res.body.Documents).toHaveLength(1);
+        });
+    });
+
     describe('POST /api/jobs', () => {
         it('should create a job with an Existing AssetId', async () => {
             // Transaction Sequence on CONNECTION

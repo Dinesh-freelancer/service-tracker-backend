@@ -9,6 +9,7 @@ router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
 const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+const WORKER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
 
 /**
  * @swagger
@@ -45,7 +46,7 @@ const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
  *         description: List of inventory items
  */
 router.get('/',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     inventoryController.listInventory);
 
 /**
@@ -70,7 +71,7 @@ router.get('/',
  *         description: Item not found
  */
 router.get('/:partId',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     inventoryController.getInventoryItem);
 
 /**

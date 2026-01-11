@@ -9,6 +9,7 @@ router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
 const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+const WORKER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
 
 /**
  * @swagger
@@ -48,7 +49,7 @@ const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
  *         description: Created
  */
 router.post('/',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     documentController.createDocument);
 
 /**
@@ -93,7 +94,7 @@ router.delete('/:id',
  *         description: List of documents
  */
 router.get('/job/:jobNumber',
-    authorize(...ADMIN_OWNER),
+    authorize(...WORKER_ALLOWED),
     documentController.getDocumentsByJob);
 
 /**

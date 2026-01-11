@@ -3,29 +3,7 @@
 > vite
 
 
-  VITE v5.4.21  ready in 1097 ms
+  VITE v5.4.21  ready in 829 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
-4:46:18 PM [vite] Internal server error: Failed to resolve import "./context/SensitiveInfoContext" from "src/App.jsx". Does the file exist?
-  Plugin: vite:import-analysis
-  File: /app/apps/web/src/App.jsx:9:38
-  23 |  import JobsList from "./pages/jobs/JobsList";
-  24 |  import DashboardLayout from "./layout/DashboardLayout";
-  25 |  import { SensitiveInfoProvider } from "./context/SensitiveInfoContext";
-     |                                         ^
-  26 |  import "./App.css";
-  27 |  const ProtectedRoute = ({ children }) => {
-      at TransformPluginContext._formatError (file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
-      at TransformPluginContext.error (file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
-      at normalizeUrl (file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
-      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-      at async file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
-      at async Promise.all (index 11)
-      at async TransformPluginContext.transform (file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
-      at async PluginContainer.transform (file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
-      at async loadAndTransform (file:///app/apps/web/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
-4:46:18 PM [vite] Pre-transform error: Failed to resolve import "./context/SensitiveInfoContext" from "src/App.jsx". Does the file exist?
-4:46:19 PM [vite] Pre-transform error: Failed to resolve import "../../context/SensitiveInfoContext" from "src/pages/jobs/JobsList.jsx". Does the file exist?
-4:46:19 PM [vite] Pre-transform error: Failed to resolve import "../context/SensitiveInfoContext" from "src/layout/DashboardLayout.jsx". Does the file exist?
-4:47:07 PM [vite] page reload src/context/SensitiveInfoContext.jsx
