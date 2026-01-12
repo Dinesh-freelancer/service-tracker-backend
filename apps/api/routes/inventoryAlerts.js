@@ -8,6 +8,8 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -30,7 +32,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of items below threshold
  */
 router.get('/low-stock',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     inventoryAlertController.lowStockAlerts);
 
 /**
@@ -48,7 +50,7 @@ router.get('/low-stock',
  *         description: List of items with 0 stock
  */
 router.get('/out-of-stock',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     inventoryAlertController.outOfStockAlerts);
 
 module.exports = router;

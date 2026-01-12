@@ -75,7 +75,7 @@ async function addCustomer(customerData) {
         Address,
         City,
         State,
-        ZipCode,
+        Pincode,
         PrimaryContact, // Renamed from Phone1/Whatsapp
         Email,
         Notes,
@@ -91,9 +91,9 @@ async function addCustomer(customerData) {
 
         const [result] = await connection.query(
             `INSERT INTO customerdetails
-            (CustomerName, Address, City, State, ZipCode, PrimaryContact, Email, Notes, OrganizationId, CustomerType, Designation)
+            (CustomerName, Address, City, State, Pincode, PrimaryContact, Email, Notes, OrganizationId, CustomerType, Designation)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [CustomerName, Address, City, State, ZipCode, PrimaryContact, Email, Notes, OrganizationId || null, CustomerType || 'Individual', Designation]
+            [CustomerName, Address, City, State, Pincode, PrimaryContact, Email, Notes, OrganizationId || null, CustomerType || 'Individual', Designation]
         );
 
         const newCustomerId = result.insertId;

@@ -4,6 +4,9 @@
   "workspaces": [
     "apps/*"
   ],
+  "scripts": {
+    "build": "npm install && npm run build --prefix apps/web"
+  },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "autoprefixer": "^10.4.23",

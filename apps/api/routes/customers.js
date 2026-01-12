@@ -9,6 +9,8 @@ const { validateRequest, createCustomerValidators } = require('../middleware/val
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -46,7 +48,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of customers
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     customerController.listCustomers);
 
 /**
@@ -71,7 +73,7 @@ router.get('/',
  *         description: Customer not found
  */
 router.get('/:id',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     customerController.getCustomer);
 
 /**
@@ -102,7 +104,7 @@ router.get('/:id',
  *         description: Customer created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     createCustomerValidators,
     validateRequest,
     customerController.createCustomer);

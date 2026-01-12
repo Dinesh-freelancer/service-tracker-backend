@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Search,
   Filter,
@@ -7,10 +7,10 @@ import {
   ChevronRight,
   Eye,
   MoreVertical,
-  Loader2
+  Loader2,
+  Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useSensitiveInfo } from '../../context/SensitiveInfoContext';
 
 /**
  * Jobs List Component
@@ -20,6 +20,7 @@ import { useSensitiveInfo } from '../../context/SensitiveInfoContext';
  */
 const JobsList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -28,9 +29,6 @@ const JobsList = () => {
     totalPages: 1,
     totalItems: 0
   });
-
-  // Global Sensitive Info Toggle Context
-  const { hideSensitive } = useSensitiveInfo();
 
   // State from URL or defaults
   const page = parseInt(searchParams.get('page') || '1');
@@ -43,15 +41,14 @@ const JobsList = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('token');
 
       const query = new URLSearchParams({
         page,
         limit: 10,
         ...(statusFilter && { status: statusFilter }),
-        ...(searchQuery && { search: searchQuery }),
-        hideSensitive: hideSensitive // Use state from context
+        ...(searchQuery && { search: searchQuery })
       });
 
       const response = await fetch(`${apiUrl}/jobs?${query}`, {
@@ -77,7 +74,7 @@ const JobsList = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [page, statusFilter, searchQuery, hideSensitive]); // Add hideSensitive to dependencies
+  }, [page, statusFilter, searchQuery]);
 
   // Handlers
   const handleSearch = (e) => {
@@ -114,7 +111,16 @@ const JobsList = () => {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Service Requests</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Manage and track all repair jobs.</p>
         </div>
-        {/* Placeholder for "Create Job" button if we add it later */}
+
+        {isAdminOrOwner && (
+            <button
+                onClick={() => navigate('/dashboard/jobs/new')}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm shadow-blue-500/20"
+            >
+                <Plus size={18} />
+                Create Job
+            </button>
+        )}
       </div>
 
       {/* Filters & Search */}
@@ -158,7 +164,8 @@ const JobsList = () => {
                 <thead>
                     <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">
                         <th className="p-4 font-semibold">Job #</th>
-                        {isAdminOrOwner && <th className="p-4 font-semibold">Customer</th>}
+                        <th className="p-4 font-semibold">Internal Tag</th>
+                        <th className="p-4 font-semibold">Customer</th>
                         <th className="p-4 font-semibold">Device</th>
                         <th className="p-4 font-semibold">Date Received</th>
                         <th className="p-4 font-semibold text-center">Status</th>
@@ -188,19 +195,20 @@ const JobsList = () => {
                                 <td className="p-4 font-medium text-slate-900 dark:text-white">
                                     {job.JobNumber}
                                 </td>
-                                {isAdminOrOwner && (
-                                    <td className="p-4 text-slate-600 dark:text-slate-300">
-                                        <div className="font-medium">
-                                            {job.CustomerType === 'OrganizationMember' && job.OrganizationName
-                                                ? `${job.OrganizationName} - ${job.CustomerName}`
-                                                : job.CustomerName}
-                                        </div>
-                                        <div className="text-xs text-slate-400">{job.PrimaryContact || 'No Contact'}</div>
-                                    </td>
-                                )}
+                                <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">
+                                    {job.InternalTag || '-'}
+                                </td>
                                 <td className="p-4 text-slate-600 dark:text-slate-300">
-                                    <div>{job.PumpBrand || job.MotorBrand}</div>
-                                    <div className="text-xs text-slate-400">{job.PumpModel || job.MotorModel} - {job.HP}HP</div>
+                                    <div className="font-medium">
+                                        {job.CustomerType === 'OrganizationMember' && job.OrganizationName
+                                            ? `${job.OrganizationName} - ${job.CustomerName}`
+                                            : job.CustomerName}
+                                    </div>
+                                    <div className="text-xs text-slate-400">{job.PrimaryContact || 'No Contact'}</div>
+                                </td>
+                                <td className="p-4 text-slate-600 dark:text-slate-300">
+                                    <div>{job.Brand}</div>
+                                    <div className="text-xs text-slate-400">{job.PumpModel} / {job.MotorModel} - {job.HP}HP</div>
                                 </td>
                                 <td className="p-4 text-slate-500 dark:text-slate-400">
                                     {new Date(job.DateReceived).toLocaleDateString()}
@@ -216,7 +224,9 @@ const JobsList = () => {
                                     </td>
                                 )}
                                 <td className="p-4 text-center">
-                                    <button className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details">
+                                    <button
+                                        onClick={() => navigate(`/dashboard/jobs/${job.JobNumber}`)}
+                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details">
                                         <Eye size={18} />
                                     </button>
                                 </td>

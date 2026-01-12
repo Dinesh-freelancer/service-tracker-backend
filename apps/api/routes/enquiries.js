@@ -4,8 +4,12 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const constants = require('../utils/constants');
 const enquiryController = require('../controllers/enquiryController');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
+
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -37,7 +41,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of enquiries
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     enquiryController.listEnquiries);
 
 /**
@@ -62,7 +66,7 @@ router.get('/',
  *         description: Not found
  */
 router.get('/:enquiryId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     enquiryController.getEnquiry);
 
 /**
@@ -109,7 +113,7 @@ router.get('/:enquiryId',
  *         description: Created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     enquiryController.createEnquiry);
 
 module.exports = router;

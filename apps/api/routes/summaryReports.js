@@ -8,6 +8,8 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -36,7 +38,7 @@ router.use(sensitiveInfoToggle);
  *         description: Daily stats
  */
 router.get('/daily',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     summaryReportController.dailySummary);
 
 /**
@@ -66,7 +68,7 @@ router.get('/daily',
  *         description: Weekly stats
  */
 router.get('/weekly',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     summaryReportController.weeklySummary);
 
 /**
@@ -90,7 +92,7 @@ router.get('/weekly',
  *         description: Monthly stats
  */
 router.get('/monthly',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     summaryReportController.monthlySummary);
 
 module.exports = router;

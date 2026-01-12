@@ -3,9 +3,12 @@ const router = express.Router();
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
 const constants = require('../utils/constants');
 const workerController = require('../controllers/workerController');
-const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+
 router.use(authenticateToken);
-router.use(sensitiveInfoToggle);
+
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+router.use(authorize(...ADMIN_OWNER));
+
 /**
  * @swagger
  * tags:
@@ -19,17 +22,11 @@ router.use(sensitiveInfoToggle);
  *   get:
  *     summary: List workers
  *     tags: [Workers]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
  *         description: List of workers
  */
-router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
-    workerController.listWorkers);
+router.get('/', workerController.listWorkers);
 
 /**
  * @swagger
@@ -37,24 +34,17 @@ router.get('/',
  *   get:
  *     summary: Get worker by ID
  *     tags: [Workers]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: workerId
  *         required: true
  *         schema:
  *           type: integer
- *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
  *         description: Worker details
- *       404:
- *         description: Not found
  */
-router.get('/:workerId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
-    workerController.getWorker);
+router.get('/:workerId', workerController.getWorker);
 
 /**
  * @swagger
@@ -62,8 +52,6 @@ router.get('/:workerId',
  *   post:
  *     summary: Create new worker
  *     tags: [Workers]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -78,20 +66,48 @@ router.get('/:workerId',
  *                 type: string
  *               MobileNumber:
  *                 type: string
- *               AlternateNumber:
- *                 type: string
- *               WhatsappNumber:
- *                 type: string
- *               Address:
- *                 type: string
  *               Skills:
+ *                 type: string
+ *               Username:
+ *                 type: string
+ *               Password:
  *                 type: string
  *     responses:
  *       201:
  *         description: Created
  */
-router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
-    workerController.createWorker);
+router.post('/', workerController.createWorker);
+
+/**
+ * @swagger
+ * /workers/{id}:
+ *   put:
+ *     summary: Update worker
+ *     tags: [Workers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Updated
+ */
+router.put('/:id', workerController.updateWorker);
+
+/**
+ * @swagger
+ * /workers/{id}:
+ *   delete:
+ *     summary: Delete worker (Soft)
+ *     tags: [Workers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       204:
+ *         description: Deleted
+ */
+router.delete('/:id', workerController.deleteWorker);
 
 module.exports = router;

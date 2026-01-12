@@ -8,6 +8,8 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -30,7 +32,7 @@ router.use(sensitiveInfoToggle);
  *         description: Work log stats
  */
 router.get('/work-log-summary',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     technicianReportController.workLogSummary);
 
 /**
@@ -48,7 +50,7 @@ router.get('/work-log-summary',
  *         description: Attendance stats
  */
 router.get('/attendance-summary',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     technicianReportController.attendanceSummary);
 
 /**
@@ -66,7 +68,7 @@ router.get('/attendance-summary',
  *         description: Completion rates
  */
 router.get('/job-completion-rate',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     technicianReportController.jobCompletionRate);
 
 module.exports = router;

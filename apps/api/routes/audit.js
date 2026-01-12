@@ -4,8 +4,12 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 const constants = require('../utils/constants');
 const auditController = require('../controllers/auditController');
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
+
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
 /**
  * @swagger
  * tags:
@@ -32,7 +36,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of audit logs
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     auditController.listAudits);
 
 /**
@@ -66,7 +70,7 @@ router.get('/',
  *         description: Created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     auditController.createAudit);
 
 module.exports = router;

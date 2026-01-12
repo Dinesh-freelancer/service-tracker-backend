@@ -45,11 +45,17 @@ const createCustomerValidators = [
  */
 const createServiceRequestValidators = [
     body('CustomerId').notEmpty().isInt().withMessage('Valid Customer ID is required'),
-    body('PumpBrand').optional().isString(),
-    body('PumpModel').optional().isString(),
-    body('MotorBrand').optional().isString(),
-    body('MotorModel').optional().isString(),
+    // Optional because we might pass AssetId OR NewAsset object
+    body('AssetId').optional().isInt(),
+    // Validate NewAsset object if present? Handled in controller logic or custom validator here.
     body('DateReceived').notEmpty().isISO8601().toDate().withMessage('Valid Date Received is required')
+];
+
+const validateAsset = [
+    body('CustomerId').notEmpty().isInt().withMessage('Customer ID is required'),
+    body('Brand').notEmpty().withMessage('Brand is required'),
+    body('AssetType').optional().isIn(['Pumpset', 'Motor Only', 'Pump Only']).withMessage('Invalid Asset Type'),
+    validateRequest // Auto-execute validation check
 ];
 
 module.exports = {
@@ -57,5 +63,6 @@ module.exports = {
     registerValidators,
     loginValidators,
     createCustomerValidators,
-    createServiceRequestValidators
+    createServiceRequestValidators,
+    validateAsset
 };

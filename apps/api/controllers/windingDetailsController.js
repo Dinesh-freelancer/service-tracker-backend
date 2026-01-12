@@ -30,13 +30,12 @@ async function createWindingDetail(req, res, next) {
  */
 async function getAllWindingDetails(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let rows = await windingModel.getAllWindingDetails();
 
         // Map over rows and filter each, passing the JobStatus we now fetch
         const filtered = rows.map(item => {
-            return filterWindingDetails(item, role, hideSensitive, item.JobStatus);
+            return filterWindingDetails(item, role, item.JobStatus);
         });
 
         res.json(filtered);
@@ -53,12 +52,11 @@ async function getAllWindingDetails(req, res, next) {
  */
 async function getByJobNumber(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let records = await windingModel.getWindingDetailsByJobNumber(req.params.jobNumber);
 
         const filtered = records.map(item => {
-             return filterWindingDetails(item, role, hideSensitive, item.JobStatus);
+             return filterWindingDetails(item, role, item.JobStatus);
         });
 
         res.json(filtered);

@@ -8,6 +8,9 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+const WORKER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
+
 /**
  * @swagger
  * tags:
@@ -43,7 +46,7 @@ router.use(sensitiveInfoToggle);
  *         description: List of inventory items
  */
 router.get('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...WORKER_ALLOWED),
     inventoryController.listInventory);
 
 /**
@@ -68,7 +71,7 @@ router.get('/',
  *         description: Item not found
  */
 router.get('/:partId',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...WORKER_ALLOWED),
     inventoryController.getInventoryItem);
 
 /**
@@ -109,7 +112,7 @@ router.get('/:partId',
  *         description: Item created
  */
 router.post('/',
-    authorize(constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER),
+    authorize(...ADMIN_OWNER),
     inventoryController.createInventoryItem);
 
 module.exports = router;

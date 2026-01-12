@@ -5,8 +5,11 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Placeholder from './pages/Placeholder';
 import JobsList from './pages/jobs/JobsList';
+import CreateJob from './pages/jobs/CreateJob';
+import JobDetails from './pages/jobs/JobDetails';
 import DashboardLayout from './layout/DashboardLayout';
-import { SensitiveInfoProvider } from './context/SensitiveInfoContext';
+import UserManagement from './pages/settings/UserManagement';
+import Workers from './pages/admin/Workers';
 import './App.css';
 
 // Protected Route Wrapper
@@ -27,15 +30,18 @@ function App() {
       {/* Dashboard Routes wrapped in Layout */}
       <Route path="/dashboard" element={
           <ProtectedRoute>
-            <SensitiveInfoProvider>
               <DashboardLayout />
-            </SensitiveInfoProvider>
           </ProtectedRoute>
       }>
           <Route index element={<Dashboard />} />
 
           {/* Placeholder Routes for Sidebar Links */}
           <Route path="jobs" element={<JobsList />} />
+          <Route path="jobs/new" element={<CreateJob />} />
+          <Route path="jobs/:jobNumber" element={<JobDetails />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="workers" element={<Workers />} />
+
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Placeholder />} />
           <Route path="reports" element={<Placeholder />} />

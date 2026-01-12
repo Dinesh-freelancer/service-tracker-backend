@@ -12,14 +12,13 @@ const NotificationService = require('../utils/notificationService');
  */
 async function listWorkLogs(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         const jobNumber = req.query.jobNumber || null;
         const { page, limit, offset } = getPagination(req);
 
         const { rows, totalCount } = await workLogModel.getAllWorkLogs(jobNumber, limit, offset);
 
-        const filteredLogs = filterWorkLogList(rows, role, hideSensitive);
+        const filteredLogs = filterWorkLogList(rows, role);
         const response = getPaginationData(filteredLogs, page, limit, totalCount);
 
         res.json(response);
@@ -36,12 +35,11 @@ async function listWorkLogs(req, res, next) {
  */
 async function getWorkLog(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
         const role = req.user ? req.user.Role : null;
         let log = await workLogModel.getWorkLogById(req.params.workLogId);
         if (!log) return res.status(404).json({ error: 'Work log not found' });
 
-        log = filterWorkLog(log, role, hideSensitive);
+        log = filterWorkLog(log, role);
 
         res.json(log);
     } catch (err) {
