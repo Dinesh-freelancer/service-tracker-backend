@@ -5,7 +5,7 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm install && npm run build --prefix apps/web"
+    "build": "npm run build --workspace=web"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
