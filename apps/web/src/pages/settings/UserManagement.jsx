@@ -42,7 +42,7 @@ const UserManagement = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   const token = localStorage.getItem('token');
 
   const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm({

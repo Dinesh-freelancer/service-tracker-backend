@@ -30,7 +30,7 @@ const JobDetails = () => {
     const [docType, setDocType] = useState('Photo');
     const [docLink, setDocLink] = useState('');
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const apiUrl = import.meta.env.VITE_API_URL || '';
     const role = localStorage.getItem('role'); // Assuming role is stored or decoded from token
 
     const fetchJob = async () => {

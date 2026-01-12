@@ -41,7 +41,7 @@ const JobsList = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('token');
 
       const query = new URLSearchParams({

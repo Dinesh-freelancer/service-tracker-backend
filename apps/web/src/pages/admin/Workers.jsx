@@ -50,7 +50,7 @@ const Workers = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   const token = localStorage.getItem('token');
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({

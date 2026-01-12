@@ -17,7 +17,26 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./utils/swaggerConfig');
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+    'https://rassipumps.in',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5000'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Check if origin matches allowed domains or subdomains
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.rassipumps.in')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+}));
 app.use(express.json());
 
 // Apply rate limiting to all requests
@@ -111,8 +130,13 @@ app.use('/api/leads', leadRoutes);
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-});
+// Start server (Only in local/dev environment)
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server started on port ${PORT}`);
+    });
+}
+
+// Export for Vercel
+module.exports = app;

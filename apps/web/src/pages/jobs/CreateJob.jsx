@@ -34,7 +34,7 @@ const CreateJob = () => {
     const [loadingAssets, setLoadingAssets] = useState(false);
     const [customerSearch, setCustomerSearch] = useState('');
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const apiUrl = import.meta.env.VITE_API_URL || '';
 
     // Fetch Customers (Debounced search ideally, but simple for now)
     useEffect(() => {
