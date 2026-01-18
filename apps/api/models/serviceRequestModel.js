@@ -38,7 +38,7 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
     params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await pool.query(query, params);
-    console.log("QUERY:",query);
+    console.warn("QUERY:",query);
     const countParams = filters.params || [];
     const [countRows] = await pool.query(countQuery, countParams);
 
