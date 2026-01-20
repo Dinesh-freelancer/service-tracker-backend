@@ -431,15 +431,13 @@ const JobDetails = () => {
 
                 {/* Sidebar Column */}
                 <div className="space-y-6">
-                    {/* Customer Info */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                            <User size={20} className="text-indigo-500" />
-                            Customer
-                        </h2>
-                        {job.CustomerName === '*****' ? (
-                            <div className="text-slate-500 italic">Hidden (Sensitive)</div>
-                        ) : (
+                    {/* Customer Info - Only show if not masked (Workers see *****) */}
+                    {job.CustomerName !== '*****' && (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                <User size={20} className="text-indigo-500" />
+                                Customer
+                            </h2>
                             <div className="space-y-3">
                                 <div className="font-medium text-slate-900 dark:text-white">{job.CustomerName}</div>
                                 {job.OrganizationName && <div className="text-sm text-slate-500">{job.OrganizationName}</div>}
@@ -447,8 +445,8 @@ const JobDetails = () => {
                                     {job.PrimaryContact}
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
