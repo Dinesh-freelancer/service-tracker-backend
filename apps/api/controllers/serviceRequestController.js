@@ -30,7 +30,6 @@ async function listServiceRequests(req, res, next) {
             'a.MotorModel', 'a.SerialNumber',
             'sr.Status', 'c.CustomerName'
         ];
-
         const filters = buildSearchFilters(req.query, searchableFields);
 
         let rows, totalCount;

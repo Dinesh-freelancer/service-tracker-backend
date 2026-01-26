@@ -25,7 +25,7 @@ function buildSearchFilters(query, searchableFields = []) {
 
     // Exact Match Filters (e.g. status=Open)
     // We explicitly exclude reserved keys like page, limit, search, sortBy, sortOrder
-    const reservedKeys = ['page', 'limit', 'search', 'sortBy', 'sortOrder', 'hideSensitive', 'customerId'];
+    const reservedKeys = ['page', 'limit', 'search', 'sortBy', 'sortOrder', 'hideSensitive', 'customerId', 'path'];
 
     Object.keys(query).forEach(key => {
         if (!reservedKeys.includes(key)) {

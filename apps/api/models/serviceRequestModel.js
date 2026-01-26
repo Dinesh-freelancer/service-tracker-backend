@@ -27,7 +27,6 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
     `;
 
     let params = [];
-
     if (filters.sql) {
         query += ` ${filters.sql}`;
         countQuery += ` ${filters.sql}`;
@@ -36,9 +35,7 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
 
     query += ` ORDER BY sr.DateReceived DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
-
     const [rows] = await pool.query(query, params);
-
     const countParams = filters.params || [];
     const [countRows] = await pool.query(countQuery, countParams);
 
