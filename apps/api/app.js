@@ -42,6 +42,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type"],
   optionsSuccessStatus: 204
 }));
+app.options("*", cors());
+
 /*app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
