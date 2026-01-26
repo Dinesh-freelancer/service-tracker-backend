@@ -19,6 +19,7 @@ const swaggerSpec = require('./utils/swaggerConfig');
 // Middleware
 const allowedOrigins = [
     'https://rassipumps.in',
+    'https://s3.ksbindia.co.in',
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:5000'
