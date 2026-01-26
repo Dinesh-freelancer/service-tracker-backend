@@ -24,8 +24,25 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5000'
 ];
-
 app.use(cors({
+  origin: function (origin, callback) {
+    // Allow non-browser requests (curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".rassipumps.in")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  methods: ["POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+  optionsSuccessStatus: 204
+}));
+/*app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
@@ -37,7 +54,7 @@ app.use(cors({
             callback(new Error('Not allowed by CORS'));
         }
     }
-}));
+}));*/
 app.use(express.json());
 
 // Apply rate limiting to all requests
