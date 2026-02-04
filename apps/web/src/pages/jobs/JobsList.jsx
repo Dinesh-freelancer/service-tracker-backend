@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
  * Implements role-based visibility for sensitive columns (Customer, Amount).
  * @component
  */
-const JobsList = () => {
+const JobsList = ({ title = "Service Requests" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -108,7 +108,7 @@ const JobsList = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Service Requests</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Manage and track all repair jobs.</p>
         </div>
 

@@ -10,6 +10,7 @@ router.use(sensitiveInfoToggle);
 
 const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
 const WORKER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
+const CUSTOMER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER, constants.AUTH_ROLE_CUSTOMER];
 
 /**
  * @swagger
@@ -117,7 +118,7 @@ router.get('/job/:jobNumber',
  *         description: List of documents
  */
 router.get('/customer/:customerId',
-    authorize(...ADMIN_OWNER),
+    authorize(...CUSTOMER_ALLOWED),
     documentController.getDocumentsByCustomer);
 
 module.exports = router;

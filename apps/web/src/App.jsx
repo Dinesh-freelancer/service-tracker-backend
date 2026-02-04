@@ -10,6 +10,13 @@ import JobDetails from './pages/jobs/JobDetails';
 import DashboardLayout from './layout/DashboardLayout';
 import UserManagement from './pages/settings/UserManagement';
 import Workers from './pages/admin/Workers';
+import Inventory from './pages/admin/Inventory';
+import Settings from './pages/settings/Settings';
+import MyJobs from './pages/customer/MyJobs';
+import MyDocuments from './pages/customer/MyDocuments';
+import Profile from './pages/customer/Profile';
+import WorkLogs from './pages/worker/WorkLogs';
+import Reports from './pages/reports/Reports';
 import './App.css';
 
 // Protected Route Wrapper
@@ -43,12 +50,13 @@ function App() {
           <Route path="workers" element={<Workers />} />
 
           <Route path="customers" element={<Placeholder />} />
-          <Route path="inventory" element={<Placeholder />} />
-          <Route path="reports" element={<Placeholder />} />
-          <Route path="settings" element={<Placeholder />} />
-          <Route path="work-logs" element={<Placeholder />} />
-          <Route path="my-jobs" element={<Placeholder />} />
-          <Route path="documents" element={<Placeholder />} />
+          <Route path="inventory" element={<Inventory />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="work-logs" element={<WorkLogs />} />
+          <Route path="my-jobs" element={<MyJobs />} />
+          <Route path="documents" element={<MyDocuments />} />
+          <Route path="profile" element={<Profile />} />
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

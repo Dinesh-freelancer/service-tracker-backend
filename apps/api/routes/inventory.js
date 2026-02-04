@@ -115,4 +115,54 @@ router.post('/',
     authorize(...ADMIN_OWNER),
     inventoryController.createInventoryItem);
 
+/**
+ * @swagger
+ * /inventory/{partId}:
+ *   put:
+ *     summary: Update inventory item
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: partId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Item updated
+ */
+router.put('/:partId',
+    authorize(...ADMIN_OWNER),
+    inventoryController.updateInventoryItem);
+
+/**
+ * @swagger
+ * /inventory/{partId}:
+ *   delete:
+ *     summary: Delete inventory item
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: partId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Item deleted
+ */
+router.delete('/:partId',
+    authorize(...ADMIN_OWNER),
+    inventoryController.deleteInventoryItem);
+
 module.exports = router;

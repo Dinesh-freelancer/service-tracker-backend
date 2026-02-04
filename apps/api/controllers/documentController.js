@@ -35,6 +35,15 @@ async function getDocumentsByJob(req, res, next) {
 async function getDocumentsByCustomer(req, res, next) {
     try {
         const role = req.user ? req.user.Role : null;
+
+        // Security check for Customer role
+        if (role === 'Customer') {
+            const requestedCustomerId = parseInt(req.params.customerId);
+            if (req.user.CustomerId !== requestedCustomerId) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+        }
+
         let docs = await documentModel.getDocumentsByCustomer(req.params.customerId);
 
         // Even for getDocumentsByCustomer, we should apply filtering if the requester is constrained
