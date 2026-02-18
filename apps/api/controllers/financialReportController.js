@@ -4,11 +4,14 @@ const { STRING_HIDDEN } = require('../utils/constants');
 async function summaryAllJobs(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
-        let summary = await financialReportModel.getFinancialSummaryAllJobs();
+        const { startDate, endDate } = req.query;
+        let summary = await financialReportModel.getFinancialSummaryAllJobs(startDate, endDate);
+
         if (hideSensitive) {
             summary = summary.map(reportDetail => ({
                 "JobNumber": reportDetail.JobNumber,
                 "CustomerId": STRING_HIDDEN,
+                "CustomerName": STRING_HIDDEN,
                 "PumpBrand": STRING_HIDDEN,
                 "PumpModel": STRING_HIDDEN,
                 "MotorBrand": STRING_HIDDEN,
@@ -16,7 +19,8 @@ async function summaryAllJobs(req, res, next) {
                 "TotalPaid": STRING_HIDDEN,
                 "EstimatedAmount": STRING_HIDDEN,
                 "BilledAmount": STRING_HIDDEN,
-                "Outstanding": STRING_HIDDEN
+                "Outstanding": STRING_HIDDEN,
+                "DateReceived": reportDetail.DateReceived
             }));
         }
         res.json(summary);
@@ -29,7 +33,10 @@ async function summaryByCustomer(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
         const { customerId } = req.params;
-        let summary = await financialReportModel.getFinancialSummaryByCustomer(customerId);
+        const { startDate, endDate } = req.query;
+
+        let summary = await financialReportModel.getFinancialSummaryByCustomer(customerId, startDate, endDate);
+
         if (hideSensitive) {
             summary = summary.map(reportDetail => ({
                 "JobNumber": reportDetail.JobNumber,
@@ -37,7 +44,8 @@ async function summaryByCustomer(req, res, next) {
                 "PumpsetModel": STRING_HIDDEN,
                 "TotalPaid": STRING_HIDDEN,
                 "TotalDue": STRING_HIDDEN,
-                "Outstanding": STRING_HIDDEN
+                "Outstanding": STRING_HIDDEN,
+                "DateReceived": reportDetail.DateReceived
             }));
         }
         res.json(summary);
@@ -49,7 +57,10 @@ async function summaryByCustomer(req, res, next) {
 async function financialTotals(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
-        let totals = await financialReportModel.getFinancialTotals();
+        const { startDate, endDate } = req.query;
+
+        let totals = await financialReportModel.getFinancialTotals(startDate, endDate);
+
         if (hideSensitive) {
             totals = {
                 "TotalJobs": STRING_HIDDEN,

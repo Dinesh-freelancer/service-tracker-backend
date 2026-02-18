@@ -10,6 +10,8 @@ router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
 const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+// Allow customers to access their own data (controller handles the check)
+const ALL_ROLES_WITH_CUSTOMER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_CUSTOMER];
 
 /**
  * @swagger
@@ -73,7 +75,7 @@ router.get('/',
  *         description: Customer not found
  */
 router.get('/:id',
-    authorize(...ADMIN_OWNER),
+    authorize(...ALL_ROLES_WITH_CUSTOMER),
     customerController.getCustomer);
 
 /**
