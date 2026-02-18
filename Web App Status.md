@@ -110,6 +110,24 @@ CREATE TABLE servicerequest_history (
 
 **Purpose:** Audit trail for job status changes to calculate turnaround times.
 
+### 4. **spare_price_search Table (New)**
+
+```sql
+CREATE TABLE spare_price_search (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  pump_category VARCHAR(50),
+  pump_type VARCHAR(120),
+  pump_size VARCHAR(50),
+  spare_name VARCHAR(200),
+  basic_material VARCHAR(150),
+  unit_price DECIMAL(12,2),
+  uom VARCHAR(20),
+  UNIQUE KEY uq_spare (pump_category, pump_type, pump_size, spare_name, basic_material)
+);
+```
+
+**Purpose:** High-performance table for syncing spare part prices from external systems.
+
 *(Other tables like users, customers, inventory, partsused remain similar but updated to support new triggers)*
 
 ***
@@ -154,6 +172,14 @@ The "Hide Sensitive Info" toggle has been removed in favor of strict role-based 
 #### `PUT /api/jobs/:jobNumber`
 - **Status Update:** Logic enforces `ResolutionType` when Status is set to 'Completed' or 'Cancelled'.
 
+### Spares Management
+
+#### `POST /api/spares/upsert`
+- **Purpose:** Idempotent synchronization of spare part prices.
+- **Security:** Requires `x-api-key` header.
+- **Body:** `{ pumpCategory, pumpType, pumpSize, spareName, basicMaterial, unitPrice, uom, ... }`
+- **Response:** `{ status: 'ok' }`
+
 ***
 
 ## Frontend Integration Guide \& Data Visibility
@@ -189,7 +215,7 @@ The "Hide Sensitive Info" toggle has been removed in favor of strict role-based 
 3. **Frontend Features:**
    - **Dashboard:** Role-based Sidebar.
    - **Job List:** Updated with Internal Tag and Column Visibility (Worker sees Customer, Admin sees Amount).
-   - **Job Details:** Full tabbed interface (Docs, Parts, History).
+   - **Job Details:** Full tabbed interface (Docs, Parts, History). Customer Card is hidden for Workers (masked data).
    - **Inventory:** List view masks Cost Price for Admin/Worker.
    - **User Management:** Admin/Owner page for creating system logins and linking to profiles.
    - **Workers:** Staff Directory with seamless login creation.
