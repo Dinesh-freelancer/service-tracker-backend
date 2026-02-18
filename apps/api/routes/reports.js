@@ -26,6 +26,18 @@ const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Optional start date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Optional end date
  *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
@@ -39,7 +51,7 @@ router.get('/job-status-summary',
  * @swagger
  * /reports/job-status-summary-by-date:
  *   get:
- *     summary: Job status summary filtered by date
+ *     summary: Job status summary filtered by date (Legacy)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []

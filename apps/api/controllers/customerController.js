@@ -54,11 +54,21 @@ async function getCustomer(req, res, next) {
 
         if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-        // Security: If Customer, verify ownership
+        // Security: If requester is a Customer, verify ownership
+        // This block explicitly prevents IDOR by ensuring customers can only view their own profile.
         if (role === AUTH_ROLE_CUSTOMER) {
-             // Params ID is string, CustomerId is int, use loose equality or parse
-            if (!req.user.CustomerId || customer.CustomerId != req.user.CustomerId) {
-                return res.status(403).json({ error: 'Access denied' });
+            const authenticatedCustomerId = req.user.CustomerId;
+            const requestedCustomerId = parseInt(req.params.id, 10);
+
+            // Ensure authenticated user has a CustomerId
+            if (!authenticatedCustomerId) {
+                 return res.status(403).json({ error: 'Access denied: No customer profile linked.' });
+            }
+
+            // Ensure they are requesting their own ID (redundant but safe)
+            // AND ensure the fetched customer object matches their ID (critical)
+            if (authenticatedCustomerId !== requestedCustomerId || customer.CustomerId !== authenticatedCustomerId) {
+                return res.status(403).json({ error: 'Access denied: You can only view your own profile.' });
             }
         }
 
