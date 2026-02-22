@@ -1,55 +1,61 @@
 const pool = require('../db');
 
-// Get all winding details (usually filtered by job, but controller might ask for all)
-async function getAllWindingDetails() {
-    const [rows] = await pool.query('SELECT * FROM windingdetails');
-    return rows;
-}
+// Allowed columns for Winding Details to prevent SQL injection
+const ALLOWED_COLUMNS = [
+    'WireGauge', 'TurnCount', 'CoilWeight', 'ConnectionType',
+    'CoreLength', 'CoreDiameter', 'SlotCount', 'Pitch'
+];
 
 // Get winding details for a specific job
 async function getWindingDetailsByJobNumber(jobNumber) {
-    // We might join with ServiceRequest to get JobStatus if needed for visibility check
     const [rows] = await pool.query(
-        `SELECT wd.*, sr.Status as JobStatus
-         FROM windingdetails wd
-         JOIN servicerequest sr ON wd.jobNumber = sr.JobNumber
-         WHERE wd.jobNumber = ?`,
+        `SELECT * FROM windingdetails WHERE JobNumber = ?`,
          [jobNumber]
     );
-    return rows;
+    // Return single object or null
+    return rows.length > 0 ? rows[0] : null;
 }
 
-async function addWindingDetail(data) {
-    const fields = Object.keys(data);
-    const values = Object.values(data);
+// Upsert winding details (Insert or Update if exists)
+async function upsertWindingDetails(data) {
+    const { JobNumber, ...details } = data;
+
+    // Filter input data against allowed columns
+    const safeDetails = {};
+    Object.keys(details).forEach(key => {
+        if (ALLOWED_COLUMNS.includes(key)) {
+            safeDetails[key] = details[key];
+        }
+    });
+
+    if (Object.keys(safeDetails).length === 0) {
+        return getWindingDetailsByJobNumber(JobNumber);
+    }
+
+    const fields = ['JobNumber', ...Object.keys(safeDetails)];
     const placeholders = fields.map(() => '?').join(', ');
+    const values = [JobNumber, ...Object.values(safeDetails)];
 
-    const [result] = await pool.query(
-        `INSERT INTO windingdetails (${fields.join(', ')}) VALUES (${placeholders})`,
-        values
-    );
-    return result.insertId;
-}
-
-async function updateWindingDetail(id, data) {
-    const fields = Object.keys(data).map(field => `${field} = ?`);
-    const values = Object.values(data);
-    values.push(id);
+    // Build ON DUPLICATE KEY UPDATE clause safely using filtered keys
+    // Note: VALUES(col_name) is deprecated in MySQL 8.0.20+, using aliases is preferred
+    // syntax: INSERT INTO ... VALUES ... AS new_data ON DUPLICATE KEY UPDATE col = new_data.col
+    // But for broad compatibility with older MySQL/MariaDB often found in hosting, we stick to VALUES(col) or explicit values.
+    // Let's use the standard readable format: col = VALUES(col) which is still widely supported.
+    const updateClause = Object.keys(safeDetails)
+        .map(field => `${field} = VALUES(${field})`)
+        .join(', ');
 
     await pool.query(
-        `UPDATE windingdetails SET ${fields.join(', ')} WHERE id = ?`,
+        `INSERT INTO windingdetails (${fields.join(', ')})
+         VALUES (${placeholders})
+         ON DUPLICATE KEY UPDATE ${updateClause}`,
         values
     );
-}
 
-async function deleteWindingDetail(id) {
-    await pool.query('DELETE FROM windingdetails WHERE id = ?', [id]);
+    return getWindingDetailsByJobNumber(JobNumber);
 }
 
 module.exports = {
-    getAllWindingDetails,
     getWindingDetailsByJobNumber,
-    addWindingDetail,
-    updateWindingDetail,
-    deleteWindingDetail
+    upsertWindingDetails
 };
