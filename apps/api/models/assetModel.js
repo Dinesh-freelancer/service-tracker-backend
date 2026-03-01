@@ -22,6 +22,7 @@ async function getAssetById(assetId) {
 // Accepts optional connection for transactions
 async function createAsset(assetData, connection = null) {
     const db = connection || pool;
+    // assetData now potentially includes 'Phase' ('1-PHASE', '3-PHASE')
     const fields = Object.keys(assetData);
     const values = Object.values(assetData);
     const placeholders = fields.map(() => '?').join(', ');

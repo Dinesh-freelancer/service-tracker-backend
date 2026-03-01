@@ -15,7 +15,8 @@ const CreateJob = () => {
             MotorModel: '',
             SerialNumber: '',
             HP: '',
-            AssetType: 'Pumpset'
+            AssetType: 'Pumpset',
+            Phase: '3-PHASE' // Defaulting to 3-PHASE as it is common
         }
     });
 
@@ -125,6 +126,7 @@ const CreateJob = () => {
                     MotorModel: data.MotorModel,
                     SerialNumber: data.SerialNumber,
                     HP: data.HP,
+                    Phase: data.Phase, // Added Phase field
                     WarrantyExpiry: data.WarrantyExpiry,
                     InstallationDate: data.InstallationDate
                 };
@@ -260,6 +262,13 @@ const CreateJob = () => {
                                                     <option value="Pumpset">Pumpset (Combined)</option>
                                                     <option value="Motor Only">Motor Only</option>
                                                     <option value="Pump Only">Pump Only</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Phase</label>
+                                                <select {...register('Phase')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                                                    <option value="1-PHASE">1-PHASE</option>
+                                                    <option value="3-PHASE">3-PHASE</option>
                                                 </select>
                                             </div>
                                             <div>

@@ -2,22 +2,17 @@ const pool = require('../db');
 
 // Get all service requests with filters and pagination
 async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
-    // JOIN assets to get pump/motor details and InternalTag
+    // JOIN assets to get pump/motor details, InternalTag, and Phase
     let query = `
         SELECT sr.*,
                c.CustomerName, c.PrimaryContact, c.CustomerType, c.OrganizationId,
                o.OrganizationName,
-               a.InternalTag, a.Brand, a.AssetType, a.PumpModel, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry
+               a.InternalTag, a.Brand, a.AssetType, a.PumpModel, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry, a.Phase
         FROM servicerequest sr
         LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
         LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId
         LEFT JOIN assets a ON sr.AssetId = a.AssetId
     `;
-    // We need to handle the WHERE clause. If search terms are for asset fields, the queryHelper must support table aliases
-    // or we assume column names are unique enough.
-    // Note: queryHelper usually produces "WHERE (InternalTag LIKE ? OR ...)"
-    // Since we are JOINing, we should be careful about ambiguous columns.
-    // `filters.sql` from queryHelper should be constructed knowing this query structure.
 
     let countQuery = `
         SELECT COUNT(*) as count
@@ -44,12 +39,12 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
 
 async function getServiceRequestByJobNumber(jobNumber, connection = null) {
     const db = connection || pool;
-    // Also JOIN here to get full details for single view
+    // JOIN here to get full details for single view, including Phase
     const [rows] = await db.query(
         `SELECT sr.*,
                 c.CustomerName, c.PrimaryContact, c.CustomerType, c.OrganizationId,
                 o.OrganizationName,
-                a.InternalTag, a.Brand, a.AssetType, a.PumpModel, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry, a.InstallationDate
+                a.InternalTag, a.Brand, a.AssetType, a.PumpModel, a.MotorModel, a.SerialNumber, a.HP, a.WarrantyExpiry, a.InstallationDate, a.Phase
          FROM servicerequest sr
          LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
          LEFT JOIN organizations o ON c.OrganizationId = o.OrganizationId

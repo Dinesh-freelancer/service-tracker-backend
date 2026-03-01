@@ -6,7 +6,7 @@ const constants = require('../utils/constants');
 
 router.use(authenticateToken);
 
-// Winding details are technical, restricted to Staff (Worker, Admin, Owner)
+// Winding details are technical, restricted to Staff
 const STAFF_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
 
 /**
@@ -18,40 +18,40 @@ const STAFF_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, const
 
 /**
  * @swagger
- * /winding/{jobNumber}:
+ * /winding-details/asset/{assetId}:
  *   get:
- *     summary: Get winding details for a job
+ *     summary: Get winding details for an asset
  *     tags: [Winding Details]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: jobNumber
+ *         name: assetId
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     responses:
  *       200:
  *         description: Winding details object
  */
-router.get('/:jobNumber',
+router.get('/asset/:assetId',
     authorize(...STAFF_ROLES),
     windingDetailsController.getWindingDetails);
 
 /**
  * @swagger
- * /winding/{jobNumber}:
+ * /winding-details/asset/{assetId}:
  *   post:
- *     summary: Save (Upsert) winding details for a job
+ *     summary: Save (Upsert) winding details for an asset
  *     tags: [Winding Details]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: jobNumber
+ *         name: assetId
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -59,19 +59,15 @@ router.get('/:jobNumber',
  *           schema:
  *             type: object
  *             properties:
- *               WireGauge:
- *                 type: string
- *               TurnCount:
- *                 type: integer
- *               CoilWeight:
+ *               hp:
  *                 type: number
- *               ConnectionType:
+ *               phase:
  *                 type: string
  *     responses:
  *       200:
  *         description: Saved details
  */
-router.post('/:jobNumber',
+router.post('/asset/:assetId',
     authorize(...STAFF_ROLES),
     windingDetailsController.saveWindingDetails);
 

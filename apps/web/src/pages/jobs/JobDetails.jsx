@@ -251,6 +251,10 @@ const JobDetails = () => {
                                 <div className="text-xs text-slate-500 uppercase">Brand / Type</div>
                                 <div className="font-medium text-slate-900 dark:text-white">{job.Brand} <span className="text-xs text-slate-500">({job.AssetType})</span></div>
                             </div>
+                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                                <div className="text-xs text-slate-500 uppercase">Phase</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{job.Phase || 'N/A'}</div>
+                            </div>
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                 <div className="text-xs text-slate-500 uppercase">Models</div>
                                 <div className="font-medium text-slate-900 dark:text-white text-xs">
@@ -265,10 +269,6 @@ const JobDetails = () => {
                              <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                 <div className="text-xs text-slate-500 uppercase">HP</div>
                                 <div className="font-medium text-slate-900 dark:text-white">{job.HP || 'N/A'}</div>
-                            </div>
-                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
-                                <div className="text-xs text-slate-500 uppercase">Warranty</div>
-                                <div className="font-medium text-slate-900 dark:text-white">{job.WarrantyExpiry || 'N/A'}</div>
                             </div>
                         </div>
                     </div>
@@ -413,7 +413,7 @@ const JobDetails = () => {
 
                             {/* Winding Details View */}
                             {activeTab === 'winding' && !isCustomer && (
-                                <WindingDetails jobNumber={jobNumber} />
+                                <WindingDetails assetId={job.AssetId} phase={job.Phase} defaultHp={job.HP} />
                             )}
 
                             {/* History View */}
