@@ -1,43 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/windingDetailsController');
-const constants = require('../utils/constants');
+const windingDetailsController = require('../controllers/windingDetailsController');
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
-const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
+const constants = require('../utils/constants');
 
 router.use(authenticateToken);
-router.use(sensitiveInfoToggle);
 
-const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+// Winding details are technical, restricted to Staff (Worker, Admin, Owner)
+const STAFF_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
 
 /**
  * @swagger
  * tags:
  *   name: Winding Details
- *   description: Winding specifications
+ *   description: Motor winding specifications
  */
 
 /**
  * @swagger
- * /winding-details:
+ * /winding/{jobNumber}:
  *   get:
- *     summary: List all winding details
- *     tags: [Winding Details]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - $ref: '#/components/parameters/HideSensitive'
- *     responses:
- *       200:
- *         description: List of winding details
- */
-router.get('/', authenticateToken, controller.getAllWindingDetails);
-
-/**
- * @swagger
- * /winding-details/job/{jobNumber}:
- *   get:
- *     summary: Get winding details by job number
+ *     summary: Get winding details for a job
  *     tags: [Winding Details]
  *     security:
  *       - bearerAuth: []
@@ -47,85 +30,49 @@ router.get('/', authenticateToken, controller.getAllWindingDetails);
  *         required: true
  *         schema:
  *           type: string
- *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
- *         description: Winding details list
+ *         description: Winding details object
  */
-router.get('/job/:jobNumber', authenticateToken, controller.getByJobNumber);
+router.get('/:jobNumber',
+    authorize(...STAFF_ROLES),
+    windingDetailsController.getWindingDetails);
 
 /**
  * @swagger
- * /winding-details:
+ * /winding/{jobNumber}:
  *   post:
- *     summary: Create winding details
+ *     summary: Save (Upsert) winding details for a job
  *     tags: [Winding Details]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobNumber
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - jobNumber
- *               - hp
- *               - phase
  *             properties:
- *               jobNumber:
+ *               WireGauge:
  *                 type: string
- *               hp:
+ *               TurnCount:
+ *                 type: integer
+ *               CoilWeight:
  *                 type: number
- *               kw:
- *                 type: number
- *               phase:
+ *               ConnectionType:
  *                 type: string
- *                 enum: [1-PHASE, 3-PHASE]
- *     responses:
- *       201:
- *         description: Created
- */
-router.post('/', authorize(...ADMIN_OWNER), controller.createWindingDetail);
-
-/**
- * @swagger
- * /winding-details/{id}:
- *   put:
- *     summary: Update winding details
- *     tags: [Winding Details]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
  *     responses:
  *       200:
- *         description: Updated
+ *         description: Saved details
  */
-router.put('/:id', authorize(...ADMIN_OWNER), controller.updateWindingDetail);
-
-/**
- * @swagger
- * /winding-details/{id}:
- *   delete:
- *     summary: Delete winding details
- *     tags: [Winding Details]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Deleted
- */
-router.delete('/:id', authorize(...ADMIN_OWNER), controller.deleteWindingDetail);
+router.post('/:jobNumber',
+    authorize(...STAFF_ROLES),
+    windingDetailsController.saveWindingDetails);
 
 module.exports = router;

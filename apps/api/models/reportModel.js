@@ -1,26 +1,30 @@
 const pool = require('../db');
 
-// Get counts of service requests by status
-async function getJobStatusSummary() {
-    const [rows] = await pool.query(`
-    SELECT Status, COUNT(*) AS count
-    FROM servicerequest
-    GROUP BY Status
-    ORDER BY Status
-  `);
+// Get counts of service requests by status, optionally filtered by date range
+async function getJobStatusSummary(startDate, endDate) {
+    let sql = 'SELECT Status, COUNT(*) AS count FROM servicerequest';
+    const params = [];
+
+    if (startDate && endDate) {
+        sql += ' WHERE DateReceived BETWEEN ? AND ?';
+        params.push(startDate, endDate);
+    } else if (startDate) {
+        sql += ' WHERE DateReceived >= ?';
+        params.push(startDate);
+    } else if (endDate) {
+        sql += ' WHERE DateReceived <= ?';
+        params.push(endDate);
+    }
+
+    sql += ' GROUP BY Status ORDER BY Status';
+
+    const [rows] = await pool.query(sql, params);
     return rows;
 }
 
-// Get counts filtered by date range (optional)
+// Kept for backward compatibility if needed, but redundant now
 async function getJobStatusSummaryByDate(startDate, endDate) {
-    const [rows] = await pool.query(`
-    SELECT Status, COUNT(*) AS count
-    FROM servicerequest
-    WHERE DateReceived >= ? AND DateReceived <= ?
-    GROUP BY Status
-    ORDER BY Status
-  `, [startDate, endDate]);
-    return rows;
+    return getJobStatusSummary(startDate, endDate);
 }
 
 module.exports = {

@@ -109,7 +109,7 @@ router.get('/:attendanceId',
  *         description: Created
  */
 router.post('/',
-    authorize(...ADMIN_OWNER),
+    authorize(...ALL_ROLES),
     attendanceController.createAttendance);
 
 module.exports = router;

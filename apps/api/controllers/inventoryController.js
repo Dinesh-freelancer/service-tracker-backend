@@ -54,8 +54,31 @@ async function createInventoryItem(req, res, next) {
     }
 }
 
+// Update inventory item
+async function updateInventoryItem(req, res, next) {
+    try {
+        const item = await inventoryModel.updateInventory(req.params.partId, req.body);
+        if (!item) return res.status(404).json({ error: 'Item not found' });
+        res.json(item);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Delete inventory item
+async function deleteInventoryItem(req, res, next) {
+    try {
+        await inventoryModel.deleteInventory(req.params.partId);
+        res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listInventory,
     getInventoryItem,
-    createInventoryItem
+    createInventoryItem,
+    updateInventoryItem,
+    deleteInventoryItem
 };

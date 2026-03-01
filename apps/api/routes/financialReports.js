@@ -26,6 +26,16 @@ const OWNER_ONLY = [constants.AUTH_ROLE_OWNER];
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
  *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
@@ -49,6 +59,16 @@ router.get('/all-jobs',
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
  *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:
@@ -67,6 +87,16 @@ router.get('/customer/:customerId',
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
  *       - $ref: '#/components/parameters/HideSensitive'
  *     responses:
  *       200:

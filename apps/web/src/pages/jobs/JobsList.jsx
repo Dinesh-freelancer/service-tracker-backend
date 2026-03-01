@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
  * Implements role-based visibility for sensitive columns (Customer, Amount).
  * @component
  */
-const JobsList = () => {
+const JobsList = ({ title = "Service Requests" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -37,6 +37,7 @@ const JobsList = () => {
 
   const role = localStorage.getItem('role') || 'Worker';
   const isAdminOrOwner = role === 'Admin' || role === 'Owner';
+  const isCustomer = role === 'Customer';
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -108,7 +109,7 @@ const JobsList = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Service Requests</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Manage and track all repair jobs.</p>
         </div>
 
@@ -164,7 +165,7 @@ const JobsList = () => {
                 <thead>
                     <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">
                         <th className="p-4 font-semibold">Job #</th>
-                        <th className="p-4 font-semibold">Internal Tag</th>
+                        {!isCustomer && <th className="p-4 font-semibold">Internal Tag</th>}
                         <th className="p-4 font-semibold">Customer</th>
                         <th className="p-4 font-semibold">Device</th>
                         <th className="p-4 font-semibold">Date Received</th>
@@ -176,7 +177,7 @@ const JobsList = () => {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-sm">
                     {loading ? (
                          <tr>
-                            <td colSpan="7" className="p-8 text-center text-slate-500">
+                            <td colSpan="8" className="p-8 text-center text-slate-500">
                                 <div className="flex justify-center items-center space-x-2">
                                     <Loader2 className="animate-spin" size={20} />
                                     <span>Loading jobs...</span>
@@ -185,7 +186,7 @@ const JobsList = () => {
                          </tr>
                     ) : jobs.length === 0 ? (
                         <tr>
-                            <td colSpan="7" className="p-8 text-center text-slate-500">
+                            <td colSpan="8" className="p-8 text-center text-slate-500">
                                 No jobs found matching your criteria.
                             </td>
                         </tr>
@@ -195,9 +196,11 @@ const JobsList = () => {
                                 <td className="p-4 font-medium text-slate-900 dark:text-white">
                                     {job.JobNumber}
                                 </td>
-                                <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">
-                                    {job.InternalTag || '-'}
-                                </td>
+                                {!isCustomer && (
+                                    <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">
+                                        {job.InternalTag || '-'}
+                                    </td>
+                                )}
                                 <td className="p-4 text-slate-600 dark:text-slate-300">
                                     <div className="font-medium">
                                         {job.CustomerType === 'OrganizationMember' && job.OrganizationName

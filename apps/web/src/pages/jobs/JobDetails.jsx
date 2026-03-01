@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity } from 'lucide-react';
+import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database } from 'lucide-react';
 import toast from 'react-hot-toast';
+import WindingDetails from '../../components/jobs/WindingDetails';
 
 const JobDetails = () => {
     const { jobNumber } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('job-docs'); // 'job-docs', 'asset-docs', 'parts', 'history'
+    const [activeTab, setActiveTab] = useState('job-docs'); // 'job-docs', 'asset-docs', 'parts', 'history', 'winding'
 
     // Modals
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -32,6 +33,7 @@ const JobDetails = () => {
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const role = localStorage.getItem('role'); // Assuming role is stored or decoded from token
+    const isCustomer = role === 'Customer';
 
     const fetchJob = async () => {
         try {
@@ -214,15 +216,17 @@ const JobDetails = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                     <button
-                        onClick={() => setShowStatusModal(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-                    >
-                        <Activity size={18} />
-                        Update Status
-                    </button>
-                </div>
+                {!isCustomer && (
+                    <div className="flex gap-2">
+                         <button
+                            onClick={() => setShowStatusModal(true)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+                        >
+                            <Activity size={18} />
+                            Update Status
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -239,7 +243,9 @@ const JobDetails = () => {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                 <div className="text-xs text-slate-500 uppercase">Internal Tag</div>
-                                <div className="font-mono font-medium text-slate-900 dark:text-white">{job.InternalTag || 'N/A'}</div>
+                                <div className="font-mono font-medium text-slate-900 dark:text-white">
+                                    {isCustomer ? '*****' : (job.InternalTag || 'N/A')}
+                                </div>
                             </div>
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                 <div className="text-xs text-slate-500 uppercase">Brand / Type</div>
@@ -307,6 +313,14 @@ const JobDetails = () => {
                                 >
                                     Parts Used
                                 </button>
+                                {!isCustomer && (
+                                    <button
+                                        onClick={() => setActiveTab('winding')}
+                                        className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'winding' ? 'border-pink-600 text-pink-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Winding Details
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => setActiveTab('asset-docs')}
                                     className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'asset-docs' ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
@@ -328,7 +342,9 @@ const JobDetails = () => {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-medium text-slate-900 dark:text-white">Documents</h3>
-                                        <button onClick={() => setShowDocModal(true)} className="text-sm text-blue-600 hover:underline">+ Add Document</button>
+                                        {!isCustomer && (
+                                            <button onClick={() => setShowDocModal(true)} className="text-sm text-blue-600 hover:underline">+ Add Document</button>
+                                        )}
                                     </div>
                                     {displayedDocs.length === 0 ? (
                                         <div className="text-center py-8 text-slate-400">
@@ -359,9 +375,11 @@ const JobDetails = () => {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-medium text-slate-900 dark:text-white">Spare Parts & Consumables</h3>
-                                        <button onClick={() => setShowPartModal(true)} className="text-sm text-orange-600 hover:underline flex items-center gap-1">
-                                            <Plus size={16} /> Add Part
-                                        </button>
+                                        {!isCustomer && (
+                                            <button onClick={() => setShowPartModal(true)} className="text-sm text-orange-600 hover:underline flex items-center gap-1">
+                                                <Plus size={16} /> Add Part
+                                            </button>
+                                        )}
                                     </div>
                                     {(!job.Parts || job.Parts.length === 0) ? (
                                         <div className="text-center py-8 text-slate-400">
@@ -375,7 +393,7 @@ const JobDetails = () => {
                                                     <tr>
                                                         <th className="px-4 py-2">Part Name</th>
                                                         <th className="px-4 py-2">Qty</th>
-                                                        <th className="px-4 py-2 text-right">Cost</th>
+                                                        { !isCustomer && <th className="px-4 py-2 text-right">Cost</th> }
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -383,7 +401,7 @@ const JobDetails = () => {
                                                         <tr key={part.PartUsedId} className="border-b border-slate-100 dark:border-slate-700">
                                                             <td className="px-4 py-2 font-medium text-slate-900 dark:text-white">{part.PartName}</td>
                                                             <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{part.Qty}</td>
-                                                            <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{part.CostPrice}</td>
+                                                            { !isCustomer && <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{part.CostPrice}</td> }
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -391,6 +409,11 @@ const JobDetails = () => {
                                         </div>
                                     )}
                                 </div>
+                            )}
+
+                            {/* Winding Details View */}
+                            {activeTab === 'winding' && !isCustomer && (
+                                <WindingDetails jobNumber={jobNumber} />
                             )}
 
                             {/* History View */}
