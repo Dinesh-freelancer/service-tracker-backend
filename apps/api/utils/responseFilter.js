@@ -19,7 +19,9 @@ function filterServiceRequest(job, role) {
     if (role === AUTH_ROLE_CUSTOMER) {
         return {
             JobNumber: job.JobNumber,
+            AssetId: job.AssetId,
             InternalTag: job.InternalTag,
+            Phase: job.Phase,
             PumpBrand: job.PumpBrand,
             PumpModel: job.PumpModel,
             MotorBrand: job.MotorBrand,
@@ -38,12 +40,14 @@ function filterServiceRequest(job, role) {
     const filtered = {
         JobNumber: job.JobNumber,
         CustomerId: job.CustomerId,
+        AssetId: job.AssetId,
         // Worker must not see Customer Name or Details
         CustomerName: (role === AUTH_ROLE_WORKER) ? STRING_HIDDEN : job.CustomerName,
         PrimaryContact: (role === AUTH_ROLE_WORKER) ? STRING_HIDDEN : job.PrimaryContact,
         OrganizationName: (role === AUTH_ROLE_WORKER) ? STRING_HIDDEN : job.OrganizationName,
         CustomerType: job.CustomerType,
         InternalTag: job.InternalTag,
+        Phase: job.Phase,
         Brand: job.Brand,
         AssetType: job.AssetType,
         PumpModel: job.PumpModel,
@@ -126,7 +130,7 @@ function filterWindingDetails(detail, role, jobStatus) {
         if (!allowedStatuses.includes(jobStatus)) {
              return {
                 id: detail.id,
-                jobNumber: detail.jobNumber,
+                assetId: detail.assetId,
                 message: "Winding details not available at this stage"
             };
         }
