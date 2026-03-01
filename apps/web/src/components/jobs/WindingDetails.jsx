@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Loader2, Database, Plus, Trash2 } from 'lucide-react';
+import { Save, Loader2, Database, Plus, Trash2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const SlotTurnsBuilder = ({ title, data, onChange }) => {
     // data is expected to be an object: { "1-8": "50", "1-10": "50" }
     const [rows, setRows] = useState(
-        data ? Object.entries(data).map(([pitch, turns]) => ({ pitch, turns })) : [{ pitch: '', turns: '' }]
+        data && Object.keys(data).length > 0 ? Object.entries(data).map(([pitch, turns]) => ({ pitch, turns })) : [{ pitch: '', turns: '' }]
     );
 
     useEffect(() => {
@@ -107,7 +107,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
 
     useEffect(() => {
         const fetchDetails = async () => {
-            if (!assetId) return;
+            if (!assetId) {
+                setLoading(false);
+                return; // Early return, but loading is set to false
+            }
             try {
                 const res = await fetch(`${apiUrl}/winding-details/asset/${assetId}`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -187,6 +190,15 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
     };
 
     if (loading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-slate-400" /></div>;
+
+    if (!assetId) {
+        return (
+            <div className="p-8 text-center bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                <AlertCircle className="mx-auto text-amber-500 mb-2" size={32} />
+                <p className="text-slate-600 dark:text-slate-300">Winding details cannot be loaded because no Asset is linked to this job.</p>
+            </div>
+        );
+    }
 
     const is1Phase = formData.phase === '1-PHASE';
 
