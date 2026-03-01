@@ -3,17 +3,24 @@ import { Save, Loader2, Database, Plus, Trash2, AlertCircle } from 'lucide-react
 import toast from 'react-hot-toast';
 
 const SlotTurnsBuilder = ({ title, data, onChange }) => {
-    // data is expected to be an object: { "1-8": "50", "1-10": "50" }
-    const [rows, setRows] = useState(
-        data && Object.keys(data).length > 0 ? Object.entries(data).map(([pitch, turns]) => ({ pitch, turns })) : [{ pitch: '', turns: '' }]
-    );
+    // Initial state setup. Only initialize once if data is present.
+    const [rows, setRows] = useState(() => {
+        if (data && Object.keys(data).length > 0) {
+            return Object.entries(data).map(([pitch, turns]) => ({ pitch, turns }));
+        }
+        return [{ pitch: '', turns: '' }];
+    });
+
+    // Track initialization to prevent overwriting user input during parent re-renders
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
-        // Sync internal state if external data changes (e.g. initial load)
-        if (data && Object.keys(data).length > 0) {
+        // Sync internal state ONLY on first meaningful data load to prevent overwriting active typing
+        if (!initialized && data && Object.keys(data).length > 0) {
              setRows(Object.entries(data).map(([pitch, turns]) => ({ pitch, turns })));
+             setInitialized(true);
         }
-    }, [data]);
+    }, [data, initialized]);
 
     const handleRowChange = (index, field, value) => {
         const newRows = [...rows];
@@ -35,8 +42,9 @@ const SlotTurnsBuilder = ({ title, data, onChange }) => {
     const updateParent = (currentRows) => {
         const jsonObj = {};
         currentRows.forEach(row => {
-            if (row.pitch && row.turns) {
-                jsonObj[row.pitch] = row.turns;
+            // Only add fully formed pairs to the final JSON to avoid {"": "50"} or {"1-8": ""}
+            if (row.pitch.trim() !== '' && row.turns.trim() !== '') {
+                jsonObj[row.pitch.trim()] = row.turns.trim();
             }
         });
         onChange(jsonObj);
@@ -179,7 +187,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error('Failed to save details');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to save details');
+            }
 
             toast.success('Winding details saved successfully');
         } catch (err) {
