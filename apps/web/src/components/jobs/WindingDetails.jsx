@@ -101,6 +101,7 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
         kw: '',
         phase: phase || '3-PHASE',
         connection_type: 'NONE',
+        slots: '',
         swg_run: '', swg_start: '', swg_3phase: '',
         wire_id_run: '', wire_od_run: '',
         wire_id_start: '', wire_od_start: '',
@@ -228,7 +229,7 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
             <form onSubmit={handleSave} className="space-y-6">
 
                 {/* General Specs */}
-                <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">HP</label>
                         <input type="number" step="0.01" name="hp" value={formData.hp} onChange={handleChange} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
@@ -236,6 +237,22 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                     <div>
                         <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">KW</label>
                         <input type="number" step="0.01" name="kw" value={formData.kw} onChange={handleChange} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Total Slots</label>
+                        <input
+                            type="number"
+                            name="slots"
+                            list="slots-presets"
+                            value={formData.slots}
+                            onChange={handleChange}
+                            className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                        />
+                        <datalist id="slots-presets">
+                            <option value="18" />
+                            <option value="24" />
+                            <option value="36" />
+                        </datalist>
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Connection Type</label>

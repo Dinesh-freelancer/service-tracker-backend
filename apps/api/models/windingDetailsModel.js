@@ -3,7 +3,7 @@ const pool = require('../db');
 // Allowed columns for Winding Details based on new DDL
 // Using AssetId to match standard database casing conventions in this project
 const ALLOWED_COLUMNS = [
-    'AssetId', 'hp', 'kw', 'phase', 'connection_type',
+    'AssetId', 'hp', 'kw', 'phase', 'connection_type', 'slots',
     'swg_run', 'swg_start', 'swg_3phase',
     'wire_id_run', 'wire_od_run',
     'wire_id_start', 'wire_od_start',
