@@ -27,13 +27,17 @@ async function getWindingDetailsByAssetId(assetId) {
 
 // Upsert winding details (Insert or Update if exists)
 async function upsertWindingDetails(data) {
-    // Map incoming assetId to the DB column name AssetId
-    const { assetId, ...details } = data;
+    // Destructure both camelCase and PascalCase to ensure they don't end up in 'details'
+    const { assetId, AssetId, id, ...details } = data;
+
+    // We use the explicit assetId passed from the controller/route parameter
+    const targetAssetId = assetId || AssetId;
 
     // Filter input data against allowed columns
     const safeDetails = {};
     Object.keys(details).forEach(key => {
-        if (ALLOWED_COLUMNS.includes(key)) {
+        // We explicitly skip AssetId here as we handle it manually below
+        if (ALLOWED_COLUMNS.includes(key) && key !== 'AssetId') {
             // Handle JSON stringification for slot_turns
             if (JSON_COLUMNS.includes(key) && details[key] !== null && typeof details[key] === 'object') {
                 safeDetails[key] = JSON.stringify(details[key]);
@@ -46,10 +50,10 @@ async function upsertWindingDetails(data) {
     // If there's nothing to update (which shouldn't happen usually, but just in case)
     // we still might want to just insert an empty shell, but let's proceed.
 
-    // Explicitly add AssetId to the front of the query arrays
+    // Explicitly add AssetId to the front of the query arrays exactly once
     const fields = ['AssetId', ...Object.keys(safeDetails)];
     const placeholders = fields.map(() => '?').join(', ');
-    const values = [assetId, ...Object.values(safeDetails)];
+    const values = [targetAssetId, ...Object.values(safeDetails)];
 
     // Build ON DUPLICATE KEY UPDATE clause
     // We don't need to update AssetId, just the other fields
@@ -70,7 +74,7 @@ async function upsertWindingDetails(data) {
         values
     );
 
-    return getWindingDetailsByAssetId(assetId);
+    return getWindingDetailsByAssetId(targetAssetId);
 }
 
 module.exports = {
