@@ -23,8 +23,13 @@ const SlotTurnsBuilder = ({ title, data, onChange }) => {
     }, [data, initialized]);
 
     const handleRowChange = (index, field, value) => {
-        const newRows = [...rows];
-        newRows[index][field] = value;
+        // MUST map to create a new object reference so React detects the deep change
+        const newRows = rows.map((row, i) => {
+            if (i === index) {
+                return { ...row, [field]: value };
+            }
+            return row;
+        });
         setRows(newRows);
         updateParent(newRows);
     };
@@ -35,16 +40,21 @@ const SlotTurnsBuilder = ({ title, data, onChange }) => {
 
     const removeRow = (index) => {
         const newRows = rows.filter((_, i) => i !== index);
-        setRows(newRows.length ? newRows : [{ pitch: '', turns: '' }]);
-        updateParent(newRows);
+        const finalRows = newRows.length ? newRows : [{ pitch: '', turns: '' }];
+        setRows(finalRows);
+        updateParent(finalRows);
     };
 
     const updateParent = (currentRows) => {
         const jsonObj = {};
         currentRows.forEach(row => {
+            // Safely handle values, ensure they are strings before trimming
+            const safePitch = String(row.pitch || '').trim();
+            const safeTurns = String(row.turns || '').trim();
+
             // Only add fully formed pairs to the final JSON to avoid {"": "50"} or {"1-8": ""}
-            if (row.pitch.trim() !== '' && row.turns.trim() !== '') {
-                jsonObj[row.pitch.trim()] = row.turns.trim();
+            if (safePitch !== '' && safeTurns !== '') {
+                jsonObj[safePitch] = safeTurns;
             }
         });
         onChange(jsonObj);
