@@ -31,11 +31,11 @@ async function getPartUsedById(partUsedId) {
 }
 
 async function addPartUsed(partData) {
-    const { JobNumber, PartId, Qty, CostPrice, SellingPrice } = partData;
+    const { JobNumber, PartId, PartName, Qty, CostPrice, SellingPrice } = partData;
     const [result] = await pool.query(
-        `INSERT INTO partsused (JobNumber, PartId, Qty, CostPrice, SellingPrice)
-     VALUES (?, ?, ?, ?, ?)`,
-        [JobNumber, PartId, Qty, CostPrice, SellingPrice]
+        `INSERT INTO partsused (JobNumber, PartId, PartName, Qty, CostPrice, SellingPrice)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+        [JobNumber, PartId, PartName, Qty, CostPrice, SellingPrice]
     );
     const [rows] = await pool.query('SELECT * FROM partsused WHERE PartUsedId = ?', [result.insertId]);
     return rows[0];

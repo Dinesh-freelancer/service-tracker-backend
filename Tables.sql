@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `partsused` (
   `PartName` varchar(100) NOT NULL,
   `Qty` decimal(10,2) DEFAULT '1.00',
   `CostPrice` decimal(10,2) NOT NULL,
-  `BilledPrice` decimal(10,2) DEFAULT NULL,
+  `SellingPrice` decimal(10,2) DEFAULT NULL,
   `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`PartUsedId`),
   CONSTRAINT `fk_parts_job` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE,

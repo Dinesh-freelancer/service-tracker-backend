@@ -95,7 +95,7 @@ router.get('/:partUsedId',
  *                 type: number
  *               CostPrice:
  *                 type: number
- *               BilledPrice:
+ *               SellingPrice:
  *                 type: number
  *               Supplier:
  *                 type: string
