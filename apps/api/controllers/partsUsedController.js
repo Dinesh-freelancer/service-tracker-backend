@@ -40,7 +40,7 @@ async function createPartUsed(req, res, next) {
 
         // Check for Low Stock
         if (req.body.PartId) {
-            const part = await InventoryModel.getPartById(req.body.PartId);
+            const part = await InventoryModel.getInventoryById(req.body.PartId);
             if (part && part.QuantityInStock <= part.LowStockThreshold) {
                 await NotificationService.notifyAdminsAndOwners(
                     'LowStock',
