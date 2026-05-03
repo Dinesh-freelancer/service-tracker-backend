@@ -128,7 +128,25 @@ CREATE TABLE spare_price_search (
 
 **Purpose:** High-performance table for syncing spare part prices from external systems.
 
-*(Other tables like users, customers, inventory, partsused remain similar but updated to support new triggers)*
+### 5. **inventory_batches Table (New - FIFO Tracking)**
+
+```sql
+CREATE TABLE inventory_batches (
+  BatchId INT AUTO_INCREMENT PRIMARY KEY,
+  PartId INT NOT NULL,
+  CostPrice DECIMAL(10,2) NOT NULL,
+  OriginalQty DECIMAL(10,2) NOT NULL,
+  QuantityRemaining DECIMAL(10,2) NOT NULL,
+  SourceType ENUM('Purchase', 'Adjustment', 'Return'),
+  SourceId INT,
+  ReceivedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (PartId) REFERENCES inventory(PartId)
+);
+```
+
+**Purpose:** Tracks exact cost prices per batch received via Purchase Orders. Used to calculate precise FIFO (First-In, First-Out) inventory consumption costs when parts are added to jobs, rather than relying on a static `DefaultCostPrice`.
+
+*(Other tables like users, customers, inventory, partsused remain similar but updated to support FIFO logic)*
 
 ***
 

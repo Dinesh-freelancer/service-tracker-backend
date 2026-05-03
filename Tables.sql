@@ -326,6 +326,23 @@ CREATE TABLE IF NOT EXISTS `purchaseitems` (
   CONSTRAINT `fk_pi_inventory` FOREIGN KEY (`PartId`) REFERENCES `inventory` (`PartId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+DROP TRIGGER IF EXISTS `trg_update_stock_on_part_used`;
+DROP TRIGGER IF EXISTS `trg_restore_stock_on_part_delete`;
+DROP TRIGGER IF EXISTS `trg_adjust_stock_on_part_update`;
+
+CREATE TABLE IF NOT EXISTS `inventory_batches` (
+  `BatchId` int NOT NULL AUTO_INCREMENT,
+  `PartId` int NOT NULL,
+  `CostPrice` decimal(10,2) NOT NULL,
+  `OriginalQty` decimal(10,2) NOT NULL,
+  `QuantityRemaining` decimal(10,2) NOT NULL,
+  `SourceType` enum('Purchase', 'Adjustment', 'Return') DEFAULT 'Adjustment',
+  `SourceId` int DEFAULT NULL,
+  `ReceivedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`BatchId`),
+  CONSTRAINT `fk_batch_inventory` FOREIGN KEY (`PartId`) REFERENCES `inventory` (`PartId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `windingdetails` (
   `id` int NOT NULL AUTO_INCREMENT,
   `jobNumber` varchar(50) NOT NULL,
@@ -384,49 +401,6 @@ BEGIN
 END //
 
 -- Automatically deduct inventory stock when parts are used
-CREATE TRIGGER `trg_update_stock_on_part_used`
-AFTER INSERT ON `partsused`
-FOR EACH ROW
-BEGIN
-    IF NEW.PartId IS NOT NULL THEN
-        UPDATE `inventory` 
-        SET QuantityInStock = QuantityInStock - NEW.Qty
-        WHERE PartId = NEW.PartId;
-    END IF;
-END //
-
--- Restore stock when a part is removed from a job
-CREATE TRIGGER `trg_restore_stock_on_part_delete`
-AFTER DELETE ON `partsused`
-FOR EACH ROW
-BEGIN
-    IF OLD.PartId IS NOT NULL THEN
-        UPDATE `inventory`
-        SET QuantityInStock = QuantityInStock + OLD.Qty
-        WHERE PartId = OLD.PartId;
-    END IF;
-END //
-
--- Adjust stock when part quantity changes or part is swapped
-CREATE TRIGGER `trg_adjust_stock_on_part_update`
-AFTER UPDATE ON `partsused`
-FOR EACH ROW
-BEGIN
-    IF OLD.PartId IS NOT NULL THEN
-        -- Revert old quantity
-        UPDATE `inventory`
-        SET QuantityInStock = QuantityInStock + OLD.Qty
-        WHERE PartId = OLD.PartId;
-    END IF;
-
-    IF NEW.PartId IS NOT NULL THEN
-        -- Deduct new quantity
-        UPDATE `inventory`
-        SET QuantityInStock = QuantityInStock - NEW.Qty
-        WHERE PartId = NEW.PartId;
-    END IF;
-END //
-
 DELIMITER ;
 
 SET SQL_MODE=@OLD_SQL_MODE;

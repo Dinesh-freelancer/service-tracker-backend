@@ -75,6 +75,8 @@ async function createPurchase(purchaseData, items) {
         );
         const purchaseId = pResult.insertId;
 
+        const inventoryModel = require('./inventoryModel');
+
         // Insert Items
         for (const item of items) {
             item.PurchaseId = purchaseId;
@@ -87,11 +89,8 @@ async function createPurchase(purchaseData, items) {
                 iValues
             );
 
-            // Update Inventory Stock
-            await connection.query(
-                `UPDATE inventory SET QuantityInStock = QuantityInStock + ? WHERE PartId = ?`,
-                [item.Qty, item.PartId]
-            );
+            // Update Inventory Stock via new FIFO Batch system
+            await inventoryModel.createBatch(connection, item.PartId, item.UnitPrice, item.Qty, 'Purchase', purchaseId);
         }
 
         await connection.commit();
