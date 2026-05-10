@@ -17,6 +17,7 @@ import MyDocuments from './pages/customer/MyDocuments';
 import Profile from './pages/customer/Profile';
 import WorkLogs from './pages/worker/WorkLogs';
 import Reports from './pages/reports/Reports';
+import CreatePurchase from './pages/admin/CreatePurchase';
 import './App.css';
 
 // Protected Route Wrapper
@@ -51,6 +52,7 @@ function App() {
 
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Inventory />} />
+          <Route path="purchases/create" element={<CreatePurchase />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="work-logs" element={<WorkLogs />} />

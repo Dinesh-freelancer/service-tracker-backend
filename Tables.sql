@@ -265,6 +265,8 @@ CREATE TABLE IF NOT EXISTS `purchases` (
   `PurchaseDate` datetime NOT NULL,
   `SupplierId` int NOT NULL,
   `PurchasedBy` int NOT NULL,
+  `PaymentStatus` enum('Pending','Paid','Partial') DEFAULT 'Pending',
+  `Notes` text,
   `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`PurchaseId`),
   CONSTRAINT `fk_purch_supplier` FOREIGN KEY (`SupplierId`) REFERENCES `suppliers` (`SupplierId`),

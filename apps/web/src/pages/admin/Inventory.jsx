@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +11,8 @@ import {
   Trash2,
   Loader2,
   AlertTriangle,
-  ArrowUpDown
+  ArrowUpDown,
+  ShoppingCart
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
@@ -31,6 +33,7 @@ const inventorySchema = z.object({
 });
 
 const Inventory = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,9 +193,14 @@ const Inventory = () => {
             <p className="text-slate-500 dark:text-slate-400 text-sm">Manage parts, stock levels, and pricing.</p>
         </div>
         {(role === 'Owner' || role === 'Admin') && (
-            <Button onClick={() => { reset(); setIsAddOpen(true); }} className="flex items-center gap-2">
-                <Plus size={18} /> Add Item
-            </Button>
+            <div className="flex gap-2">
+                <Button variant="outline" onClick={() => navigate('/dashboard/purchases/create')} className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <ShoppingCart size={18} /> Record Purchase
+                </Button>
+                <Button onClick={() => { reset(); setIsAddOpen(true); }} className="flex items-center gap-2">
+                    <Plus size={18} /> Add Item
+                </Button>
+            </div>
         )}
       </div>
 

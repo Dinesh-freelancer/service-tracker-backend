@@ -5,21 +5,12 @@ const { STRING_HIDDEN } = require('../utils/constants');
 // Get all purchases
 async function getAllPurchases(req, res, next) {
     try {
-        const hideSensitive = req.hideSensitive;
-        let purchases = await purchaseModel.getAllPurchases();
-        if (hideSensitive) {
-            purchases = purchases.map(item => ({
-                "PurchaseId": item.PurchaseId,
-                "PurchaseDate": STRING_HIDDEN,
-                "SupplierId": STRING_HIDDEN,
-                "PurchasedBy": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN,
-                "SupplierName": STRING_HIDDEN,
-                "PurchasedByName": STRING_HIDDEN
-            }));
-        }
+        let filters = req.query || {};
+        let purchases = await purchaseModel.getAllPurchases(filters);
+        // Note: With RBAC, Admin/Owner can see purchases.
+        // Workers should not access this route at all (protected in routes).
+        // If we want to hide sensitive info from Admins (like supplier details?), we would do it here.
+        // But typically Admin needs to see purchases. So we return as is.
         res.json(purchases);
     } catch (err) {
         next(err);
@@ -33,19 +24,6 @@ async function getPurchaseById(req, res, next) {
         let purchase = await purchaseModel.getPurchaseById(req.params.id);
         if (!purchase) {
             return res.status(404).json({ error: 'Purchase not found' });
-        }
-        if(hideSensitive){
-            purchase = {
-                "PurchaseId": purchase.PurchaseId,
-                "PurchaseDate": STRING_HIDDEN,
-                "SupplierId": STRING_HIDDEN,
-                "PurchasedBy": STRING_HIDDEN,
-                "Notes": STRING_HIDDEN,
-                "CreatedAt": STRING_HIDDEN,
-                "UpdatedAt": STRING_HIDDEN,
-                "SupplierName": STRING_HIDDEN,
-                "PurchasedByName": STRING_HIDDEN
-            };
         }
         res.json(purchase);
     } catch (err) {

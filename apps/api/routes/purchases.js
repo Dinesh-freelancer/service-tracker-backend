@@ -8,10 +8,10 @@ const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
 
-const OWNER_ONLY = [constants.AUTH_ROLE_OWNER];
+const ADMIN_OWNER = [constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_ADMIN];
 
-// All routes protected and accessible by Owner only
-router.use(authorize(...OWNER_ONLY));
+// All routes protected and accessible by Owner and Admin
+router.use(authorize(...ADMIN_OWNER));
 
 /**
  * @swagger
@@ -87,6 +87,9 @@ router.get('/:id', purchaseController.getPurchaseById);
  *                     format: date-time
  *                   Notes:
  *                     type: string
+ *                   PaymentStatus:
+ *                     type: string
+ *                     enum: [Pending, Paid, Partial]
  *               items:
  *                 type: array
  *                 items:
