@@ -7,6 +7,7 @@ import { ShoppingCart, Save, Plus, Trash2, ArrowLeft, Loader2, Search } from 'lu
 import toast from 'react-hot-toast';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import Modal from '../../components/ui/Modal';
 
 const itemSchema = z.object({
   PartId: z.number().min(1, 'Part is required'),
@@ -23,11 +24,22 @@ const purchaseSchema = z.object({
   items: z.array(itemSchema).min(1, 'At least one item is required')
 });
 
+const newSupplierSchema = z.object({
+  SupplierName: z.string().min(2, 'Supplier Name is required'),
+  ContactName: z.string().optional(),
+  ContactPhone: z.string().optional(),
+  ContactEmail: z.string().email('Invalid email address').or(z.literal(''))
+});
+
 const CreatePurchase = () => {
   const navigate = useNavigate();
   const [suppliers, setSuppliers] = useState([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // New Supplier Modal logic
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+  const [isSubmittingSupplier, setIsSubmittingSupplier] = useState(false);
 
   // Search Inventory logic
   const [inventorySearch, setInventorySearch] = useState('');
@@ -45,6 +57,15 @@ const CreatePurchase = () => {
       PaymentStatus: 'Pending',
       items: []
     }
+  });
+
+  const {
+    register: registerSupplier,
+    handleSubmit: handleSupplierSubmit,
+    reset: resetSupplier,
+    formState: { errors: supplierErrors }
+  } = useForm({
+    resolver: zodResolver(newSupplierSchema)
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -73,6 +94,38 @@ const CreatePurchase = () => {
       toast.error(err.message);
     } finally {
       setLoadingSuppliers(false);
+    }
+  };
+
+  const onSubmitNewSupplier = async (data) => {
+    setIsSubmittingSupplier(true);
+    try {
+        const res = await fetch(`${apiUrl}/suppliers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Failed to add supplier');
+
+        toast.success(`Supplier ${data.SupplierName} added successfully`);
+
+        // Refresh supplier list
+        await fetchSuppliers();
+
+        // Auto-select the newly created supplier
+        setValue('SupplierId', String(result.SupplierId));
+
+        setIsSupplierModalOpen(false);
+        resetSupplier();
+    } catch (err) {
+        toast.error(err.message);
+    } finally {
+        setIsSubmittingSupplier(false);
     }
   };
 
@@ -195,9 +248,18 @@ const CreatePurchase = () => {
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Supplier *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Supplier *
+                    </label>
+                    <button
+                        type="button"
+                        onClick={() => setIsSupplierModalOpen(true)}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                        <Plus size={12} /> New Supplier
+                    </button>
+                </div>
                 {loadingSuppliers ? (
                      <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 size={16} className="animate-spin" /> Loading...</div>
                 ) : (
@@ -382,6 +444,48 @@ const CreatePurchase = () => {
         </div>
 
       </form>
+
+      {/* New Supplier Modal */}
+      <Modal
+        isOpen={isSupplierModalOpen}
+        onClose={() => { setIsSupplierModalOpen(false); resetSupplier(); }}
+        title="Add New Supplier"
+      >
+        <form onSubmit={handleSupplierSubmit(onSubmitNewSupplier)} className="space-y-4">
+            <Input
+                label="Supplier Name *"
+                {...registerSupplier('SupplierName')}
+                error={supplierErrors.SupplierName?.message}
+            />
+            <Input
+                label="Contact Person"
+                {...registerSupplier('ContactName')}
+                error={supplierErrors.ContactName?.message}
+            />
+            <Input
+                label="Contact Phone"
+                {...registerSupplier('ContactPhone')}
+                error={supplierErrors.ContactPhone?.message}
+            />
+            <Input
+                label="Contact Email"
+                type="email"
+                {...registerSupplier('ContactEmail')}
+                error={supplierErrors.ContactEmail?.message}
+            />
+
+            <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => { setIsSupplierModalOpen(false); resetSupplier(); }}>
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmittingSupplier} className="flex items-center gap-2">
+                    {isSubmittingSupplier ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    Save Supplier
+                </Button>
+            </div>
+        </form>
+      </Modal>
+
     </div>
   );
 };
