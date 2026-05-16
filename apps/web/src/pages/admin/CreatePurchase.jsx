@@ -146,7 +146,7 @@ const CreatePurchase = () => {
         });
         if (res.ok) {
           const data = await res.json();
-          setInventoryResults(data.rows || data); // handle pagination wrapper
+          setInventoryResults(data.data || data.rows || data); // handle pagination wrapper
         }
       } catch (err) {
         console.error(err);
