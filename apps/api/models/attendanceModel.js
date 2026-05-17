@@ -40,13 +40,16 @@ async function getAttendanceById(attendanceId) {
 }
 
 async function addAttendance(attendanceData) {
-    const { WorkerId, AttendanceDate, Status, Notes } = attendanceData;
-    // Use UPSERT so Admin can click and overwrite a day's attendance
+    const { WorkerId, AttendanceDate, Status, CheckInTime, CheckOutTime } = attendanceData;
+    // Use UPSERT so Admin can click and overwrite a day's attendance, including times
     const [result] = await pool.query(
-        `INSERT INTO attendance (WorkerId, AttendanceDate, Status)
-         VALUES (?, ?, ?)
-         ON DUPLICATE KEY UPDATE Status = VALUES(Status)`,
-        [WorkerId, AttendanceDate, Status]
+        `INSERT INTO attendance (WorkerId, AttendanceDate, Status, CheckInTime, CheckOutTime)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            Status = VALUES(Status),
+            CheckInTime = VALUES(CheckInTime),
+            CheckOutTime = VALUES(CheckOutTime)`,
+        [WorkerId, AttendanceDate, Status, CheckInTime || null, CheckOutTime || null]
     );
     return result.insertId;
 }

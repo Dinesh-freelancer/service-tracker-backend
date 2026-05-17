@@ -6,6 +6,7 @@ async function listAttendance(req, res, next) {
         const hideSensitive = req.hideSensitive;
         const { date, dateFrom, dateTo, workerId } = req.query;
         let records = await attendanceModel.getAttendance({ date, dateFrom, dateTo, workerId });
+        // Let hideSensitive mask it for customers/etc., but Admins and Owners (and Workers themselves) need times
         if (hideSensitive) {
             records = records.map(record => ({
                 "AttendanceId": record.AttendanceId,

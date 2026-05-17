@@ -377,7 +377,7 @@ const CreatePurchase = () => {
                                 <tr key={field.id} className="group">
                                     <td className="p-3">
                                         <div className="font-medium text-slate-900 dark:text-white text-sm">{field.PartName}</div>
-                                        <input type="hidden" {...register(`items.${index}.PartId`)} />
+                                        <input type="hidden" {...register(`items.${index}.PartId`, { valueAsNumber: true })} />
                                         <input type="hidden" {...register(`items.${index}.PartName`)} />
                                     </td>
                                     <td className="p-3">

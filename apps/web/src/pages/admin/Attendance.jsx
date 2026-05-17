@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2, CheckCircle, XCircle, Clock, Plane, FileText } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2, CheckCircle, XCircle, Clock, Plane, FileText, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../../components/ui/Button';
+import Modal from '../../components/ui/Modal';
+import Input from '../../components/ui/Input';
 
 const Attendance = () => {
     const [workers, setWorkers] = useState([]);
@@ -33,9 +35,10 @@ const Attendance = () => {
             const workersList = await workersRes.json();
             setWorkers(workersList);
 
-            // Fetch attendance for this month
-            const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-            const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+            // Fetch attendance for this month (avoid timezone shifts by explicitly formatting locally)
+            const pad = (n) => n.toString().padStart(2, '0');
+            const startDate = `${year}-${pad(month + 1)}-01`;
+            const endDate = `${year}-${pad(month + 1)}-${pad(daysInMonth)}`;
 
             const attRes = await fetch(`${apiUrl}/attendance?dateFrom=${startDate}&dateTo=${endDate}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -59,41 +62,38 @@ const Attendance = () => {
         setCurrentDate(new Date(year, month + 1, 1));
     };
 
-    // Find a specific record in our loaded state
-    const getAttendanceStatus = (workerId, day) => {
-        // Date format: YYYY-MM-DD
-        const targetDate = new Date(Date.UTC(year, month, day)).toISOString().split('T')[0];
+    // Modal states
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedCell, setSelectedCell] = useState(null); // { worker, day, record }
+    const [formData, setFormData] = useState({ Status: 'Present', CheckInTime: '', CheckOutTime: '', Notes: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-        // Find matching record
-        // The API returns UTC dates, we need to match the YYYY-MM-DD prefix.
-        const record = attendanceData.find(a =>
+    // Find a specific record in our loaded state
+    const getAttendanceRecord = (workerId, day) => {
+        const targetDate = new Date(Date.UTC(year, month, day)).toISOString().split('T')[0];
+        return attendanceData.find(a =>
             a.WorkerId === workerId &&
             a.AttendanceDate &&
             a.AttendanceDate.startsWith(targetDate)
         );
-
-        return record ? record.Status : null;
     };
 
-    const cycleStatus = async (workerId, day, currentStatus) => {
-        const statuses = ['Present', 'Absent', 'Half Day', 'Field Work', 'On Leave'];
-        let nextStatusIndex = 0;
-
-        if (currentStatus) {
-            const currentIndex = statuses.indexOf(currentStatus);
-            nextStatusIndex = (currentIndex + 1) % statuses.length;
-        }
-
-        const newStatus = statuses[nextStatusIndex];
-        const targetDate = new Date(Date.UTC(year, month, day)).toISOString().split('T')[0];
-
-        // Optimistic UI Update
-        const newRecord = { WorkerId: workerId, AttendanceDate: targetDate, Status: newStatus };
-
-        setAttendanceData(prev => {
-            const filtered = prev.filter(a => !(a.WorkerId === workerId && a.AttendanceDate.startsWith(targetDate)));
-            return [...filtered, newRecord];
+    const handleCellClick = (worker, day, record) => {
+        setSelectedCell({ worker, day, targetDate: new Date(Date.UTC(year, month, day)).toISOString().split('T')[0] });
+        setFormData({
+            Status: record?.Status || 'Present',
+            CheckInTime: record?.CheckInTime || '',
+            CheckOutTime: record?.CheckOutTime || '',
+            Notes: record?.Notes || ''
         });
+        setIsModalOpen(true);
+    };
+
+    const handleModalSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        const { worker, targetDate } = selectedCell;
 
         try {
             const res = await fetch(`${apiUrl}/attendance`, {
@@ -103,17 +103,22 @@ const Attendance = () => {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    WorkerId: workerId,
+                    WorkerId: worker.WorkerId,
                     AttendanceDate: targetDate,
-                    Status: newStatus
+                    Status: formData.Status,
+                    CheckInTime: formData.CheckInTime,
+                    CheckOutTime: formData.CheckOutTime,
+                    Notes: formData.Notes
                 })
             });
-            if (!res.ok) throw new Error('Failed to update status');
-            toast.success(`Marked as ${newStatus}`);
+            if (!res.ok) throw new Error('Failed to update attendance');
+            toast.success(`Attendance updated`);
+            setIsModalOpen(false);
+            fetchData(); // Refresh grid
         } catch (err) {
             toast.error(err.message);
-            // Revert on failure (reload data)
-            fetchData();
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -192,15 +197,26 @@ const Attendance = () => {
                                                 {worker.WorkerName}
                                             </td>
                                             {daysArray.map(day => {
-                                                const status = getAttendanceStatus(worker.WorkerId, day);
+                                                const record = getAttendanceRecord(worker.WorkerId, day);
+                                                const status = record?.Status;
+
+                                                // Build tooltip string
+                                                let tooltip = `${worker.WorkerName} - ${new Date(year, month, day).toLocaleDateString()}`;
+                                                if (status) tooltip += `\nStatus: ${status}`;
+                                                if (record?.CheckInTime) tooltip += `\nIn: ${record.CheckInTime}`;
+                                                if (record?.CheckOutTime) tooltip += `\nOut: ${record.CheckOutTime}`;
+
                                                 return (
                                                     <td key={day} className="p-1 text-center border-l border-slate-50 dark:border-slate-800/50">
                                                         <button
-                                                            onClick={() => cycleStatus(worker.WorkerId, day, status)}
-                                                            className="w-full h-full flex items-center justify-center p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                                                            title={`${worker.WorkerName} - ${new Date(year, month, day).toLocaleDateString()} ${status ? `(${status})` : ''}`}
+                                                            onClick={() => handleCellClick(worker, day, record)}
+                                                            className="w-full h-full flex flex-col items-center justify-center p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer relative group"
+                                                            title={tooltip}
                                                         >
                                                             {getStatusIcon(status)}
+                                                            {(record?.CheckInTime || record?.CheckOutTime) && (
+                                                                <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                                            )}
                                                         </button>
                                                     </td>
                                                 );
@@ -214,6 +230,59 @@ const Attendance = () => {
                 )}
             </div>
         </div>
+
+        {/* Detail/Edit Modal */}
+        <Modal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            title={`Attendance for ${selectedCell?.worker?.WorkerName}`}
+        >
+            <div className="text-sm text-slate-500 mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+                Date: {selectedCell && new Date(year, month, selectedCell.day).toLocaleDateString()}
+            </div>
+
+            <form onSubmit={handleModalSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Status</label>
+                    <select
+                        value={formData.Status}
+                        onChange={(e) => setFormData({...formData, Status: e.target.value})}
+                        className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                    >
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Half Day">Half Day</option>
+                        <option value="Field Work">Field Work</option>
+                        <option value="On Leave">On Leave</option>
+                    </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <Input
+                        label="Check-in Time"
+                        type="time"
+                        value={formData.CheckInTime}
+                        onChange={(e) => setFormData({...formData, CheckInTime: e.target.value})}
+                    />
+                    <Input
+                        label="Check-out Time"
+                        type="time"
+                        value={formData.CheckOutTime}
+                        onChange={(e) => setFormData({...formData, CheckOutTime: e.target.value})}
+                    />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+                        {isSubmitting ? <Loader2 className="animate-spin" size={16}/> : <Save size={16}/>}
+                        Save Attendance
+                    </Button>
+                </div>
+            </form>
+        </Modal>
+
+        </>
     );
 };
 
