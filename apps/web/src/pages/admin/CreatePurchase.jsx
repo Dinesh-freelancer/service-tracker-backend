@@ -193,6 +193,7 @@ const CreatePurchase = () => {
         },
         items: data.items.map(item => ({
           PartId: item.PartId,
+          PartName: item.PartName,
           Qty: item.Qty,
           UnitPrice: item.UnitPrice
         }))

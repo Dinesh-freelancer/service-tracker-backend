@@ -4,8 +4,8 @@ const {STRING_HIDDEN} = require('../utils/constants');
 async function listAttendance(req, res, next) {
     try {
         const hideSensitive = req.hideSensitive;
-        const { date, workerId } = req.query;
-        let records = await attendanceModel.getAttendance({ date, workerId });
+        const { date, dateFrom, dateTo, workerId } = req.query;
+        let records = await attendanceModel.getAttendance({ date, dateFrom, dateTo, workerId });
         if (hideSensitive) {
             records = records.map(record => ({
                 "AttendanceId": record.AttendanceId,

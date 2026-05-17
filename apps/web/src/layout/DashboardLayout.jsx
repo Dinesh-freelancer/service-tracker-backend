@@ -16,7 +16,8 @@ import {
   Eye,
   EyeOff,
   Shield,
-  User
+  User,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
@@ -50,10 +51,12 @@ const DashboardLayout = () => {
       { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     ];
 
+
     const adminItems = [
       { name: 'Jobs', icon: Briefcase, path: '/dashboard/jobs' },
       { name: 'Customers', icon: Users, path: '/dashboard/customers' },
       { name: 'Workers', icon: User, path: '/dashboard/workers' },
+      { name: 'Attendance', icon: CalendarIcon, path: '/dashboard/attendance' },
       { name: 'Inventory', icon: ShoppingBag, path: '/dashboard/inventory' },
       { name: 'Purchases', icon: ShoppingCart, path: '/dashboard/purchases' },
       { name: 'Reports', icon: FileText, path: '/dashboard/reports' },

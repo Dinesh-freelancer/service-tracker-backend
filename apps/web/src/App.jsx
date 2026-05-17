@@ -19,6 +19,7 @@ import WorkLogs from './pages/worker/WorkLogs';
 import Reports from './pages/reports/Reports';
 import Purchases from './pages/admin/Purchases';
 import CreatePurchase from './pages/admin/CreatePurchase';
+import Attendance from './pages/admin/Attendance';
 import './App.css';
 
 // Protected Route Wrapper
@@ -50,6 +51,7 @@ function App() {
           <Route path="jobs/:jobNumber" element={<JobDetails />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="workers" element={<Workers />} />
+          <Route path="attendance" element={<Attendance />} />
 
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Inventory />} />
