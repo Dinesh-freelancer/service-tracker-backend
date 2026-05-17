@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { DollarSign, TrendingUp, Loader2, Calendar, FileText } from 'lucide-react';
+import { DollarSign, TrendingUp, Loader2, Calendar, FileText, Download } from 'lucide-react';
 
 const Reports = () => {
   const [loading, setLoading] = useState(true);
@@ -69,6 +69,36 @@ const Reports = () => {
       setDateRange(prev => ({ ...prev, [name]: value }));
   };
 
+  const exportToCSV = () => {
+      if (!jobDetails || jobDetails.length === 0) return;
+      const headers = ['JobNumber', 'DateReceived', 'CustomerName', 'Device', 'BilledAmount', 'TotalPaid', 'Outstanding', 'PartsCost', 'Profit'];
+      const csvData = jobDetails.map(job => [
+          job.JobNumber,
+          job.DateReceived ? new Date(job.DateReceived).toLocaleDateString() : '',
+          `"${job.CustomerName || ''}"`,
+          `"${job.PumpBrand || ''} - ${job.PumpModel || ''}"`,
+          job.BilledAmount || 0,
+          job.TotalPaid || 0,
+          job.Outstanding || 0,
+          job.PartsCost || 0,
+          job.Profit || 0
+      ]);
+
+      const csvContent = [
+          headers.join(','),
+          ...csvData.map(row => row.join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  };
+
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ff0000', '#0000ff'];
 
   return (
@@ -109,7 +139,7 @@ const Reports = () => {
             <>
                 {/* Financial Cards (Owner Only) */}
                 {isOwner && financialData && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600">
@@ -117,18 +147,7 @@ const Reports = () => {
                                 </div>
                                 <div>
                                     <div className="text-sm text-slate-500">Total Billed</div>
-                                    <div className="text-2xl font-bold text-slate-900 dark:text-white">₹{financialData.TotalAmountBilled?.toLocaleString() || 0}</div>
-                                </div>
-                            </div>
-                        </div>
-                         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600">
-                                    <DollarSign size={24} />
-                                </div>
-                                <div>
-                                    <div className="text-sm text-slate-500">Payments Received</div>
-                                    <div className="text-2xl font-bold text-slate-900 dark:text-white">₹{financialData.TotalPaymentsReceived?.toLocaleString() || 0}</div>
+                                    <div className="text-xl font-bold text-slate-900 dark:text-white">₹{financialData.TotalAmountBilled?.toLocaleString() || 0}</div>
                                 </div>
                             </div>
                         </div>
@@ -138,8 +157,34 @@ const Reports = () => {
                                     <TrendingUp size={24} />
                                 </div>
                                 <div>
-                                    <div className="text-sm text-slate-500">Outstanding</div>
-                                    <div className="text-2xl font-bold text-slate-900 dark:text-white">₹{financialData.TotalOutstanding?.toLocaleString() || 0}</div>
+                                    <div className="text-sm text-slate-500">Parts Cost (COGS)</div>
+                                    <div className="text-xl font-bold text-slate-900 dark:text-white">₹{financialData.TotalPartsCost?.toLocaleString() || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+                         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600">
+                                    <DollarSign size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-sm text-slate-500">Gross Profit</div>
+                                    <div className="text-xl font-bold text-slate-900 dark:text-white">₹{financialData.GrossProfit?.toLocaleString() || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600">
+                                    <TrendingUp size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-sm text-slate-500">Profit Margin</div>
+                                    <div className="text-xl font-bold text-slate-900 dark:text-white">
+                                        {financialData.TotalAmountBilled > 0
+                                            ? ((financialData.GrossProfit / financialData.TotalAmountBilled) * 100).toFixed(1) + '%'
+                                            : '0%'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -194,24 +239,32 @@ const Reports = () => {
                 {isOwner && jobDetails.length > 0 && (
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <FileText size={20} className="text-blue-600"/>
-                                Detailed Financial Report
-                            </h3>
-                            <div className="text-xs text-slate-500">
-                                Showing {jobDetails.length} records
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <FileText size={20} className="text-blue-600"/>
+                                    Detailed Financial Report
+                                </h3>
+                                <div className="text-xs text-slate-500 mt-1">
+                                    Showing {jobDetails.length} records
+                                </div>
                             </div>
+                            <button
+                                onClick={exportToCSV}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors text-sm font-medium"
+                            >
+                                <Download size={16} /> Export CSV
+                            </button>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse whitespace-nowrap">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">
                                         <th className="p-4 font-semibold">Job #</th>
                                         <th className="p-4 font-semibold">Date Received</th>
                                         <th className="p-4 font-semibold">Customer</th>
-                                        <th className="p-4 font-semibold">Device</th>
                                         <th className="p-4 font-semibold text-right">Billed (₹)</th>
-                                        <th className="p-4 font-semibold text-right">Paid (₹)</th>
+                                        <th className="p-4 font-semibold text-right">Parts Cost (₹)</th>
+                                        <th className="p-4 font-semibold text-right">Profit (₹)</th>
                                         <th className="p-4 font-semibold text-right">Balance (₹)</th>
                                     </tr>
                                 </thead>
@@ -223,16 +276,17 @@ const Reports = () => {
                                                 {job.DateReceived ? new Date(job.DateReceived).toLocaleDateString() : '-'}
                                             </td>
                                             <td className="p-4 text-slate-600 dark:text-slate-300">
-                                                {job.CustomerName || `ID: ${job.CustomerId}`}
-                                            </td>
-                                            <td className="p-4 text-slate-600 dark:text-slate-300 text-xs">
-                                                {job.PumpBrand} - {job.PumpModel}
+                                                <div className="font-medium">{job.CustomerName || `ID: ${job.CustomerId}`}</div>
+                                                <div className="text-xs text-slate-400">{job.PumpBrand} - {job.PumpModel}</div>
                                             </td>
                                             <td className="p-4 text-right font-medium text-slate-900 dark:text-white">
                                                 {job.BilledAmount > 0 ? job.BilledAmount.toLocaleString() : (job.EstimatedAmount ? `~${job.EstimatedAmount.toLocaleString()}` : '-')}
                                             </td>
+                                            <td className="p-4 text-right text-red-500 dark:text-red-400 font-medium">
+                                                {job.PartsCost > 0 ? job.PartsCost.toLocaleString() : '-'}
+                                            </td>
                                             <td className="p-4 text-right text-green-600 font-medium">
-                                                {job.TotalPaid > 0 ? job.TotalPaid.toLocaleString() : '-'}
+                                                {job.Profit !== undefined && job.Profit !== null ? job.Profit.toLocaleString() : '-'}
                                             </td>
                                             <td className={`p-4 text-right font-bold ${job.Outstanding > 0 ? 'text-red-500' : 'text-slate-400'}`}>
                                                 {job.Outstanding > 0 ? job.Outstanding.toLocaleString() : '0'}

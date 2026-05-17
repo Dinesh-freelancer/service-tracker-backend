@@ -35,16 +35,26 @@ async function getFinancialSummaryAllJobs(startDate, endDate) {
            sr.PumpModel,
            sr.MotorBrand,
            sr.MotorModel,
-           COALESCE(SUM(p.Amount), 0) AS TotalPaid,
+           COALESCE(p_agg.TotalPaid, 0) AS TotalPaid,
+           COALESCE(pu_agg.TotalPartsCost, 0) AS PartsCost,
            COALESCE(sr.EstimatedAmount, 0) AS EstimatedAmount,
            COALESCE(sr.BilledAmount, 0) AS BilledAmount,
-           (COALESCE(sr.BilledAmount, sr.EstimatedAmount, 0) - COALESCE(SUM(p.Amount), 0)) AS Outstanding,
+           (COALESCE(sr.BilledAmount, sr.EstimatedAmount, 0) - COALESCE(p_agg.TotalPaid, 0)) AS Outstanding,
+           (COALESCE(sr.BilledAmount, 0) - COALESCE(pu_agg.TotalPartsCost, 0)) AS Profit,
            sr.DateReceived
       FROM servicerequest sr
- LEFT JOIN payments p ON sr.JobNumber = p.JobNumber
+ LEFT JOIN (
+        SELECT JobNumber, SUM(Amount) as TotalPaid
+        FROM payments
+        GROUP BY JobNumber
+    ) p_agg ON sr.JobNumber = p_agg.JobNumber
+ LEFT JOIN (
+        SELECT JobNumber, SUM(CostPrice * Qty) as TotalPartsCost
+        FROM partsused
+        GROUP BY JobNumber
+    ) pu_agg ON sr.JobNumber = pu_agg.JobNumber
  LEFT JOIN customerdetails c ON sr.CustomerId = c.CustomerId
      WHERE 1=1 ${clause}
-  GROUP BY sr.JobNumber
   ORDER BY sr.JobNumber DESC
   `;
 
@@ -88,13 +98,20 @@ async function getFinancialTotals(startDate, endDate) {
       COUNT(sr.JobNumber) AS TotalJobs,
       COALESCE(SUM(p_agg.TotalPaid), 0) AS TotalPaymentsReceived,
       SUM(COALESCE(sr.BilledAmount, sr.EstimatedAmount, 0)) AS TotalAmountBilled,
-      (SUM(COALESCE(sr.BilledAmount, sr.EstimatedAmount, 0)) - COALESCE(SUM(p_agg.TotalPaid), 0)) AS TotalOutstanding
+      (SUM(COALESCE(sr.BilledAmount, sr.EstimatedAmount, 0)) - COALESCE(SUM(p_agg.TotalPaid), 0)) AS TotalOutstanding,
+      COALESCE(SUM(pu_agg.TotalPartsCost), 0) AS TotalPartsCost,
+      (SUM(COALESCE(sr.BilledAmount, 0)) - COALESCE(SUM(pu_agg.TotalPartsCost), 0)) AS GrossProfit
     FROM servicerequest sr
     LEFT JOIN (
         SELECT JobNumber, SUM(Amount) as TotalPaid
         FROM payments
         GROUP BY JobNumber
     ) p_agg ON sr.JobNumber = p_agg.JobNumber
+    LEFT JOIN (
+        SELECT JobNumber, SUM(CostPrice * Qty) as TotalPartsCost
+        FROM partsused
+        GROUP BY JobNumber
+    ) pu_agg ON sr.JobNumber = pu_agg.JobNumber
     WHERE 1=1 ${clause}
   `;
 
