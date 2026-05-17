@@ -3,10 +3,16 @@ const pool = require('../db');
 // Get all purchases with details
 async function getAllPurchases(filters, hideSensitive = true) {
     let query = `
-    SELECT p.*, s.SupplierName, u.Username AS PurchasedByName
+    SELECT
+      p.*,
+      s.SupplierName,
+      u.Username AS PurchasedByName,
+      COALESCE(SUM(pi.TotalPrice), 0) AS TotalAmount,
+      COUNT(pi.PurchaseItemId) AS ItemCount
     FROM purchases p
     LEFT JOIN suppliers s ON p.SupplierId = s.SupplierId
     LEFT JOIN users u ON p.PurchasedBy = u.UserId
+    LEFT JOIN purchaseitems pi ON p.PurchaseId = pi.PurchaseId
   `;
     let params = [];
     let whereClauses = [];
@@ -22,12 +28,9 @@ async function getAllPurchases(filters, hideSensitive = true) {
         query += ' WHERE ' + whereClauses.join(' AND ');
     }
 
-    query += ' ORDER BY p.PurchaseDate DESC';
+    query += ' GROUP BY p.PurchaseId ORDER BY p.PurchaseDate DESC';
 
     const [rows] = await pool.query(query, params);
-
-    // Fetch items for each purchase? Or do it in getPurchaseById only to save bandwidth.
-    // For list view, maybe we don't need all items.
 
     return rows;
 }

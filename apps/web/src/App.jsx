@@ -17,6 +17,7 @@ import MyDocuments from './pages/customer/MyDocuments';
 import Profile from './pages/customer/Profile';
 import WorkLogs from './pages/worker/WorkLogs';
 import Reports from './pages/reports/Reports';
+import Purchases from './pages/admin/Purchases';
 import CreatePurchase from './pages/admin/CreatePurchase';
 import './App.css';
 
@@ -52,6 +53,7 @@ function App() {
 
           <Route path="customers" element={<Placeholder />} />
           <Route path="inventory" element={<Inventory />} />
+          <Route path="purchases" element={<Purchases />} />
           <Route path="purchases/create" element={<CreatePurchase />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />

@@ -11,6 +11,7 @@ import {
   FileText,
   Hammer,
   ShoppingBag,
+  ShoppingCart,
   Bell,
   Eye,
   EyeOff,
@@ -54,6 +55,7 @@ const DashboardLayout = () => {
       { name: 'Customers', icon: Users, path: '/dashboard/customers' },
       { name: 'Workers', icon: User, path: '/dashboard/workers' },
       { name: 'Inventory', icon: ShoppingBag, path: '/dashboard/inventory' },
+      { name: 'Purchases', icon: ShoppingCart, path: '/dashboard/purchases' },
       { name: 'Reports', icon: FileText, path: '/dashboard/reports' },
       { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
     ];
