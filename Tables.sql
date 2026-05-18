@@ -228,6 +228,7 @@ CREATE TABLE IF NOT EXISTS `documents` (
   `CustomerId` int DEFAULT NULL,
   `DocumentType` enum('Quote','Invoice','Photo','Other') NOT NULL,
   `EmbedTag` text NOT NULL,
+  `IsCustomerVisible` tinyint(1) DEFAULT '1',
   `CreatedBy` int NOT NULL,
   `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`DocumentId`),

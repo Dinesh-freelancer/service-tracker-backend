@@ -198,7 +198,13 @@ function filterPartsUsed(part, role) {
  * Filters Documents.
  */
 function filterDocument(doc, role) {
-    return doc; // Visible
+    // Customers can only see documents explicitly marked as visible to them
+    if (role === AUTH_ROLE_CUSTOMER) {
+        if (!doc.IsCustomerVisible) {
+            return null; // Will filter this out completely in the list mapper
+        }
+    }
+    return doc; // Visible to staff
 }
 
 /**
@@ -222,7 +228,7 @@ function filterPayment(payment, role) {
 function filterList(list, filterFn, role, extraArg) {
     if (!list) return [];
     if (!Array.isArray(list)) return filterFn(list, role, extraArg);
-    return list.map(item => filterFn(item, role, extraArg));
+    return list.map(item => filterFn(item, role, extraArg)).filter(Boolean); // filter(Boolean) removes nulls
 }
 
 function filterServiceRequestList(list, role) {
