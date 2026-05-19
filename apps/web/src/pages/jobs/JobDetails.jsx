@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database } from 'lucide-react';
+import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
 import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
@@ -31,6 +31,7 @@ const JobDetails = () => {
     // Doc Form
     const [docType, setDocType] = useState('Photo');
     const [docLink, setDocLink] = useState('');
+    const [docDescription, setDocDescription] = useState('');
     const [isCustomerVisible, setIsCustomerVisible] = useState(false); // Default to false for photos
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -117,6 +118,24 @@ const JobDetails = () => {
         }
     };
 
+    const handleDeleteDoc = async (docId) => {
+        if (!confirm('Are you sure you want to delete this document?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${apiUrl}/documents/${docId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) throw new Error('Failed to delete document');
+
+            toast.success('Document deleted');
+            fetchJob();
+        } catch (err) {
+            toast.error(err.message);
+        }
+    };
+
     const handleAddPart = async () => {
         if (!selectedPart) return;
         try {
@@ -160,6 +179,7 @@ const JobDetails = () => {
                 JobNumber: job.JobNumber,
                 CustomerId: job.CustomerId,
                 DocumentType: docType,
+                Description: docDescription,
                 EmbedTag: docLink,
                 IsCustomerVisible: isCustomerVisible ? 1 : 0
             };
@@ -178,6 +198,8 @@ const JobDetails = () => {
             toast.success('Document added');
             setShowDocModal(false);
             setDocLink('');
+            setDocDescription('');
+            setIsCustomerVisible(false); // Reset
             fetchJob();
         } catch (err) {
             toast.error(err.message);
@@ -376,12 +398,26 @@ const JobDetails = () => {
                                                                         </span>
                                                                     )}
                                                                 </div>
+                                                                {doc.Description && (
+                                                                    <div className="text-sm text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                                                                        {doc.Description}
+                                                                    </div>
+                                                                )}
                                                                 <div className="text-xs text-slate-500 mb-1">{new Date(doc.CreatedAt).toLocaleDateString()}</div>
                                                                 <a href={url} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate inline-flex items-center gap-1">
                                                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                                                                     Open Fullscreen
                                                                 </a>
                                                             </div>
+                                                            {!isCustomer && (role === 'Admin' || role === 'Owner') && (
+                                                                <button
+                                                                    onClick={() => handleDeleteDoc(doc.DocumentId)}
+                                                                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors shrink-0"
+                                                                    title="Delete Document"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            )}
                                                         </div>
 
                                                         {/* Inline Viewer */}
@@ -635,6 +671,17 @@ const JobDetails = () => {
                                     <option value="Quote">Quote</option>
                                     <option value="Other">Other</option>
                                 </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1 dark:text-slate-300">Description / Label</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., Impeller side, Cable test result..."
+                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 mb-4"
+                                    value={docDescription}
+                                    onChange={(e) => setDocDescription(e.target.value)}
+                                />
                             </div>
 
                             <div>

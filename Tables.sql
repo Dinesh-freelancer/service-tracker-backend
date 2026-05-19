@@ -227,6 +227,7 @@ CREATE TABLE IF NOT EXISTS `documents` (
   `AssetId` int DEFAULT NULL,
   `CustomerId` int DEFAULT NULL,
   `DocumentType` enum('Quote','Invoice','Photo','Other') NOT NULL,
+  `Description` varchar(255) DEFAULT NULL,
   `EmbedTag` text NOT NULL,
   `IsCustomerVisible` tinyint(1) DEFAULT '1',
   `CreatedBy` int NOT NULL,
