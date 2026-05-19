@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
-import { extractUrlFromEmbed } from '../../utils/helpers';
+import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
 
 const JobDetails = () => {
     const { jobNumber } = useParams();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Image, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { parseJwt } from '../../utils/auth';
-import { extractUrlFromEmbed } from '../../utils/helpers';
+import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
 
 const MyDocuments = () => {
     const [documents, setDocuments] = useState([]);
@@ -69,26 +69,55 @@ const MyDocuments = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {documents.map(doc => (
-                        <div key={doc.DocumentId} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
-                                    {doc.DocumentType === 'Photo' ? <Image size={24} /> : <FileText size={24} />}
+                    {documents.map(doc => {
+                        const url = extractUrlFromEmbed(doc.EmbedTag);
+                        const isImage = isDirectImageLink(url);
+                        const isEmbeddable = url.includes('drive.google.com') || url.includes('docs.google.com');
+
+                        return (
+                            <div key={doc.DocumentId} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow flex flex-col h-full">
+                                <div className="flex items-start justify-between mb-4 shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+                                            {doc.DocumentType === 'Photo' ? <Image size={24} /> : <FileText size={24} />}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-slate-900 dark:text-white leading-tight">{doc.DocumentType}</h3>
+                                            <p className="text-xs text-slate-500 mt-1">Job #{doc.JobNumber || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-slate-400 shrink-0">{new Date(doc.CreatedAt).toLocaleDateString()}</span>
                                 </div>
-                                <span className="text-xs text-slate-400">{new Date(doc.CreatedAt).toLocaleDateString()}</span>
+
+                                {/* Inline Viewer */}
+                                <div className="flex-1 flex flex-col justify-end">
+                                    {isImage ? (
+                                        <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded overflow-hidden mb-4 relative">
+                                            <img src={url} alt={doc.DocumentType} className="w-full h-full object-contain absolute inset-0" />
+                                        </div>
+                                    ) : isEmbeddable ? (
+                                        <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded overflow-hidden mb-4 relative">
+                                            <iframe src={url} className="w-full h-full border-0 absolute inset-0" allow="autoplay" title={doc.DocumentType}></iframe>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full aspect-video bg-slate-50 dark:bg-slate-900/50 rounded flex flex-col items-center justify-center mb-4 text-slate-400">
+                                             <FileText size={32} className="mb-2 opacity-20" />
+                                             <span className="text-xs">Preview Not Available</span>
+                                        </div>
+                                    )}
+
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="block w-full text-center py-2 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm text-blue-600 dark:text-blue-400 transition-colors mt-auto shrink-0"
+                                    >
+                                        Open in New Tab
+                                    </a>
+                                </div>
                             </div>
-                            <h3 className="font-medium text-slate-900 dark:text-white mb-1">{doc.DocumentType}</h3>
-                            <p className="text-xs text-slate-500 mb-4">Job #{doc.JobNumber || 'N/A'}</p>
-                            <a
-                                href={extractUrlFromEmbed(doc.EmbedTag)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block w-full text-center py-2 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm text-blue-600 dark:text-blue-400 transition-colors"
-                            >
-                                View Document
-                            </a>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
