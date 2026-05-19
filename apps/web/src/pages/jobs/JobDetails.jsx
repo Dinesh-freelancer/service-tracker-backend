@@ -356,25 +356,47 @@ const JobDetails = () => {
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {displayedDocs.map(doc => (
-                                                <div key={doc.DocumentId} className="flex items-center gap-3 p-3 border border-slate-100 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                                    <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded">
-                                                        <Image size={20} className="text-blue-600 dark:text-blue-400" />
-                                                    </div>
-                                                    <div className="overflow-hidden">
-                                                        <div className="font-medium text-slate-900 dark:text-white truncate flex items-center gap-2">
-                                                            {doc.DocumentType}
-                                                            {!isCustomer && (
-                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${doc.IsCustomerVisible ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                                                                    {doc.IsCustomerVisible ? 'Public' : 'Internal'}
-                                                                </span>
-                                                            )}
+                                            {displayedDocs.map(doc => {
+                                                const url = extractUrlFromEmbed(doc.EmbedTag);
+                                                const isImage = isDirectImageLink(url);
+                                                const isEmbeddable = url.includes('drive.google.com') || url.includes('docs.google.com');
+
+                                                return (
+                                                    <div key={doc.DocumentId} className="flex flex-col gap-3 p-3 border border-slate-100 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
+                                                        <div className="flex items-start gap-3 w-full">
+                                                            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded shrink-0">
+                                                                {doc.DocumentType === 'Photo' ? <Image size={20} className="text-blue-600 dark:text-blue-400" /> : <FileText size={20} className="text-blue-600 dark:text-blue-400" />}
+                                                            </div>
+                                                            <div className="overflow-hidden flex-1">
+                                                                <div className="font-medium text-slate-900 dark:text-white truncate flex items-center gap-2">
+                                                                    {doc.DocumentType}
+                                                                    {!isCustomer && (
+                                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${doc.IsCustomerVisible ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                                            {doc.IsCustomerVisible ? 'Public' : 'Internal'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-xs text-slate-500 mb-1">{new Date(doc.CreatedAt).toLocaleDateString()}</div>
+                                                                <a href={url} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate inline-flex items-center gap-1">
+                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                                    Open Fullscreen
+                                                                </a>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-xs text-slate-500">{new Date(doc.CreatedAt).toLocaleDateString()}</div>
-                                                        <a href={extractUrlFromEmbed(doc.EmbedTag)} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate block">View Link</a>
+
+                                                        {/* Inline Viewer */}
+                                                        {isImage ? (
+                                                            <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded overflow-hidden">
+                                                                <img src={url} alt={doc.DocumentType} className="w-full h-full object-contain" />
+                                                            </div>
+                                                        ) : isEmbeddable ? (
+                                                            <div className="w-full aspect-[4/3] bg-slate-100 dark:bg-slate-900 rounded overflow-hidden relative">
+                                                                <iframe src={url} className="w-full h-full border-0" allow="autoplay" title={doc.DocumentType}></iframe>
+                                                            </div>
+                                                        ) : null}
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
