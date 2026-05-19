@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Image, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { parseJwt } from '../../utils/auth';
+import { extractUrlFromEmbed } from '../../utils/helpers';
 
 const MyDocuments = () => {
     const [documents, setDocuments] = useState([]);
@@ -79,7 +80,7 @@ const MyDocuments = () => {
                             <h3 className="font-medium text-slate-900 dark:text-white mb-1">{doc.DocumentType}</h3>
                             <p className="text-xs text-slate-500 mb-4">Job #{doc.JobNumber || 'N/A'}</p>
                             <a
-                                href={doc.EmbedTag}
+                                href={extractUrlFromEmbed(doc.EmbedTag)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="block w-full text-center py-2 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm text-blue-600 dark:text-blue-400 transition-colors"

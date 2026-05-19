@@ -200,7 +200,8 @@ function filterPartsUsed(part, role) {
 function filterDocument(doc, role) {
     // Customers can only see documents explicitly marked as visible to them
     if (role === AUTH_ROLE_CUSTOMER) {
-        if (!doc.IsCustomerVisible) {
+        // If undefined (e.g. legacy DB), default to visible so we don't break existing documents
+        if (doc.IsCustomerVisible === 0 || doc.IsCustomerVisible === false) {
             return null; // Will filter this out completely in the list mapper
         }
     }

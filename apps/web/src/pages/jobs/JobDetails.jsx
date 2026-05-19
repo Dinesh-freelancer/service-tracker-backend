@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
+import { extractUrlFromEmbed } from '../../utils/helpers';
 
 const JobDetails = () => {
     const { jobNumber } = useParams();
@@ -159,7 +160,8 @@ const JobDetails = () => {
                 JobNumber: job.JobNumber,
                 CustomerId: job.CustomerId,
                 DocumentType: docType,
-                EmbedTag: docLink
+                EmbedTag: docLink,
+                IsCustomerVisible: isCustomerVisible ? 1 : 0
             };
 
             const res = await fetch(`${apiUrl}/documents`, {
@@ -369,7 +371,7 @@ const JobDetails = () => {
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-slate-500">{new Date(doc.CreatedAt).toLocaleDateString()}</div>
-                                                        <a href={doc.EmbedTag} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate block">View Link</a>
+                                                        <a href={extractUrlFromEmbed(doc.EmbedTag)} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate block">View Link</a>
                                                     </div>
                                                 </div>
                                             ))}
