@@ -347,8 +347,8 @@ const JobDetails = () => {
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => setActiveTab('asset-docs')}
-                                    className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'asset-docs' ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                    onClick={() => setActiveTab('asset-history')}
+                                    className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'asset-history' ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                                 >
                                     Asset History
                                 </button>
@@ -362,8 +362,8 @@ const JobDetails = () => {
                         </div>
                         <div className="p-6">
 
-                            {/* Job Docs & Asset Docs View */}
-                            {(activeTab === 'job-docs' || activeTab === 'asset-docs') && (
+                            {/* Job Docs View */}
+                            {activeTab === 'job-docs' && (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-medium text-slate-900 dark:text-white">Documents</h3>
@@ -482,6 +482,88 @@ const JobDetails = () => {
                             {/* Winding Details View */}
                             {activeTab === 'winding' && !isCustomer && (
                                 <WindingDetails assetId={job.AssetId} phase={job.Phase} defaultHp={job.HP} />
+                            )}
+
+                            {/* Asset History View */}
+                            {activeTab === 'asset-history' && (
+                                <div className="space-y-6">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                            <Database size={18} className="text-purple-600" />
+                                            Asset Specifications
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                            <div><span className="text-slate-500 block">Internal Tag</span> <span className="font-medium dark:text-white">{job.InternalTag || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Brand</span> <span className="font-medium dark:text-white">{job.Brand || job.PumpBrand || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Motor Model</span> <span className="font-medium dark:text-white">{job.MotorModel || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Pump Model</span> <span className="font-medium dark:text-white">{job.PumpModel || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Serial Number</span> <span className="font-medium dark:text-white">{job.SerialNumber || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">HP</span> <span className="font-medium dark:text-white">{job.HP || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Phase</span> <span className="font-medium dark:text-white">{job.Phase || 'N/A'}</span></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Past Repair Timeline</h3>
+                                        {(!job.AssetJobs || job.AssetJobs.length === 0) ? (
+                                            <div className="text-center py-8 text-slate-400 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                                <Clock size={32} className="mx-auto mb-2 opacity-50" />
+                                                No previous repair history found for this asset.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {job.AssetJobs.map((assetJob, index) => (
+                                                    <div key={assetJob.JobNumber} className="relative pl-6 pb-4 border-l-2 border-slate-200 dark:border-slate-700 last:border-0 last:pb-0">
+                                                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-purple-500"></div>
+                                                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <div>
+                                                                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                                                        Job #{assetJob.JobNumber}
+                                                                        {assetJob.JobNumber === job.JobNumber && (
+                                                                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-semibold uppercase tracking-wider">Current</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                                                        <Calendar size={12} /> Received: {new Date(assetJob.DateReceived).toLocaleDateString()}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium border ${
+                                                                        assetJob.Status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                                        assetJob.Status === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                                        'bg-slate-50 text-slate-700 border-slate-200'
+                                                                    }`}>
+                                                                        {assetJob.Status}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-sm text-slate-700 dark:text-slate-300 mt-3">
+                                                                <span className="font-semibold">Issue/Notes:</span> {assetJob.Notes || 'No notes provided.'}
+                                                            </div>
+                                                            {assetJob.ResolutionType && (
+                                                                <div className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                                                                    <span className="font-semibold">Resolution:</span> {assetJob.ResolutionType}
+                                                                </div>
+                                                            )}
+                                                            {assetJob.JobNumber !== job.JobNumber && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        navigate(`/dashboard/jobs/${assetJob.JobNumber}`);
+                                                                        window.location.reload(); // Force full reload to reset state for new job
+                                                                    }}
+                                                                    className="mt-3 text-xs text-purple-600 hover:text-purple-700 font-medium"
+                                                                >
+                                                                    View Job Details &rarr;
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )}
 
                             {/* History View */}

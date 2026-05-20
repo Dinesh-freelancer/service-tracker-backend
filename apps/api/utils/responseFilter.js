@@ -62,6 +62,7 @@ function filterServiceRequest(job, role) {
         History: job.History, // Audit Trail visible to Staff
         WorkLogs: job.WorkLogs ? filterWorkLogList(job.WorkLogs, role) : undefined,
         Documents: job.Documents ? filterDocumentList(job.Documents, role) : undefined,
+        AssetJobs: job.AssetJobs, // Let staff see Asset timeline
         // Parts & Payments depend on Role
     };
 

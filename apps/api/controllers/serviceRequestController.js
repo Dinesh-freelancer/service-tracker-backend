@@ -84,15 +84,17 @@ async function getServiceRequest(req, res, next) {
         }
 
         // Fetch related data in parallel
-        const [history, parts, documents] = await Promise.all([
+        const [history, parts, documents, assetJobs] = await Promise.all([
             serviceRequestModel.getHistoryByJobNumber(jobNumber),
             partsUsedModel.getAllPartsUsed(jobNumber),
-            documentModel.getDocumentsByJob(jobNumber)
+            documentModel.getDocumentsByJob(jobNumber),
+            serviceRequest.AssetId ? serviceRequestModel.getServiceRequestsByAssetId(serviceRequest.AssetId) : Promise.resolve([])
         ]);
 
         serviceRequest.History = history || [];
         serviceRequest.Parts = parts || [];
         serviceRequest.Documents = documents || [];
+        serviceRequest.AssetJobs = assetJobs || [];
 
         serviceRequest = filterServiceRequest(serviceRequest, role);
 

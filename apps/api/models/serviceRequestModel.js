@@ -108,11 +108,24 @@ async function getHistoryByJobNumber(jobNumber) {
     return rows;
 }
 
+// Get all jobs associated with a specific asset (for Asset History timeline)
+async function getServiceRequestsByAssetId(assetId) {
+    const [rows] = await pool.query(
+        `SELECT JobNumber, DateReceived, Status, ResolutionType, Notes
+         FROM servicerequest
+         WHERE AssetId = ?
+         ORDER BY DateReceived DESC`,
+        [assetId]
+    );
+    return rows;
+}
+
 module.exports = {
     getAllServiceRequests,
     getServiceRequestByJobNumber,
     addServiceRequest,
     updateServiceRequest,
     generateJobNumber,
-    getHistoryByJobNumber
+    getHistoryByJobNumber,
+    getServiceRequestsByAssetId
 };
