@@ -10,6 +10,7 @@ import JobDetails from './pages/jobs/JobDetails';
 import DashboardLayout from './layout/DashboardLayout';
 import UserManagement from './pages/settings/UserManagement';
 import Workers from './pages/admin/Workers';
+import Customers from './pages/admin/Customers';
 import Inventory from './pages/admin/Inventory';
 import Settings from './pages/settings/Settings';
 import MyJobs from './pages/customer/MyJobs';
@@ -53,7 +54,7 @@ function App() {
           <Route path="workers" element={<Workers />} />
           <Route path="attendance" element={<Attendance />} />
 
-          <Route path="customers" element={<Placeholder />} />
+          <Route path="customers" element={<Customers />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="purchases" element={<Purchases />} />
           <Route path="purchases/create" element={<CreatePurchase />} />
