@@ -45,14 +45,11 @@ const JobsList = ({ title = "Service Requests" }) => {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('token');
 
-      const customerId = searchParams.get('customerId');
-
       const query = new URLSearchParams({
         page,
         limit: 10,
         ...(statusFilter && { status: statusFilter }),
-        ...(searchQuery && { search: searchQuery }),
-        ...(customerId && { customerId })
+        ...(searchQuery && { search: searchQuery })
       });
 
       const response = await fetch(`${apiUrl}/jobs?${query}`, {
@@ -78,7 +75,7 @@ const JobsList = ({ title = "Service Requests" }) => {
 
   useEffect(() => {
     fetchJobs();
-  }, [page, statusFilter, searchQuery, searchParams]);
+  }, [page, statusFilter, searchQuery]);
 
   // Handlers
   const handleSearch = (e) => {
