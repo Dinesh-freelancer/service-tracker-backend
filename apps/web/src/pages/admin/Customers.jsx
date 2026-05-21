@@ -19,10 +19,25 @@ const customerSchema = z.object({
   State: z.string().optional(),
   Pincode: z.string().optional(),
   Notes: z.string().optional(),
+  OrganizationId: z.string().optional(),
+  Designation: z.string().optional()
+});
+
+const organizationSchema = z.object({
+  OrganizationName: z.string().min(2, 'Organization Name is required'),
+  Email: z.string().email('Invalid email address').or(z.literal('')),
+  PrimaryContact: z.string().optional(),
+  Address: z.string().optional(),
+  City: z.string().optional(),
+  State: z.string().optional(),
+  ZipCode: z.string().optional(),
+  GSTNumber: z.string().optional(),
+  OrganizationType: z.enum(['Company', 'Apartments', 'Dealers', 'Electricals', 'Other']).default('Company')
 });
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -35,10 +50,14 @@ const Customers = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Org Modal State
+  const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [isSubmittingOrg, setIsSubmittingOrg] = useState(false);
+
   const apiUrl = import.meta.env.VITE_API_URL || '';
   const token = localStorage.getItem('token');
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       CustomerType: 'Individual',
@@ -47,7 +66,21 @@ const Customers = () => {
     }
   });
 
+  const {
+      register: registerOrg,
+      handleSubmit: handleOrgSubmit,
+      reset: resetOrg,
+      formState: { errors: orgErrors }
+  } = useForm({
+      resolver: zodResolver(organizationSchema),
+      defaultValues: { OrganizationType: 'Company' }
+  });
+
   const customerType = watch('CustomerType');
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -55,6 +88,20 @@ const Customers = () => {
     }, 500);
     return () => clearTimeout(delay);
   }, [page, searchQuery]);
+
+  const fetchOrganizations = async () => {
+    try {
+        const res = await fetch(`${apiUrl}/organizations`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setOrganizations(data);
+        }
+    } catch (err) {
+        console.error('Failed to load organizations', err);
+    }
+  };
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -80,13 +127,22 @@ const Customers = () => {
   const onSubmitAdd = async (data) => {
     setIsSubmitting(true);
     try {
+      // Clean payload
+      const payload = { ...data };
+      if (payload.CustomerType === 'Individual') {
+          delete payload.OrganizationId;
+          delete payload.Designation;
+      } else if (payload.OrganizationId) {
+          payload.OrganizationId = parseInt(payload.OrganizationId);
+      }
+
       const res = await fetch(`${apiUrl}/customers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
 
       const result = await res.json();
@@ -101,6 +157,33 @@ const Customers = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onSubmitOrg = async (data) => {
+      setIsSubmittingOrg(true);
+      try {
+          const res = await fetch(`${apiUrl}/organizations`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(data)
+          });
+
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error || 'Failed to create organization');
+
+          toast.success('Organization created');
+          await fetchOrganizations();
+          setValue('OrganizationId', String(result.OrganizationId));
+          setIsOrgModalOpen(false);
+          resetOrg();
+      } catch (err) {
+          toast.error(err.message);
+      } finally {
+          setIsSubmittingOrg(false);
+      }
   };
 
   return (
@@ -168,7 +251,9 @@ const Customers = () => {
                                         )}
                                     </div>
                                     {c.OrganizationName && (
-                                        <div className="text-xs text-slate-500 mt-1">{c.OrganizationName}</div>
+                                        <div className="text-xs text-slate-500 mt-1">
+                                            {c.OrganizationName} {c.Designation && <span className="font-semibold px-1 text-slate-400">|</span>} {c.Designation}
+                                        </div>
                                     )}
                                 </td>
                                 <td className="p-4 space-y-1">
@@ -236,12 +321,41 @@ const Customers = () => {
 
             <Input label="Full Name *" {...register('CustomerName')} error={errors.CustomerName?.message} />
 
+            {customerType === 'OrganizationMember' && (
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-4">
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Organization *
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setIsOrgModalOpen(true)}
+                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                            >
+                                <Plus size={12} /> New Org
+                            </button>
+                        </div>
+                        <select
+                            {...register('OrganizationId')}
+                            className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        >
+                            <option value="">Select Organization</option>
+                            {organizations.map(org => (
+                                <option key={org.OrganizationId} value={org.OrganizationId}>{org.OrganizationName}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <Input label="Designation / Role" {...register('Designation')} placeholder="e.g., Manager, Procurement" />
+                </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
                 <Input label="Primary Phone *" {...register('PrimaryContact')} error={errors.PrimaryContact?.message} />
                 <Input label="Email Address" type="email" {...register('Email')} error={errors.Email?.message} />
             </div>
 
-            <Input label="Street Address" {...register('Address')} />
+            <Input label={customerType === 'OrganizationMember' ? "Address (Leave blank to use Org address)" : "Street Address"} {...register('Address')} />
 
             <div className="grid grid-cols-3 gap-4">
                 <Input label="City" {...register('City')} />
@@ -262,6 +376,53 @@ const Customers = () => {
                 <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
                     {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : null}
                     Create Profile
+                </Button>
+            </div>
+        </form>
+      </Modal>
+
+      {/* Add Organization Modal */}
+      <Modal
+        isOpen={isOrgModalOpen}
+        onClose={() => { setIsOrgModalOpen(false); resetOrg(); }}
+        title="Add New Organization"
+      >
+        <form onSubmit={handleOrgSubmit(onSubmitOrg)} className="space-y-4">
+            <Input label="Organization Name *" {...registerOrg('OrganizationName')} error={orgErrors.OrganizationName?.message} />
+
+            <div>
+                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Type</label>
+                <select
+                    {...registerOrg('OrganizationType')}
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                >
+                    <option value="Company">Company</option>
+                    <option value="Apartments">Apartments</option>
+                    <option value="Dealers">Dealers</option>
+                    <option value="Electricals">Electricals</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <Input label="Primary Contact" {...registerOrg('PrimaryContact')} />
+                <Input label="Email Address" type="email" {...registerOrg('Email')} error={orgErrors.Email?.message} />
+            </div>
+
+            <Input label="GST Number" {...registerOrg('GSTNumber')} />
+            <Input label="Street Address" {...registerOrg('Address')} />
+
+            <div className="grid grid-cols-3 gap-4">
+                <Input label="City" {...registerOrg('City')} />
+                <Input label="State" {...registerOrg('State')} />
+                <Input label="Pincode" {...registerOrg('ZipCode')} />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" type="button" onClick={() => setIsOrgModalOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isSubmittingOrg} className="flex items-center gap-2">
+                    {isSubmittingOrg ? <Loader2 size={16} className="animate-spin" /> : null}
+                    Create Organization
                 </Button>
             </div>
         </form>
