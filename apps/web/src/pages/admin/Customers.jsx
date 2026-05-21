@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Users, Plus, Search, Loader2, Mail, Phone, MapPin, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Plus, Search, Loader2, Mail, Phone, MapPin, Building2, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -13,7 +14,7 @@ const customerSchema = z.object({
   CustomerType: z.enum(['Individual', 'OrganizationMember']).default('Individual'),
   CustomerName: z.string().min(2, 'Name is required'),
   PrimaryContact: z.string().min(10, 'Valid contact number required'),
-  Email: z.string().email('Invalid email address').or(z.literal('')),
+  Email: z.string().email('Invalid email address').optional().or(z.literal('')),
   Address: z.string().optional(),
   City: z.string().optional(),
   State: z.string().optional(),
@@ -25,7 +26,7 @@ const customerSchema = z.object({
 
 const organizationSchema = z.object({
   OrganizationName: z.string().min(2, 'Organization Name is required'),
-  Email: z.string().email('Invalid email address').or(z.literal('')),
+  Email: z.string().email('Invalid email address').optional().or(z.literal('')),
   PrimaryContact: z.string().optional(),
   Address: z.string().optional(),
   City: z.string().optional(),
@@ -36,6 +37,7 @@ const organizationSchema = z.object({
 });
 
 const Customers = () => {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -226,6 +228,7 @@ const Customers = () => {
                         <th className="p-4 font-semibold">Contact Details</th>
                         <th className="p-4 font-semibold">Location</th>
                         <th className="p-4 font-semibold">Joined</th>
+                         <th className="p-4 font-semibold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-sm">
@@ -276,6 +279,14 @@ const Customers = () => {
                                 </td>
                                 <td className="p-4 text-slate-500 text-xs">
                                     {new Date(c.CreatedAt).toLocaleDateString()}
+                                </td>
+                                <td className="p-4 text-right">
+                                    <button
+                                        onClick={() => navigate(`/dashboard/jobs?customerId=${c.CustomerId}`)}
+                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center justify-end gap-1 w-full"
+                                    >
+                                        <ExternalLink size={14} /> View Jobs
+                                    </button>
                                 </td>
                             </tr>
                         ))

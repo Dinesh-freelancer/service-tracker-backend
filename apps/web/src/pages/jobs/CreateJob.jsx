@@ -49,7 +49,9 @@ const CreateJob = () => {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const data = await res.json();
-                    setCustomers(data.data || []);
+                    // Filter out OrganizationMembers as per requirement (only individuals or organizations)
+                    const filteredCustomers = (data.data || []).filter(c => c.CustomerType !== 'OrganizationMember');
+                    setCustomers(filteredCustomers);
                 } catch (err) {
                     toast.error('Failed to load customers');
                 } finally {

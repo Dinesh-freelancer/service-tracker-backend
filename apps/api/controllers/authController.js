@@ -29,11 +29,22 @@ async function login(req, res, next) {
         if (!user || !await bcrypt.compare(Password, user.PasswordHash)) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
+        // If it's a Customer, let's fetch their OrganizationId so we can embed it in the token
+        let userOrgId = null;
+        if (user.Role === 'Customer' && user.CustomerId) {
+            const customerModel = require('../models/customerModel');
+            const customerData = await customerModel.getCustomerById(user.CustomerId);
+            if (customerData && customerData.OrganizationId) {
+                userOrgId = customerData.OrganizationId;
+            }
+        }
+
         const token = jwt.sign({
                 UserId: user.UserId,
                 Role: user.Role,
                 CustomerId: user.CustomerId,
-                WorkerId: user.WorkerId
+                WorkerId: user.WorkerId,
+                OrganizationId: userOrgId
             },
             JWT_SECRET, { expiresIn: '24h' }
         );
