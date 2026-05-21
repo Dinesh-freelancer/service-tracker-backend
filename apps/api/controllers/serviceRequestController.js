@@ -30,6 +30,18 @@ async function listServiceRequests(req, res, next) {
             'a.MotorModel', 'a.SerialNumber',
             'sr.Status', 'c.CustomerName'
         ];
+
+        // Intercept customerId to handle Organization-wide viewing
+        if (req.query.customerId) {
+            const customerModel = require('../models/customerModel');
+            const requestedCustomer = await customerModel.getCustomerById(req.query.customerId);
+            if (requestedCustomer && requestedCustomer.OrganizationId) {
+                // If it's an organization member, search by OrganizationId instead of specific CustomerId
+                req.query.organizationId = requestedCustomer.OrganizationId;
+                delete req.query.customerId;
+            }
+        }
+
         const filters = buildSearchFilters(req.query, searchableFields);
 
         let rows, totalCount;
@@ -43,12 +55,7 @@ async function listServiceRequests(req, res, next) {
              if (!req.user.CustomerId) {
                  allRows = [];
              } else {
-                 // Customers see jobs if the Job's CustomerId matches theirs OR they both share the same OrganizationId
-                 allRows = allRows.filter(reqItem => {
-                     const isSameCustomer = reqItem.CustomerId === req.user.CustomerId;
-                     const isSameOrganization = req.user.OrganizationId && reqItem.OrganizationId === req.user.OrganizationId;
-                     return isSameCustomer || isSameOrganization;
-                 });
+                 allRows = allRows.filter(reqItem => reqItem.CustomerId === req.user.CustomerId);
              }
 
              totalCount = allRows.length;
@@ -83,12 +90,7 @@ async function getServiceRequest(req, res, next) {
 
         // Security: If Customer, verify ownership
         if (role === AUTH_ROLE_CUSTOMER) {
-             if (!req.user.CustomerId) {
-                 return res.status(403).json({ error: 'Access denied' });
-             }
-             const isSameCustomer = serviceRequest.CustomerId === req.user.CustomerId;
-             const isSameOrganization = req.user.OrganizationId && serviceRequest.OrganizationId === req.user.OrganizationId;
-             if (!isSameCustomer && !isSameOrganization) {
+             if (!req.user.CustomerId || serviceRequest.CustomerId !== req.user.CustomerId) {
                 return res.status(403).json({ error: 'Access denied' });
             }
         }

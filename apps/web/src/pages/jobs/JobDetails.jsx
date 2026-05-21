@@ -332,14 +332,12 @@ const JobDetails = () => {
                                 >
                                     Job Documents
                                 </button>
-                                {!isCustomer && (
-                                    <button
-                                        onClick={() => setActiveTab('parts')}
-                                        className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'parts' ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                                    >
-                                        Parts Used
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => setActiveTab('parts')}
+                                    className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'parts' ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Parts Used
+                                </button>
                                 {!isCustomer && (
                                     <button
                                         onClick={() => setActiveTab('winding')}
@@ -441,7 +439,7 @@ const JobDetails = () => {
                             )}
 
                             {/* Parts Used View */}
-                            {activeTab === 'parts' && !isCustomer && (
+                            {activeTab === 'parts' && (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-medium text-slate-900 dark:text-white">Spare Parts & Consumables</h3>

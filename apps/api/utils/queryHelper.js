@@ -25,7 +25,7 @@ function buildSearchFilters(query, searchableFields = []) {
 
     // Exact Match Filters (e.g. status=Open)
     // We explicitly exclude reserved keys like page, limit, search, sortBy, sortOrder
-    const reservedKeys = ['page', 'limit', 'search', 'sortBy', 'sortOrder', 'hideSensitive', 'customerId', 'path'];
+    const reservedKeys = ['page', 'limit', 'search', 'sortBy', 'sortOrder', 'hideSensitive', 'customerId', 'organizationId', 'path'];
 
     Object.keys(query).forEach(key => {
         if (!reservedKeys.includes(key)) {
@@ -47,6 +47,12 @@ function buildSearchFilters(query, searchableFields = []) {
     if (query.customerId) {
         sqlParts.push(`sr.CustomerId = ?`);
         params.push(query.customerId);
+    }
+
+    // Explicitly handle organizationId if present
+    if (query.organizationId) {
+        sqlParts.push(`c.OrganizationId = ?`);
+        params.push(query.organizationId);
     }
 
     const sql = sqlParts.length > 0 ? `WHERE ${sqlParts.join(' AND ')}` : '';
