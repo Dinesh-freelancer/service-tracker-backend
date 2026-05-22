@@ -24,6 +24,9 @@ const CreateJob = () => {
     const [step, setStep] = useState(1);
 
     // Data States
+    const [selectionMode, setSelectionMode] = useState('Individual'); // 'Individual' or 'Organization'
+    const [organizations, setOrganizations] = useState([]);
+    const [selectedOrganizationId, setSelectedOrganizationId] = useState('');
     const [customers, setCustomers] = useState([]);
     const [assets, setAssets] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -31,25 +34,66 @@ const CreateJob = () => {
     const [isNewAsset, setIsNewAsset] = useState(false);
 
     // UI States
+    const [loadingOrgs, setLoadingOrgs] = useState(false);
     const [loadingCustomers, setLoadingCustomers] = useState(false);
     const [loadingAssets, setLoadingAssets] = useState(false);
     const [customerSearch, setCustomerSearch] = useState('');
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
 
-    // Fetch Customers (Debounced search ideally, but simple for now)
+    // Fetch Organizations if mode is 'Organization'
+    useEffect(() => {
+        if (selectionMode === 'Organization' && organizations.length === 0) {
+            const fetchOrgs = async () => {
+                setLoadingOrgs(true);
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`${apiUrl}/organizations`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setOrganizations(data);
+                    }
+                } catch (err) {
+                    toast.error('Failed to load organizations');
+                } finally {
+                    setLoadingOrgs(false);
+                }
+            };
+            fetchOrgs();
+        }
+    }, [selectionMode, organizations.length, apiUrl]);
+
+    // Fetch Customers (Filtered by Search and Selection Mode)
     useEffect(() => {
         if (step === 1) {
             const fetchCustomers = async () => {
                 setLoadingCustomers(true);
                 try {
                     const token = localStorage.getItem('token');
-                    // Assuming endpoint /api/customers?search=... exists, or just fetch all
-                    const res = await fetch(`${apiUrl}/customers?limit=100&search=${customerSearch}&hideSensitive=false`, {
+                    let queryParams = new URLSearchParams({ limit: 100, hideSensitive: 'false' });
+                    if (customerSearch) queryParams.append('search', customerSearch);
+
+                    const res = await fetch(`${apiUrl}/customers?${queryParams.toString()}`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const data = await res.json();
-                    setCustomers(data.data || []);
+                    let fetchedCustomers = data.data || [];
+
+                    if (selectionMode === 'Individual') {
+                        // Only show individuals
+                        fetchedCustomers = fetchedCustomers.filter(c => c.CustomerType === 'Individual');
+                    } else if (selectionMode === 'Organization') {
+                        // Only show members of the selected organization
+                        if (selectedOrganizationId) {
+                            fetchedCustomers = fetchedCustomers.filter(c => c.OrganizationId === Number(selectedOrganizationId));
+                        } else {
+                            fetchedCustomers = []; // Don't show any until org is selected
+                        }
+                    }
+
+                    setCustomers(fetchedCustomers);
                 } catch (err) {
                     toast.error('Failed to load customers');
                 } finally {
@@ -59,7 +103,7 @@ const CreateJob = () => {
             const debounce = setTimeout(fetchCustomers, 500);
             return () => clearTimeout(debounce);
         }
-    }, [customerSearch, step]);
+    }, [customerSearch, step, selectionMode, selectedOrganizationId, apiUrl]);
 
     // Fetch Assets when customer is selected (or when an organization is active for that customer)
     useEffect(() => {
@@ -203,7 +247,53 @@ const CreateJob = () => {
                     {/* Step 1: Customer Selection */}
                     <div className={step === 1 ? 'space-y-4' : 'hidden'}>
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Find Customer</h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Find Customer</h3>
+                                <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => {
+                                            setSelectionMode('Individual');
+                                            setSelectedOrganizationId('');
+                                            setCustomerSearch('');
+                                        }}
+                                        className={`px-3 py-1 text-sm rounded-md transition-colors ${selectionMode === 'Individual' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Individual
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSelectionMode('Organization');
+                                            setCustomerSearch('');
+                                        }}
+                                        className={`px-3 py-1 text-sm rounded-md transition-colors ${selectionMode === 'Organization' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Organization
+                                    </button>
+                                </div>
+                            </div>
+
+                            {selectionMode === 'Organization' && (
+                                <div className="p-4 bg-blue-50/50 dark:bg-slate-700/30 rounded-lg border border-slate-200 dark:border-slate-600 mb-4">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Select Organization</label>
+                                    {loadingOrgs ? (
+                                        <div className="text-sm text-slate-500">Loading organizations...</div>
+                                    ) : (
+                                        <select
+                                            value={selectedOrganizationId}
+                                            onChange={(e) => setSelectedOrganizationId(e.target.value)}
+                                            className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">-- Choose Organization --</option>
+                                            {organizations.map(org => (
+                                                <option key={org.OrganizationId} value={org.OrganizationId}>
+                                                    {org.OrganizationName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="relative">
                                 <Search className="absolute left-3 top-3 text-slate-400" size={18} />
                                 <input
