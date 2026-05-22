@@ -61,14 +61,22 @@ const CreateJob = () => {
         }
     }, [customerSearch, step]);
 
-    // Fetch Assets when customer is selected
+    // Fetch Assets when customer is selected (or when an organization is active for that customer)
     useEffect(() => {
         if (selectedCustomer) {
             const fetchAssets = async () => {
                 setLoadingAssets(true);
                 try {
                     const token = localStorage.getItem('token');
-                    const res = await fetch(`${apiUrl}/assets?customerId=${selectedCustomer.CustomerId}`, {
+
+                    // If the customer belongs to an organization, fetch all assets for that organization
+                    // so they can share assets between organization members
+                    let url = `${apiUrl}/assets?customerId=${selectedCustomer.CustomerId}`;
+                    if (selectionMode === 'Organization' && selectedOrganizationId) {
+                        url = `${apiUrl}/assets?organizationId=${selectedOrganizationId}`;
+                    }
+
+                    const res = await fetch(url, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const data = await res.json();
@@ -81,7 +89,7 @@ const CreateJob = () => {
             };
             fetchAssets();
         }
-    }, [selectedCustomer]);
+    }, [selectedCustomer, selectionMode, selectedOrganizationId, apiUrl]);
 
     const handleCustomerSelect = (customer) => {
         setSelectedCustomer(customer);
