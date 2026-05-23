@@ -52,11 +52,21 @@ const Reports = () => {
           setFinancialData(finJson);
 
           // Detailed Job Report
+
           const resJobs = await fetch(`${apiUrl}/financial-reports/all-jobs${queryStr}`, {
               headers: { Authorization: `Bearer ${token}` }
           });
           const jobsJson = await resJobs.json();
           setJobDetails(jobsJson);
+
+          const resPvR = await fetch(`${apiUrl}/financial-reports/purchases-vs-revenue${queryStr}`, {
+              headers: { Authorization: `Bearer ${token}` }
+          });
+          if (resPvR.ok) {
+              const pvrJson = await resPvR.json();
+              setPurchasesVsRevenueData(pvrJson);
+          }
+
       }
 
     } catch (err) {

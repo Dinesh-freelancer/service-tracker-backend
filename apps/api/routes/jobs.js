@@ -151,7 +151,7 @@ router.post('/',
  *         description: Job updated
  */
 router.put('/:jobNumber',
-    authorize(...STAFF_ROLES),
+    authorize(...ALL_ROLES),
     serviceRequestController.updateServiceRequest);
 
 module.exports = router;

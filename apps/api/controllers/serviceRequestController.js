@@ -196,6 +196,23 @@ async function updateServiceRequest(req, res, next) {
             return res.status(404).json({ message: 'Job not found' });
         }
 
+        // IDOR and Security Check for Customer Role
+        if (req.user && req.user.Role === 'Customer') {
+            if (existingJob.CustomerId !== req.user.CustomerId) {
+                return res.status(403).json({ error: 'Access denied: You can only update your own jobs.' });
+            }
+
+            // Customers can ONLY update Status and ResolutionType
+            const allowedCustomerUpdates = ['Status', 'ResolutionType'];
+            const attemptKeys = Object.keys(updates);
+            for (const key of attemptKeys) {
+                if (!allowedCustomerUpdates.includes(key)) {
+                    return res.status(403).json({ error: `Access denied: Customers cannot update field: ${key}` });
+                }
+            }
+        }
+
+
         // Validate ResolutionType for terminal statuses and On Hold (when rejecting estimates)
         const terminalStatuses = ['Completed', 'Cancelled', 'Rejected', 'Fulfilled'];
         if (updates.Status && terminalStatuses.includes(updates.Status)) {
