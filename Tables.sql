@@ -1,3 +1,14 @@
+
+-- -----------------------------------------------------
+-- Table `settings`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `settings` (
+  `SettingKey` varchar(100) NOT NULL,
+  `SettingValue` text,
+  `UpdatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SettingKey`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- -----------------------------------------------------
 -- DATABASE RECONSTRUCTION SCRIPT
 -- -----------------------------------------------------

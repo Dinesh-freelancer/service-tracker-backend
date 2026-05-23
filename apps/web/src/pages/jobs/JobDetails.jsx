@@ -241,6 +241,59 @@ const JobDetails = () => {
                     </div>
                 </div>
 
+
+                {/* Customer Approval Flow */}
+                {isCustomer && job.Status === 'Awaiting Approval' && (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch(`${apiUrl}/jobs/${jobNumber}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                        },
+                                        body: JSON.stringify({ Status: 'Approved' })
+                                    });
+                                    if (!res.ok) throw new Error('Failed to approve estimate');
+                                    toast.success('Estimate approved successfully');
+                                    fetchJob();
+                                } catch (err) {
+                                    toast.error(err.message);
+                                }
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2"
+                        >
+                            <Activity size={18} />
+                            Approve Estimate
+                        </button>
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch(`${apiUrl}/jobs/${jobNumber}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                        },
+                                        body: JSON.stringify({ Status: 'On Hold', ResolutionType: 'Estimate Rejected' })
+                                    });
+                                    if (!res.ok) throw new Error('Failed to reject estimate');
+                                    toast.success('Estimate rejected');
+                                    fetchJob();
+                                } catch (err) {
+                                    toast.error(err.message);
+                                }
+                            }}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2"
+                        >
+                            <X size={18} />
+                            Reject
+                        </button>
+                    </div>
+                )}
+
                 {!isCustomer && (
                     <div className="flex gap-2">
                          <button

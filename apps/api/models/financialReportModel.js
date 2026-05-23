@@ -119,7 +119,52 @@ async function getFinancialTotals(startDate, endDate) {
     return rows[0];
 }
 
+
+async function getPurchasesVsRevenue(startDate, endDate) {
+    const params = [];
+    let paymentDateClause = '';
+    let purchaseDateClause = '';
+
+    if (startDate && endDate) {
+        paymentDateClause = 'WHERE PaymentDate BETWEEN ? AND ?';
+        purchaseDateClause = 'WHERE PurchaseDate BETWEEN ? AND ?';
+        params.push(startDate, endDate, startDate, endDate);
+    } else if (startDate) {
+        paymentDateClause = 'WHERE PaymentDate >= ?';
+        purchaseDateClause = 'WHERE PurchaseDate >= ?';
+        params.push(startDate, startDate);
+    } else if (endDate) {
+        paymentDateClause = 'WHERE PaymentDate <= ?';
+        purchaseDateClause = 'WHERE PurchaseDate <= ?';
+        params.push(endDate, endDate);
+    }
+
+    const sql = `
+        SELECT
+            DATE_FORMAT(DateObj, '%Y-%m') as Month,
+            SUM(Revenue) as Revenue,
+            SUM(Purchases) as Purchases
+        FROM (
+            SELECT PaymentDate as DateObj, Amount as Revenue, 0 as Purchases
+            FROM payments
+            ${paymentDateClause}
+            UNION ALL
+            SELECT p.PurchaseDate as DateObj, 0 as Revenue, COALESCE(SUM(pi.TotalPrice), 0) as Purchases
+            FROM purchases p
+            LEFT JOIN purchaseitems pi ON p.PurchaseId = pi.PurchaseId
+            ${purchaseDateClause}
+            GROUP BY p.PurchaseId
+        ) combined
+        GROUP BY Month
+        ORDER BY Month ASC
+    `;
+
+    const [rows] = await pool.query(sql, params);
+    return rows;
+}
+
 module.exports = {
+    getPurchasesVsRevenue,
     getFinancialSummaryAllJobs,
     getFinancialSummaryByCustomer,
     getFinancialTotals

@@ -106,4 +106,32 @@ router.get('/totals',
     authorize(...OWNER_ONLY),
     financialReportController.financialTotals);
 
+
+/**
+ * @swagger
+ * /financial-reports/purchases-vs-revenue:
+ *   get:
+ *     summary: Purchases vs Revenue chart data
+ *     tags: [Financial Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Array of monthly revenue and purchases
+ */
+router.get('/purchases-vs-revenue',
+    authorize(...OWNER_ONLY),
+    financialReportController.purchasesVsRevenue);
+
 module.exports = router;

@@ -145,6 +145,10 @@ app.use('/api/notifications', notificationRoutes);
 const assetRoutes = require('./routes/assets');
 app.use('/api/assets', assetRoutes);
 
+
+const settingsRoutes = require('./routes/settings');
+app.use('/api/settings', settingsRoutes);
+
 const leadRoutes = require('./routes/leads');
 app.use('/api/leads', leadRoutes);
 

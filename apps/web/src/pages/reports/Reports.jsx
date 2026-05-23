@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { DollarSign, TrendingUp, Loader2, Calendar, FileText, Download } from 'lucide-react';
 
 const Reports = () => {
@@ -7,11 +7,17 @@ const Reports = () => {
   const [statusData, setStatusData] = useState([]);
   const [financialData, setFinancialData] = useState(null);
   const [jobDetails, setJobDetails] = useState([]);
+  const [purchasesVsRevenueData, setPurchasesVsRevenueData] = useState([]);
 
   // Date Filters
-  const [dateRange, setDateRange] = useState({
-      startDate: '',
-      endDate: ''
+  const [dateRange, setDateRange] = useState(() => {
+      const end = new Date();
+      const start = new Date();
+      start.setMonth(start.getMonth() - 12);
+      return {
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0]
+      };
   });
 
   const role = localStorage.getItem('role');
@@ -187,6 +193,27 @@ const Reports = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+
+                {/* Purchases vs Revenue Chart */}
+                {isOwner && purchasesVsRevenueData.length > 0 && (
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Purchases vs Revenue</h3>
+                        <div className="h-80">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={purchasesVsRevenueData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="Month" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="Revenue" fill="#10b981" name="Revenue (₹)" />
+                                    <Bar dataKey="Purchases" fill="#ef4444" name="Purchases (₹)" />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
                 )}

@@ -75,7 +75,24 @@ async function financialTotals(req, res, next) {
     }
 }
 
+
+async function purchasesVsRevenue(req, res, next) {
+    try {
+        const hideSensitive = req.hideSensitive;
+        if (hideSensitive) {
+             return res.status(403).json({ error: "Access denied. Owners only." });
+        }
+        const { startDate, endDate } = req.query;
+
+        let data = await financialReportModel.getPurchasesVsRevenue(startDate, endDate);
+        res.json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
+    purchasesVsRevenue,
     summaryAllJobs,
     summaryByCustomer,
     financialTotals

@@ -33,6 +33,21 @@ const Settings = () => {
                 </div>
             )}
 
+
+            {/* Global Configuration (Owner Only) */}
+            {isOwner && (
+                <div
+                    onClick={() => navigate('/dashboard/settings/global')}
+                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer group"
+                >
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 w-fit mb-4 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40 transition-colors">
+                        <SettingsIcon size={24} />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-2">Global Configuration</h3>
+                    <p className="text-sm text-slate-500">Configure global variables like Company Name and Tax Rates.</p>
+                </div>
+            )}
+
             {/* Profile Settings */}
             <div
                 onClick={() => navigate('/dashboard/profile')}

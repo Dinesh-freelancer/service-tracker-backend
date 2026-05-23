@@ -196,14 +196,17 @@ async function updateServiceRequest(req, res, next) {
             return res.status(404).json({ message: 'Job not found' });
         }
 
-        // Validate ResolutionType for terminal statuses
+        // Validate ResolutionType for terminal statuses and On Hold (when rejecting estimates)
         const terminalStatuses = ['Completed', 'Cancelled', 'Rejected', 'Fulfilled'];
         if (updates.Status && terminalStatuses.includes(updates.Status)) {
-            // If ResolutionType is not provided in update, and not present in existing, and not 'Fulfilled' (maybe ok without?)
-            // Actually, we should check if 'ResolutionType' is in updates.
             if (!updates.ResolutionType && !existingJob.ResolutionType) {
                  return res.status(400).json({ error: `ResolutionType is required when status is ${updates.Status}` });
             }
+        }
+
+        // Ensure On Hold with Estimate Rejected is accepted (from customer portal)
+        if (updates.Status === 'On Hold' && updates.ResolutionType === 'Estimate Rejected') {
+            // Valid case from customer reject action
         }
 
         const result = await serviceRequestModel.updateServiceRequest(jobNumber, updates);

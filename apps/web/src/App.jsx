@@ -13,6 +13,7 @@ import Workers from './pages/admin/Workers';
 import Customers from './pages/admin/Customers';
 import Inventory from './pages/admin/Inventory';
 import Settings from './pages/settings/Settings';
+import GlobalSettings from './pages/settings/GlobalSettings';
 import MyJobs from './pages/customer/MyJobs';
 import MyDocuments from './pages/customer/MyDocuments';
 import Profile from './pages/customer/Profile';
@@ -60,6 +61,7 @@ function App() {
           <Route path="purchases/create" element={<CreatePurchase />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="settings/global" element={<GlobalSettings />} />
           <Route path="work-logs" element={<WorkLogs />} />
           <Route path="my-jobs" element={<MyJobs />} />
           <Route path="documents" element={<MyDocuments />} />
