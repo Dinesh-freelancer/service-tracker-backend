@@ -16,11 +16,11 @@ async function getSetting(key) {
 }
 
 async function updateSetting(key, value) {
-    const query = \`
+    const query = `
         INSERT INTO settings (SettingKey, SettingValue)
         VALUES (?, ?)
         ON DUPLICATE KEY UPDATE SettingValue = VALUES(SettingValue)
-    \`;
+    `;
     await pool.query(query, [key, value]);
 }
 
@@ -28,11 +28,11 @@ async function bulkUpdateSettings(settingsObj) {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        const query = \`
+        const query = `
             INSERT INTO settings (SettingKey, SettingValue)
             VALUES (?, ?)
             ON DUPLICATE KEY UPDATE SettingValue = VALUES(SettingValue)
-        \`;
+        `;
         for (const [key, value] of Object.entries(settingsObj)) {
             await connection.query(query, [key, value]);
         }
