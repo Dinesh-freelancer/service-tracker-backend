@@ -11,20 +11,26 @@ async function listAssets(req, res, next) {
         }
 
         let customerId = req.query.customerId;
+        let organizationId = req.query.organizationId;
         const role = req.user.Role;
 
         // Security: Customers can only see their own assets
         if (role === AUTH_ROLE_CUSTOMER) {
             customerId = req.user.CustomerId;
+            organizationId = req.user.OrganizationId;
         }
 
-        if (!customerId && role !== AUTH_ROLE_CUSTOMER) {
-             // If no customer ID provided and admin/worker, maybe return empty or handle search
-             // For now, let's require customerId for listing, or use search endpoint
-             return res.status(400).json({ error: 'CustomerId is required' });
+        if (!customerId && !organizationId && role !== AUTH_ROLE_CUSTOMER) {
+             // If no context ID provided and admin/worker, maybe return empty or handle search
+             return res.status(400).json({ error: 'CustomerId or OrganizationId is required' });
         }
 
-        const assets = await assetModel.getAssetsByCustomerId(customerId);
+        let assets = [];
+        if (organizationId) {
+            assets = await assetModel.getAssetsByOrganizationId(organizationId);
+        } else if (customerId) {
+            assets = await assetModel.getAssetsByCustomerId(customerId);
+        }
         res.json(assets);
     } catch (err) {
         next(err);
