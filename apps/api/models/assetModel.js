@@ -9,6 +9,19 @@ async function getAssetsByCustomerId(customerId) {
     return rows;
 }
 
+// Get all assets for an entire organization
+async function getAssetsByOrganizationId(organizationId) {
+    const [rows] = await pool.query(
+        `SELECT a.*
+         FROM assets a
+         JOIN customerdetails c ON a.CustomerId = c.CustomerId
+         WHERE c.OrganizationId = ?
+         ORDER BY a.CreatedAt DESC`,
+        [organizationId]
+    );
+    return rows;
+}
+
 // Get asset by ID
 async function getAssetById(assetId) {
     const [rows] = await pool.query(
@@ -70,6 +83,7 @@ async function searchAssets(queryStr) {
 
 module.exports = {
     getAssetsByCustomerId,
+    getAssetsByOrganizationId,
     getAssetById,
     createAsset,
     updateAsset,
