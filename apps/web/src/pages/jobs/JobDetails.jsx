@@ -546,13 +546,13 @@ const JobDetails = () => {
                                             Asset Specifications
                                         </h3>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                            <div><span className="text-slate-500 block">Internal Tag</span> <span className="font-medium dark:text-white">{job.InternalTag || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">Brand</span> <span className="font-medium dark:text-white">{job.Brand || job.PumpBrand || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">Motor Model</span> <span className="font-medium dark:text-white">{job.MotorModel || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">Pump Model</span> <span className="font-medium dark:text-white">{job.PumpModel || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">Serial Number</span> <span className="font-medium dark:text-white">{job.SerialNumber || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">HP</span> <span className="font-medium dark:text-white">{job.HP || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">Phase</span> <span className="font-medium dark:text-white">{job.Phase || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Internal Tag</span> <span className="font-medium text-slate-900 dark:text-white">{job.InternalTag || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Brand</span> <span className="font-medium text-slate-900 dark:text-white">{job.Brand || job.PumpBrand || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Motor Model</span> <span className="font-medium text-slate-900 dark:text-white">{job.MotorModel || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Pump Model</span> <span className="font-medium text-slate-900 dark:text-white">{job.PumpModel || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Serial Number</span> <span className="font-medium text-slate-900 dark:text-white">{job.SerialNumber || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">HP</span> <span className="font-medium text-slate-900 dark:text-white">{job.HP || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Phase</span> <span className="font-medium text-slate-900 dark:text-white">{job.Phase || 'N/A'}</span></div>
                                         </div>
                                     </div>
 
