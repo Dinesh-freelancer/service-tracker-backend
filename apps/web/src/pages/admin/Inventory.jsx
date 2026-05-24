@@ -304,7 +304,7 @@ const Inventory = () => {
                     <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Unit *</label>
                     <select
                         {...register('Unit')}
-                        className="w-full p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 text-slate-900 dark:text-white"
+                        className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                     >
                         {['Nos', 'Kg', 'Ltr', 'Meter', 'Pair'].map(u => <option key={u} value={u}>{u}</option>)}
                     </select>

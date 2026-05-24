@@ -210,6 +210,19 @@ async function updateServiceRequest(req, res, next) {
                     return res.status(403).json({ error: `Access denied: Customers cannot update field: ${key}` });
                 }
             }
+
+            // State Machine Check: Customers can only act on 'Awaiting Approval' jobs
+            if (existingJob.Status !== 'Awaiting Approval') {
+                 return res.status(400).json({ error: 'Job is not awaiting approval.' });
+            }
+
+            // State Machine Check: Customers can only transition to 'Approved' or 'On Hold' with 'Estimate Rejected'
+            const isApproving = updates.Status === 'Approved';
+            const isRejecting = updates.Status === 'On Hold' && updates.ResolutionType === 'Estimate Rejected';
+
+            if (!isApproving && !isRejecting) {
+                 return res.status(400).json({ error: 'Invalid action. You can only approve or reject the estimate.' });
+            }
         }
 
 

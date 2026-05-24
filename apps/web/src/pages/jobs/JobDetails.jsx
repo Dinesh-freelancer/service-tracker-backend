@@ -521,7 +521,7 @@ const JobDetails = () => {
                                                     {job.Parts.map(part => (
                                                         <tr key={part.PartUsedId} className="border-b border-slate-100 dark:border-slate-700">
                                                             <td className="px-4 py-2 font-medium text-slate-900 dark:text-white">{part.PartName}</td>
-                                                            <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{part.Qty}</td>
+                                                            <td className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">{part.Qty}</td>
                                                             { !isCustomer && <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{part.CostPrice}</td> }
                                                         </tr>
                                                     ))}
@@ -687,7 +687,7 @@ const JobDetails = () => {
                             <div>
                                 <label className="block text-sm font-medium mb-1 dark:text-slate-300">New Status</label>
                                 <select
-                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600"
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                                     value={newStatus}
                                     onChange={(e) => setNewStatus(e.target.value)}
                                 >
@@ -699,7 +699,7 @@ const JobDetails = () => {
                                 <div>
                                     <label className="block text-sm font-medium mb-1 dark:text-slate-300">Resolution Type *</label>
                                     <select
-                                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600"
+                                        className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                                         value={resolutionType}
                                         onChange={(e) => setResolutionType(e.target.value)}
                                     >
@@ -710,8 +710,8 @@ const JobDetails = () => {
                             )}
 
                             <div className="flex justify-end gap-2 mt-6">
-                                <button onClick={() => setShowStatusModal(false)} className="px-4 py-2 text-slate-600 dark:text-slate-300">Cancel</button>
-                                <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Update Status</button>
+                                <button onClick={() => setShowStatusModal(false)} className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">Cancel</button>
+                                <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50 font-medium">Update Status</button>
                             </div>
                         </div>
                     </div>
@@ -730,7 +730,7 @@ const JobDetails = () => {
                                     <input
                                         type="text"
                                         placeholder="Type part name..."
-                                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600"
+                                        className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                                         value={partSearch}
                                         onChange={(e) => setPartSearch(e.target.value)}
                                     />
@@ -765,15 +765,15 @@ const JobDetails = () => {
                                     type="number"
                                     min="0.1"
                                     step="0.1"
-                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600"
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                                     value={partQty}
                                     onChange={(e) => setPartQty(e.target.value)}
                                 />
                             </div>
 
                             <div className="flex justify-end gap-2 mt-6">
-                                <button onClick={() => setShowPartModal(false)} className="px-4 py-2 text-slate-600 dark:text-slate-300">Cancel</button>
-                                <button onClick={handleAddPart} disabled={!selectedPart} className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50">Add Part</button>
+                                <button onClick={() => setShowPartModal(false)} className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">Cancel</button>
+                                <button onClick={handleAddPart} disabled={!selectedPart} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50 font-medium">Add Part</button>
                             </div>
                         </div>
                     </div>
@@ -789,7 +789,7 @@ const JobDetails = () => {
                             <div>
                                 <label className="block text-sm font-medium mb-1 dark:text-slate-300">Document Type</label>
                                 <select
-                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600"
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                                     value={docType}
                                     onChange={(e) => {
                                         setDocType(e.target.value);
@@ -824,7 +824,7 @@ const JobDetails = () => {
                                 <input
                                     type="text"
                                     placeholder="Paste image link or text..."
-                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600"
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
                                     value={docLink}
                                     onChange={(e) => setDocLink(e.target.value)}
                                 />
@@ -845,7 +845,7 @@ const JobDetails = () => {
 
                             <div className="flex justify-end gap-2 mt-6">
                                 <button onClick={() => setShowDocModal(false)} className="px-4 py-2 text-slate-600 dark:text-slate-300">Cancel</button>
-                                <button onClick={handleAddDoc} disabled={!docLink} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">Add Document</button>
+                                <button onClick={handleAddDoc} disabled={!docLink} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50 font-medium">Add Document</button>
                             </div>
                         </div>
                     </div>
