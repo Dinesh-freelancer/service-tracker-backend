@@ -737,14 +737,14 @@ const JobDetails = () => {
                                     {searchingParts && <div className="absolute right-2 top-2 text-xs text-slate-400">Searching...</div>}
                                 </div>
                                 {inventoryResults.length > 0 && !selectedPart && (
-                                    <div className="mt-2 max-h-40 overflow-y-auto border rounded dark:border-slate-600">
+                                    <div className="mt-2 max-h-40 overflow-y-auto border rounded dark:border-slate-600 bg-white dark:bg-slate-800">
                                         {inventoryResults.map(p => (
                                             <button
                                                 key={p.PartId}
                                                 onClick={() => { setSelectedPart(p); setPartSearch(p.PartName); setInventoryResults([]); }}
                                                 className="w-full text-left p-2 hover:bg-slate-100 dark:hover:bg-slate-700 border-b dark:border-slate-600 last:border-0"
                                             >
-                                                <div className="font-medium dark:text-white">{p.PartName}</div>
+                                                <div className="font-medium text-slate-900 dark:text-white">{p.PartName}</div>
                                                 <div className="text-xs text-slate-500">Stock: {p.QuantityInStock} | Cost: {p.DefaultCostPrice}</div>
                                             </button>
                                         ))}
