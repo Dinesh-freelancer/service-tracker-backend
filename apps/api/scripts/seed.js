@@ -361,6 +361,20 @@ async function seed() {
       )
     `);
 
+    // sales_items Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS sales_items (
+        ItemId INT AUTO_INCREMENT PRIMARY KEY,
+        Category ENUM('Refurbished Motors', 'Motor Spares') NOT NULL,
+        Name VARCHAR(255) NOT NULL,
+        Status ENUM('Available', 'Out of stock') NOT NULL DEFAULT 'Available',
+        Specs JSON DEFAULT NULL,
+        Images JSON DEFAULT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('Tables created successfully.');
 
     // --- Seeding Data ---

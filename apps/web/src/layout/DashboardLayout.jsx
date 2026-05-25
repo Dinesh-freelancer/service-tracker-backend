@@ -17,7 +17,8 @@ import {
   EyeOff,
   Shield,
   User,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
@@ -74,7 +75,7 @@ const DashboardLayout = () => {
     ];
 
     if (role === 'Owner') {
-        return [...commonItems, ...adminItems, { name: 'Users', icon: Shield, path: '/dashboard/users' }];
+        return [...commonItems, ...adminItems, { name: 'Sales Items', icon: ImageIcon, path: '/dashboard/sales-items' }, { name: 'Users', icon: Shield, path: '/dashboard/users' }];
     }
     if (role === 'Admin') return [...commonItems, ...adminItems];
     if (role === 'Worker') return [...commonItems, ...workerItems];

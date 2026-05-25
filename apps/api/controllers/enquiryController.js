@@ -1,4 +1,6 @@
 const enquiryModel = require('../models/enquiryModel');
+const notificationModel = require('../models/notificationModel');
+const userModel = require('../models/userModel');
 const { STRING_HIDDEN } = require('../utils/constants');
 
 // List enquiries (optionally filtered)
@@ -58,7 +60,25 @@ async function getEnquiry(req, res, next) {
 // Add a new enquiry
 async function createEnquiry(req, res, next) {
     try {
-        const enquiry = await enquiryModel.addEnquiry(req.body);
+        const enquiryId = await enquiryModel.addEnquiry(req.body);
+        const enquiry = await enquiryModel.getEnquiryById(enquiryId);
+
+        // If this is a public sales enquiry (no token), or even if it's internal,
+        // notify the Owners.
+        if (req.body.NatureOfQuery === 'Sales item enquiry') {
+            const users = await userModel.getAllUsers();
+            const owners = users.filter(u => u.Role === 'Owner');
+            for (const owner of owners) {
+                await notificationModel.create({
+                    userId: owner.UserId,
+                    type: 'General',
+                    title: 'New Sales Enquiry',
+                    message: `New sales enquiry received from ${req.body.CustomerName} (${req.body.ContactNumber}).`,
+                    referenceId: enquiryId.toString()
+                });
+            }
+        }
+
         res.status(201).json(enquiry);
     } catch (err) {
         next(err);

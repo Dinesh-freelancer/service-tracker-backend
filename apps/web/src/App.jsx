@@ -22,6 +22,9 @@ import Reports from './pages/reports/Reports';
 import Purchases from './pages/admin/Purchases';
 import CreatePurchase from './pages/admin/CreatePurchase';
 import Attendance from './pages/admin/Attendance';
+import SalesItems from './pages/admin/SalesItems';
+import Buy from './pages/public/Buy';
+import BuyDetails from './pages/public/BuyDetails';
 import './App.css';
 
 // Protected Route Wrapper
@@ -38,6 +41,8 @@ function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/buy" element={<Buy />} />
+      <Route path="/buy/:itemId" element={<BuyDetails />} />
 
       {/* Dashboard Routes wrapped in Layout */}
       <Route path="/dashboard" element={
@@ -57,6 +62,7 @@ function App() {
 
           <Route path="customers" element={<Customers />} />
           <Route path="inventory" element={<Inventory />} />
+          <Route path="sales-items" element={<SalesItems />} />
           <Route path="purchases" element={<Purchases />} />
           <Route path="purchases/create" element={<CreatePurchase />} />
           <Route path="reports" element={<Reports />} />

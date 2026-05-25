@@ -5,10 +5,13 @@ const constants = require('../utils/constants');
 const enquiryController = require('../controllers/enquiryController');
 const sensitiveInfoToggle = require('../middleware/sensitiveInfoToggle');
 
+const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
+
+// Public route for creating enquiries from public portfolio
+router.post('/public', enquiryController.createEnquiry);
+
 router.use(authenticateToken);
 router.use(sensitiveInfoToggle);
-
-const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
 
 /**
  * @swagger

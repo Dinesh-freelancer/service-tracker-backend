@@ -10,7 +10,13 @@ const Navbar = () => {
           <img src={logo} alt="Rassi & Co Logo" className="w-10 h-10 mr-3" />
           <span className="drop-shadow-md">Rassi & Company</span>
         </Link>
-        <div>
+        <div className="flex items-center gap-4">
+           <Link
+             to="/buy"
+             className="text-white font-semibold hover:text-orange-400 transition-colors px-4 py-2"
+           >
+             Buy
+           </Link>
            <Link
              to="/login"
              className="text-white font-semibold hover:text-orange-400 transition-colors px-4 py-2"

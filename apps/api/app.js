@@ -155,6 +155,9 @@ app.use('/api/leads', leadRoutes);
 const sparePriceRoutes = require('./routes/sparePriceRoutes');
 app.use('/api/spares', sparePriceRoutes);
 
+const salesItemRoutes = require('./routes/salesItems');
+app.use('/api/sales-items', salesItemRoutes);
+
 
 // Error handler
 const errorHandler = require('./middleware/errorHandler');

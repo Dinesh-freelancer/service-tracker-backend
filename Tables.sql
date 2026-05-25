@@ -421,3 +421,14 @@ DELIMITER ;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+CREATE TABLE IF NOT EXISTS `sales_items` (
+  `ItemId` int NOT NULL AUTO_INCREMENT,
+  `Category` enum('Refurbished Motors', 'Motor Spares') NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Status` enum('Available', 'Out of stock') NOT NULL DEFAULT 'Available',
+  `Specs` json DEFAULT NULL,
+  `Images` json DEFAULT NULL,
+  `CreatedAt` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ItemId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
