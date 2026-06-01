@@ -9,6 +9,7 @@ import SEOHead from '../../components/seo/SEOHead';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
+import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
 
 const BuyDetails = () => {
   const { itemId } = useParams();
@@ -120,11 +121,25 @@ const BuyDetails = () => {
                 <div className="bg-slate-100 p-6 flex flex-col items-center justify-center relative min-h-[400px]">
                     {imagesArr.length > 0 ? (
                         <>
-                            <img
-                                src={imagesArr[currentImageIndex]}
-                                alt={`${item.Name} - View ${currentImageIndex + 1}`}
-                                className="max-w-full max-h-[500px] object-contain rounded-lg shadow-sm"
-                            />
+                            {(() => {
+                                const currentUrl = extractUrlFromEmbed(imagesArr[currentImageIndex]);
+                                const isDirectImage = isDirectImageLink(currentUrl) || !currentUrl.includes('drive.google.com'); // Best guess for non-drive embed URLs if needed, but the original intent was embed URLs like google drive. We use iframe for embeds unless it's a direct image.
+
+                                return isDirectImageLink(currentUrl) ? (
+                                    <img
+                                        src={currentUrl}
+                                        alt={`${item.Name} - View ${currentImageIndex + 1}`}
+                                        className="max-w-full max-h-[500px] object-contain rounded-lg shadow-sm w-full h-full"
+                                    />
+                                ) : (
+                                    <iframe
+                                        src={currentUrl}
+                                        title={`${item.Name} - View ${currentImageIndex + 1}`}
+                                        className="max-w-full max-h-[500px] w-full h-full border-0 rounded-lg shadow-sm"
+                                        allow="autoplay"
+                                    ></iframe>
+                                );
+                            })()}
 
                             {imagesArr.length > 1 && (
                                 <>

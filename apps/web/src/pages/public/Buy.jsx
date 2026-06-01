@@ -4,6 +4,7 @@ import { Loader2, Search, Package } from 'lucide-react';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import SEOHead from '../../components/seo/SEOHead';
+import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
 
 const Buy = () => {
   const [items, setItems] = useState([]);
@@ -103,11 +104,26 @@ const Buy = () => {
                         >
                             <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden flex items-center justify-center">
                                 {primaryImage ? (
-                                    <img
-                                        src={primaryImage}
-                                        alt={item.Name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
+                                    (() => {
+                                        const currentUrl = extractUrlFromEmbed(primaryImage);
+                                        return isDirectImageLink(currentUrl) ? (
+                                            <img
+                                                src={currentUrl}
+                                                alt={item.Name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full group-hover:scale-105 transition-transform duration-500 pointer-events-none">
+                                                <iframe
+                                                    src={currentUrl}
+                                                    title={item.Name}
+                                                    className="w-full h-full border-0 pointer-events-none"
+                                                    allow="autoplay"
+                                                    tabIndex="-1"
+                                                ></iframe>
+                                            </div>
+                                        );
+                                    })()
                                 ) : (
                                     <Package size={48} className="text-slate-300" />
                                 )}
