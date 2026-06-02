@@ -125,7 +125,7 @@ const BuyDetails = () => {
                                 const currentUrl = extractUrlFromEmbed(imagesArr[currentImageIndex]);
                                 const isDirectImage = isDirectImageLink(currentUrl) || !currentUrl.includes('drive.google.com'); // Best guess for non-drive embed URLs if needed, but the original intent was embed URLs like google drive. We use iframe for embeds unless it's a direct image.
 
-                                return isDirectImageLink(currentUrl) ? (
+                                return isDirectImage ? (
                                     <img
                                         src={currentUrl}
                                         alt={`${item.Name} - View ${currentImageIndex + 1}`}
