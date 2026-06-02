@@ -18,7 +18,8 @@ import {
   Shield,
   User,
   Calendar as CalendarIcon,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
@@ -75,9 +76,9 @@ const DashboardLayout = () => {
     ];
 
     if (role === 'Owner') {
-        return [...commonItems, ...adminItems, { name: 'Sales Items', icon: ImageIcon, path: '/dashboard/sales-items' }, { name: 'Users', icon: Shield, path: '/dashboard/users' }];
+        return [...commonItems, ...adminItems, { name: 'Sales Items', icon: ImageIcon, path: '/dashboard/sales-items' }, { name: 'Enquiries', icon: MessageSquare, path: '/dashboard/enquiries' }, { name: 'Users', icon: Shield, path: '/dashboard/users' }];
     }
-    if (role === 'Admin') return [...commonItems, ...adminItems];
+    if (role === 'Admin') return [...commonItems, ...adminItems, { name: 'Enquiries', icon: MessageSquare, path: '/dashboard/enquiries' }];
     if (role === 'Worker') return [...commonItems, ...workerItems];
     if (role === 'Customer') return [...commonItems, ...customerItems];
     return commonItems;

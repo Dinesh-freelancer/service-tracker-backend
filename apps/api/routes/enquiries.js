@@ -119,4 +119,32 @@ router.post('/',
     authorize(...ADMIN_OWNER),
     enquiryController.createEnquiry);
 
+/**
+ * @swagger
+ * /enquiries/{enquiryId}:
+ *   put:
+ *     summary: Update an existing enquiry
+ *     tags: [Enquiries]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: enquiryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Enquiry updated successfully
+ */
+router.put('/:enquiryId',
+    authorize(...ADMIN_OWNER),
+    enquiryController.updateEnquiry);
+
 module.exports = router;
