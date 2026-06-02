@@ -22,6 +22,7 @@ const allowedOrigins = [
     'https://s3.ksbindia.co.in',
     'http://localhost:3000',
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:5000'
 ];
 app.use(cors({
@@ -38,8 +39,8 @@ app.use(cors({
 
     return callback(new Error("Not allowed by CORS"));
   },
-  methods: ["POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 204
 }));
 app.options("*", cors());

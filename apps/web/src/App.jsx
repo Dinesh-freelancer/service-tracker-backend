@@ -23,6 +23,7 @@ import Purchases from './pages/admin/Purchases';
 import CreatePurchase from './pages/admin/CreatePurchase';
 import Attendance from './pages/admin/Attendance';
 import SalesItems from './pages/admin/SalesItems';
+import Enquiries from './pages/admin/Enquiries';
 import Buy from './pages/public/Buy';
 import BuyDetails from './pages/public/BuyDetails';
 import './App.css';
@@ -61,6 +62,7 @@ function App() {
           <Route path="attendance" element={<Attendance />} />
 
           <Route path="customers" element={<Customers />} />
+          <Route path="enquiries" element={<Enquiries />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="sales-items" element={<SalesItems />} />
           <Route path="purchases" element={<Purchases />} />

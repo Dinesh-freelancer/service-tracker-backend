@@ -85,8 +85,28 @@ async function createEnquiry(req, res, next) {
     }
 }
 
+// Update an existing enquiry
+async function updateEnquiry(req, res, next) {
+    try {
+        const { enquiryId } = req.params;
+        const updateData = req.body;
+
+        // Remove identifying or readonly fields if they exist
+        if (updateData.EnquiryId) delete updateData.EnquiryId;
+        if (updateData.CreatedAt) delete updateData.CreatedAt;
+
+        await enquiryModel.updateEnquiry(enquiryId, updateData);
+
+        const updatedEnquiry = await enquiryModel.getEnquiryById(enquiryId);
+        res.json(updatedEnquiry);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listEnquiries,
     getEnquiry,
-    createEnquiry
+    createEnquiry,
+    updateEnquiry
 };
