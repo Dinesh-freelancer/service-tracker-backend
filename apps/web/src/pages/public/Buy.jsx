@@ -106,7 +106,8 @@ const Buy = () => {
                                 {primaryImage ? (
                                     (() => {
                                         const currentUrl = extractUrlFromEmbed(primaryImage);
-                                        return isDirectImageLink(currentUrl) ? (
+                                        const isDirectImage = isDirectImageLink(currentUrl) || !currentUrl.includes('drive.google.com');
+                                        return isDirectImage ? (
                                             <img
                                                 src={currentUrl}
                                                 alt={item.Name}

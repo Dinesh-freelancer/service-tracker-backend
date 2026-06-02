@@ -71,7 +71,7 @@ async function createEnquiry(req, res, next) {
             for (const owner of owners) {
                 await notificationModel.create({
                     userId: owner.UserId,
-                    type: 'General',
+                    type: 'System', // Must be one of: 'JobUpdate','LowStock','Payment','System','JobAssignment'
                     title: 'New Sales Enquiry',
                     message: `New sales enquiry received from ${req.body.CustomerName} (${req.body.ContactNumber}).`,
                     referenceId: enquiryId.toString()
