@@ -38,6 +38,16 @@ const JobDetails = () => {
     const role = localStorage.getItem('role'); // Assuming role is stored or decoded from token
     const isCustomer = role === 'Customer';
 
+    const [editingJobInfo, setEditingJobInfo] = useState(false);
+    const [jobInfoForm, setJobInfoForm] = useState({
+        FailureReason: '',
+        FailureDescription: '',
+        ServicesNeeded: []
+    });
+    const [newService, setNewService] = useState('');
+    const [failureReasonsList, setFailureReasonsList] = useState([]);
+
+
     const fetchJob = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -49,6 +59,25 @@ const JobDetails = () => {
 
             const data = await res.json();
             setJob(data);
+
+            // Fetch unique failure reasons
+            try {
+                const reasonsRes = await fetch(`${apiUrl}/jobs/failure-reasons`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (reasonsRes.ok) {
+                    const reasonsData = await reasonsRes.json();
+                    setFailureReasonsList(reasonsData);
+                }
+            } catch (e) {
+                console.error("Error fetching failure reasons", e);
+            }
+
+            setJobInfoForm({
+                FailureReason: data.FailureReason || '',
+                FailureDescription: data.FailureDescription || '',
+                ServicesNeeded: Array.isArray(data.ServicesNeeded) ? data.ServicesNeeded : (typeof data.ServicesNeeded === 'string' ? JSON.parse(data.ServicesNeeded) : [])
+            });
             setNewStatus(data.Status);
         } catch (err) {
             toast.error('Failed to load job details');
@@ -353,25 +382,121 @@ const JobDetails = () => {
 
                     {/* Job Details Card */}
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                            <PenTool size={20} className="text-purple-500" />
-                            Job Information
-                        </h2>
-                        <div className="space-y-4">
-                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Issue / Notes</label>
-                                <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg text-slate-700 dark:text-slate-300 min-h-[60px]">
-                                    {job.Notes || 'No notes provided.'}
-                                </div>
-                            </div>
-                             {job.ResolutionType && (
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 mb-1">Resolution</label>
-                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-lg border border-green-100 dark:border-green-800">
-                                        {job.ResolutionType}
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <PenTool size={20} className="text-purple-500" />
+                                Job Information
+                            </h2>
+                            {!isCustomer && (
+                                editingJobInfo ? (
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setEditingJobInfo(false)} className="text-sm px-3 py-1 rounded border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
+                                        <button onClick={handleSaveJobInfo} className="text-sm px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1"><Save size={14} /> Save</button>
                                     </div>
-                                </div>
-                             )}
+                                ) : (
+                                    <button onClick={() => setEditingJobInfo(true)} className="text-sm px-3 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center gap-1"><PenTool size={14} /> Edit</button>
+                                )
+                            )}
+                        </div>
+                        <div className="space-y-4">
+                            {!editingJobInfo ? (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Issue / Notes</label>
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg text-slate-700 dark:text-slate-300 min-h-[60px]">
+                                            {job.Notes || 'No notes provided.'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Failure Reason</label>
+                                        <div className="text-sm text-slate-800 dark:text-slate-200">{job.FailureReason || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Failure Description</label>
+                                        <div className="text-sm text-slate-800 dark:text-slate-200">{job.FailureDescription || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Services Needed</label>
+                                        {job.ServicesNeeded && job.ServicesNeeded.length > 0 ? (
+                                            <ul className="space-y-2 mt-2">
+                                                {job.ServicesNeeded.map((srv, idx) => (
+                                                    <li key={idx} className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
+                                                        <input type="checkbox" checked={srv.completed} readOnly className="rounded border-slate-300" />
+                                                        <span className={srv.completed ? 'line-through text-slate-400' : ''}>{srv.name}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <div className="text-sm text-slate-500">None added</div>
+                                        )}
+                                    </div>
+                                    {job.ResolutionType && (
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">Resolution</label>
+                                            <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-lg border border-green-100 dark:border-green-800">
+                                                {job.ResolutionType}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Failure Reason</label>
+                                        <input
+                                            type="text"
+                                            list="failure-reasons-list"
+                                            className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                            value={jobInfoForm.FailureReason}
+                                            onChange={(e) => setJobInfoForm({...jobInfoForm, FailureReason: e.target.value})}
+                                            placeholder="Select or type reason..."
+                                        />
+                                        <datalist id="failure-reasons-list">
+                                            {failureReasonsList.map((reason, i) => <option key={i} value={reason} />)}
+                                        </datalist>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Failure Description</label>
+                                        <textarea
+                                            className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                            value={jobInfoForm.FailureDescription}
+                                            onChange={(e) => setJobInfoForm({...jobInfoForm, FailureDescription: e.target.value})}
+                                            rows={3}
+                                            placeholder="Detailed description..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Services Needed</label>
+                                        <div className="flex gap-2 mb-2">
+                                            <input
+                                                type="text"
+                                                className="flex-1 p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                value={newService}
+                                                onChange={(e) => setNewService(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                                                placeholder="e.g. Bearing bush changing"
+                                            />
+                                            <button type="button" onClick={addService} className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            {jobInfoForm.ServicesNeeded.map((srv, idx) => (
+                                                <li key={idx} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded border border-slate-200 dark:border-slate-600">
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={srv.completed}
+                                                            onChange={() => toggleServiceCompletion(idx)}
+                                                            className="rounded border-slate-300 w-4 h-4 cursor-pointer"
+                                                        />
+                                                        <span className={`text-sm ${srv.completed ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>{srv.name}</span>
+                                                    </div>
+                                                    <button type="button" onClick={() => removeService(idx)} className="text-red-500 hover:text-red-700"><X size={16}/></button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

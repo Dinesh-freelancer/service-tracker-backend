@@ -1,3 +1,4 @@
+const failureReasonController = require('../controllers/failureReasonController');
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
@@ -76,6 +77,8 @@ router.get('/',
  *       404:
  *         description: Job not found
  */
+router.get('/failure-reasons', authorize(...ALL_ROLES), failureReasonController.getFailureReasons);
+
 router.get('/:jobNumber',
     authorize(...ALL_ROLES),
     serviceRequestController.getServiceRequest);
