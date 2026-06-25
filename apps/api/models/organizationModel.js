@@ -30,9 +30,9 @@ async function addOrganization(orgData) {
 
     const [result] = await pool.query(
         `INSERT INTO organizations
-         (OrganizationName, Email || null, PrimaryContact, Address, City, State, ZipCode, GSTNumber, OrganizationType)
+         (OrganizationName, Email, PrimaryContact, Address, City, State, ZipCode, GSTNumber, OrganizationType)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [OrganizationName, Email, PrimaryContact, Address, City, State, ZipCode, GSTNumber, OrganizationType || 'Company']
+        [OrganizationName, Email || null, PrimaryContact, Address, City, State, ZipCode, GSTNumber, OrganizationType || 'Company']
     );
 
     return getOrganizationById(result.insertId);
