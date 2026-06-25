@@ -115,6 +115,57 @@ const JobDetails = () => {
         return () => clearTimeout(delay);
     }, [partSearch, showPartModal]);
 
+    const handleSaveJobInfo = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${apiUrl}/jobs/${jobNumber}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    FailureReason: jobInfoForm.FailureReason,
+                    FailureDescription: jobInfoForm.FailureDescription,
+                    ServicesNeeded: JSON.stringify(jobInfoForm.ServicesNeeded)
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to update job info');
+
+            toast.success('Job info updated successfully');
+            setEditingJobInfo(false);
+            fetchJob();
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
+
+    const addService = () => {
+        if (!newService.trim()) return;
+        setJobInfoForm(prev => ({
+            ...prev,
+            ServicesNeeded: [...prev.ServicesNeeded, { name: newService.trim(), completed: false }]
+        }));
+        setNewService('');
+    };
+
+    const toggleServiceCompletion = (index) => {
+        setJobInfoForm(prev => {
+            const newServices = [...prev.ServicesNeeded];
+            newServices[index].completed = !newServices[index].completed;
+            return { ...prev, ServicesNeeded: newServices };
+        });
+    };
+
+    const removeService = (index) => {
+        setJobInfoForm(prev => {
+            const newServices = [...prev.ServicesNeeded];
+            newServices.splice(index, 1);
+            return { ...prev, ServicesNeeded: newServices };
+        });
+    };
+
     const handleUpdateStatus = async () => {
         try {
             const token = localStorage.getItem('token');

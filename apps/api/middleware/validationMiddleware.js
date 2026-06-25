@@ -37,7 +37,7 @@ const loginValidators = [
 const createCustomerValidators = [
     body('CustomerName').notEmpty().withMessage('Customer Name is required'),
     body('WhatsappNumber').optional().isMobilePhone().withMessage('Invalid Whatsapp Number'),
-    body('Email').optional().isEmail().withMessage('Invalid Email Address')
+    body('Email').optional({ checkFalsy: true }).isEmail().withMessage('Invalid Email Address')
 ];
 
 /**
