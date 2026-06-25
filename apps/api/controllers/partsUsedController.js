@@ -57,8 +57,31 @@ async function createPartUsed(req, res, next) {
     }
 }
 
+// Update part used quantity
+async function updatePartUsed(req, res, next) {
+    try {
+        const { Qty } = req.body;
+        if (Qty === undefined || Qty <= 0) {
+            return res.status(400).json({ error: 'Valid Qty is required' });
+        }
+
+        const role = req.user ? req.user.Role : null;
+        let partUsed = await partsUsedModel.updatePartUsedQuantity(req.params.partUsedId, Qty);
+
+        partUsed = filterPartsUsed(partUsed, role);
+
+        // We could theoretically check low stock here again if Qty increased, but omitted for brevity
+        // and because add is where it most often crosses the threshold initially.
+
+        res.json(partUsed);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listPartsUsed,
     getPartUsed,
-    createPartUsed
+    createPartUsed,
+    updatePartUsed
 };

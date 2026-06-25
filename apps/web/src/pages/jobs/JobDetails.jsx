@@ -28,6 +28,9 @@ const JobDetails = () => {
     const [partQty, setPartQty] = useState(1);
     const [searchingParts, setSearchingParts] = useState(false);
 
+    const [editingPart, setEditingPart] = useState(null);
+    const [editPartQty, setEditPartQty] = useState(1);
+
     // Doc Form
     const [docType, setDocType] = useState('Photo');
     const [docLink, setDocLink] = useState('');
@@ -210,6 +213,29 @@ const JobDetails = () => {
             if (!res.ok) throw new Error('Failed to delete document');
 
             toast.success('Document deleted');
+            fetchJob();
+        } catch (err) {
+            toast.error(err.message);
+        }
+    };
+
+    const handleUpdatePartQty = async () => {
+        if (!editingPart || editPartQty <= 0) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${apiUrl}/partsused/${editingPart.PartUsedId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ Qty: parseFloat(editPartQty) })
+            });
+
+            if (!res.ok) throw new Error('Failed to update part quantity');
+
+            toast.success('Part quantity updated successfully');
+            setEditingPart(null);
             fetchJob();
         } catch (err) {
             toast.error(err.message);
@@ -691,14 +717,25 @@ const JobDetails = () => {
                                                         <th className="px-4 py-2">Part Name</th>
                                                         <th className="px-4 py-2">Qty</th>
                                                         { !isCustomer && <th className="px-4 py-2 text-right">Cost</th> }
+                                                        { !isCustomer && <th className="px-4 py-2 text-right">Actions</th> }
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {job.Parts.map(part => (
-                                                        <tr key={part.PartUsedId} className="border-b border-slate-100 dark:border-slate-700">
+                                                        <tr key={part.PartUsedId} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                                             <td className="px-4 py-2 font-medium text-slate-900 dark:text-white">{part.PartName}</td>
-                                                            <td className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">{part.Qty}</td>
+                                                            <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300 font-medium">{part.Qty}</td>
                                                             { !isCustomer && <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{part.CostPrice}</td> }
+                                                            { !isCustomer && (
+                                                                <td className="px-4 py-2 text-right">
+                                                                    <button
+                                                                        onClick={() => { setEditingPart(part); setEditPartQty(part.Qty); }}
+                                                                        className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                </td>
+                                                            )}
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -888,6 +925,38 @@ const JobDetails = () => {
                             <div className="flex justify-end gap-2 mt-6">
                                 <button onClick={() => setShowStatusModal(false)} className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">Cancel</button>
                                 <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50 font-medium">Update Status</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Part Modal */}
+            {editingPart && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl max-w-sm w-full p-6 shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Edit Part Quantity</h3>
+                        <div className="space-y-4">
+                            <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded border border-slate-100 dark:border-slate-700">
+                                <div className="text-sm text-slate-500 mb-1">Part Name</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{editingPart.PartName}</div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1 dark:text-slate-300">Quantity</label>
+                                <input
+                                    type="number"
+                                    min="0.1"
+                                    step="0.1"
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                    value={editPartQty}
+                                    onChange={(e) => setEditPartQty(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6">
+                                <button onClick={() => setEditingPart(null)} className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">Cancel</button>
+                                <button onClick={handleUpdatePartQty} disabled={!editPartQty || editPartQty <= 0} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50 font-medium">Save</button>
                             </div>
                         </div>
                     </div>

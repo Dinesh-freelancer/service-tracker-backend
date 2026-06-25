@@ -61,6 +61,55 @@ async function addPartUsed(partData) {
     }
 }
 
+async function updatePartUsedQuantity(partUsedId, newQty) {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Get current part used record
+        const [rows] = await connection.query('SELECT * FROM partsused WHERE PartUsedId = ?', [partUsedId]);
+        if (rows.length === 0) {
+            throw new Error('Part used record not found');
+        }
+
+        const partUsed = rows[0];
+        const oldQty = partUsed.Qty;
+        const diffQty = newQty - oldQty;
+
+        let newCostPrice = partUsed.CostPrice;
+
+        if (diffQty !== 0 && partUsed.PartId) {
+            if (diffQty > 0) {
+                // We need more parts, consume them
+                const additionalCost = await inventoryModel.consumePartFIFO(connection, partUsed.PartId, diffQty);
+                // Calculate new average cost price
+                newCostPrice = ((oldQty * partUsed.CostPrice) + (diffQty * additionalCost)) / newQty;
+            } else {
+                // We are reducing parts, restore them
+                const returnedQty = Math.abs(diffQty);
+                await inventoryModel.restorePartFIFO(connection, partUsed.PartId, returnedQty, partUsed.CostPrice);
+                // Cost price per unit remains the same for the remaining parts
+            }
+        }
+
+        // 3. Update the record
+        await connection.query(
+            'UPDATE partsused SET Qty = ?, CostPrice = ? WHERE PartUsedId = ?',
+            [newQty, newCostPrice, partUsedId]
+        );
+
+        await connection.commit();
+
+        const [updatedRows] = await pool.query('SELECT * FROM partsused WHERE PartUsedId = ?', [partUsedId]);
+        return updatedRows[0];
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+}
+
 async function deletePartUsed(partUsedId) {
     const connection = await pool.getConnection();
     try {
@@ -91,5 +140,6 @@ module.exports = {
     getPartsUsedByJob,
     getPartUsedById,
     addPartUsed,
+    updatePartUsedQuantity,
     deletePartUsed
 };

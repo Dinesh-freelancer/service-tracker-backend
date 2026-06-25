@@ -107,4 +107,37 @@ router.post('/',
     authorize(...WORKER_ALLOWED),
     partsUsedController.createPartUsed);
 
+/**
+ * @swagger
+ * /partsused/{partUsedId}:
+ *   put:
+ *     summary: Update part usage quantity
+ *     tags: [Parts Used]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: partUsedId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - Qty
+ *             properties:
+ *               Qty:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Updated successfully
+ */
+router.put('/:partUsedId',
+    authorize(...WORKER_ALLOWED),
+    partsUsedController.updatePartUsed);
+
 module.exports = router;

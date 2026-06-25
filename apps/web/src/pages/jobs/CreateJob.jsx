@@ -174,6 +174,8 @@ const CreateJob = () => {
                     InternalTag: data.InternalTag, // Optional, auto-generated if empty
                     Brand: data.Brand,
                     AssetType: data.AssetType || 'Pumpset',
+                    PumpType: data.PumpType,
+                    AssetDescription: data.AssetDescription,
                     PumpModel: data.PumpModel,
                     MotorModel: data.MotorModel,
                     SerialNumber: data.SerialNumber,
@@ -360,7 +362,26 @@ const CreateJob = () => {
                                                     <option value="Pumpset">Pumpset (Combined)</option>
                                                     <option value="Motor Only">Motor Only</option>
                                                     <option value="Pump Only">Pump Only</option>
+                                                    <option value="Others">Others</option>
                                                 </select>
+                                            </div>
+                                            {watch('AssetType') !== 'Others' && (
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-500 mb-1">Pump Type</label>
+                                                    <select {...register('PumpType')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                                                        <option value="">-- Select Pump Type --</option>
+                                                        <option value="V3 Borewell">V3 Borewell</option>
+                                                        <option value="V4 Borewell">V4 Borewell</option>
+                                                        <option value="V6 Borewell">V6 Borewell</option>
+                                                        <option value="Dewatering">Dewatering</option>
+                                                        <option value="Sewage">Sewage</option>
+                                                        <option value="Others">Others</option>
+                                                    </select>
+                                                </div>
+                                            )}
+                                            <div className="md:col-span-2">
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Asset Description</label>
+                                                <textarea {...register('AssetDescription')} rows={2} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="Provide extra details for this asset..." />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Phase</label>
