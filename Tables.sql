@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS `attendance` (
   `AttendanceId` int NOT NULL AUTO_INCREMENT,
   `WorkerId` int NOT NULL,
   `AttendanceDate` date NOT NULL,
-  `Status` enum('Present','Absent','Half Day','Field Work','On Leave') NOT NULL DEFAULT 'Present',
+  `Status` enum('Present','Absent','Half Day','Field Work','On Leave','Week off','Holiday') NOT NULL DEFAULT 'Present',
   `CheckInTime` time DEFAULT NULL,
   `CheckOutTime` time DEFAULT NULL,
   PRIMARY KEY (`AttendanceId`),

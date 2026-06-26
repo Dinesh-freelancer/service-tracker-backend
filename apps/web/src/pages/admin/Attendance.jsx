@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2, CheckCircle, XCircle, Clock, Plane, FileText, Save } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2, CheckCircle, XCircle, Clock, Plane, FileText, Save, Coffee, Gift } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -79,9 +79,12 @@ const Attendance = () => {
     };
 
     const handleCellClick = (worker, day, record) => {
-        setSelectedCell({ worker, day, targetDate: new Date(Date.UTC(year, month, day)).toISOString().split('T')[0] });
+        const targetDate = new Date(Date.UTC(year, month, day)).toISOString().split('T')[0];
+        const isSunday = new Date(year, month, day).getDay() === 0;
+
+        setSelectedCell({ worker, day, targetDate });
         setFormData({
-            Status: record?.Status || 'Present',
+            Status: record?.Status || (isSunday ? 'Week off' : 'Present'),
             CheckInTime: record?.CheckInTime || '',
             CheckOutTime: record?.CheckOutTime || '',
             Notes: record?.Notes || ''
@@ -129,6 +132,8 @@ const Attendance = () => {
             case 'Half Day': return <Clock size={18} className="text-yellow-500" />;
             case 'Field Work': return <Plane size={18} className="text-blue-500" />;
             case 'On Leave': return <FileText size={18} className="text-purple-500" />;
+            case 'Week off': return <Coffee size={18} className="text-slate-500" />;
+            case 'Holiday': return <Gift size={18} className="text-pink-500" />;
             default: return <div className="w-[18px] h-[18px] rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800" />;
         }
     };
@@ -165,6 +170,8 @@ const Attendance = () => {
                 <div className="flex items-center gap-1.5"><Clock size={14} className="text-yellow-500" /> Half Day</div>
                 <div className="flex items-center gap-1.5"><Plane size={14} className="text-blue-500" /> Field Work</div>
                 <div className="flex items-center gap-1.5"><FileText size={14} className="text-purple-500" /> On Leave</div>
+                <div className="flex items-center gap-1.5"><Coffee size={14} className="text-slate-500" /> Week off</div>
+                <div className="flex items-center gap-1.5"><Gift size={14} className="text-pink-500" /> Holiday</div>
                 <div className="text-slate-400 ml-auto italic">Click a cell to override status.</div>
             </div>
 
@@ -199,7 +206,8 @@ const Attendance = () => {
                                             </td>
                                             {daysArray.map(day => {
                                                 const record = getAttendanceRecord(worker.WorkerId, day);
-                                                const status = record?.Status;
+                                                const isSunday = new Date(year, month, day).getDay() === 0;
+                                                const status = record?.Status || (isSunday ? 'Week off' : null);
 
                                                 // Build tooltip string
                                                 let tooltip = `${worker.WorkerName} - ${new Date(year, month, day).toLocaleDateString()}`;
@@ -255,6 +263,8 @@ const Attendance = () => {
                         <option value="Half Day">Half Day</option>
                         <option value="Field Work">Field Work</option>
                         <option value="On Leave">On Leave</option>
+                        <option value="Week off">Week off</option>
+                        <option value="Holiday">Holiday</option>
                     </select>
                 </div>
 
