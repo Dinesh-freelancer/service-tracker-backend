@@ -41,7 +41,8 @@ async function addPartUsed(partData) {
 
         // Calculate actual FIFO cost if PartId is provided
         if (PartId) {
-            CostPrice = await inventoryModel.consumePartFIFO(connection, PartId, Qty);
+            const totalCost = await inventoryModel.consumePartFIFO(connection, PartId, Qty);
+            CostPrice = totalCost / Qty; // Convert back to average unit cost price for this row
         }
 
         const [result] = await connection.query(
@@ -82,8 +83,8 @@ async function updatePartUsedQuantity(partUsedId, newQty) {
             if (diffQty > 0) {
                 // We need more parts, consume them
                 const additionalCost = await inventoryModel.consumePartFIFO(connection, partUsed.PartId, diffQty);
-                // Calculate new average cost price
-                newCostPrice = ((oldQty * partUsed.CostPrice) + (diffQty * additionalCost)) / newQty;
+                // Calculate new average cost price (additionalCost is the total cost of the diffQty)
+                newCostPrice = ((oldQty * partUsed.CostPrice) + additionalCost) / newQty;
             } else {
                 // We are reducing parts, restore them
                 const returnedQty = Math.abs(diffQty);
