@@ -13,8 +13,8 @@ SET @preparedStatement = (SELECT IF(
       AND (table_schema = @dbname)
       AND (column_name = @columnname)
   ) > 0,
-  "SELECT 1",
-  "ALTER TABLE assets ADD COLUMN PumpType VARCHAR(100) DEFAULT NULL"
+  'SELECT 1',
+  'ALTER TABLE assets ADD COLUMN PumpType VARCHAR(100) DEFAULT NULL'
 ));
 PREPARE alterIfNotExists FROM @preparedStatement;
 EXECUTE alterIfNotExists;
@@ -30,8 +30,8 @@ SET @preparedStatement = (SELECT IF(
       AND (table_schema = @dbname)
       AND (column_name = @columnname)
   ) > 0,
-  "SELECT 1",
-  "ALTER TABLE assets ADD COLUMN AssetDescription TEXT DEFAULT NULL"
+  'SELECT 1',
+  'ALTER TABLE assets ADD COLUMN AssetDescription TEXT DEFAULT NULL'
 ));
 PREPARE alterIfNotExists FROM @preparedStatement;
 EXECUTE alterIfNotExists;
