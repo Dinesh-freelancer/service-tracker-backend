@@ -140,6 +140,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                         setFormData(prev => ({
                             ...prev,
                             ...data,
+                            // Fallback to empty string for nulls so React inputs don't complain about uncontrolled components
+                            hp: data.hp ?? '',
+                            kw: data.kw ?? '',
+                            slots: data.slots ?? '',
                             // Ensure JSON fields are objects even if null from DB
                             slot_turns_run: data.slot_turns_run || {},
                             slot_turns_start: data.slot_turns_start || {},
@@ -201,6 +205,22 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
             if (!res.ok) {
                 const errorData = await res.json();
                 throw new Error(errorData.error || 'Failed to save details');
+            }
+
+            const updatedData = await res.json();
+
+            // Re-sync with returned data so UI reflects what is actually saved
+            if (updatedData && Object.keys(updatedData).length > 0) {
+                setFormData(prev => ({
+                    ...prev,
+                    ...updatedData,
+                    hp: updatedData.hp ?? '',
+                    kw: updatedData.kw ?? '',
+                    slots: updatedData.slots ?? '',
+                    slot_turns_run: updatedData.slot_turns_run || {},
+                    slot_turns_start: updatedData.slot_turns_start || {},
+                    slot_turns_3phase: updatedData.slot_turns_3phase || {},
+                }));
             }
 
             toast.success('Winding details saved successfully');
