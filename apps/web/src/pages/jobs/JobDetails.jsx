@@ -458,10 +458,20 @@ const JobDetails = () => {
 
                     {/* Asset Details Card */}
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Box size={20} className="text-blue-500" />
-                            Asset Details
-                        </h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Box size={20} className="text-blue-500" />
+                                Asset Details
+                            </h2>
+                            {!isCustomer && (
+                                <button
+                                    onClick={handleEditAssetClick}
+                                    className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 font-medium transition-colors"
+                                >
+                                    <Edit size={16} /> Edit Asset
+                                </button>
+                            )}
+                        </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                 <div className="text-xs text-slate-500 uppercase">Internal Tag</div>
@@ -500,18 +510,9 @@ const JobDetails = () => {
                                 <div className="text-xs text-slate-500 uppercase">Pump Type</div>
                                 <div className="font-medium text-slate-900 dark:text-white">{job.PumpType || 'N/A'}</div>
                             </div>
-                            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg md:col-span-2 relative group">
+                            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg md:col-span-2">
                                 <div className="text-xs text-slate-500 uppercase">Asset Description</div>
                                 <div className="font-medium text-slate-900 dark:text-white">{job.AssetDescription || 'N/A'}</div>
-                                {!isCustomer && (
-                                    <button
-                                        onClick={handleEditAssetClick}
-                                        className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-600 bg-white dark:bg-slate-800 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"
-                                        title="Edit Asset Details"
-                                    >
-                                        <Edit size={14} />
-                                    </button>
-                                )}
                             </div>
                         </div>
                     </div>

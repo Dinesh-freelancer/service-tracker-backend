@@ -139,6 +139,7 @@ const DashboardLayout = () => {
                 <NavLink
                     key={item.name}
                     to={item.path}
+                    end={item.path === '/dashboard'}
                     className={({ isActive }) => `
                         flex items-center px-3 py-3 rounded-lg transition-colors group relative
                         ${isActive
