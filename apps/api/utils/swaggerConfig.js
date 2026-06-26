@@ -40,6 +40,8 @@ const options = {
                 PumpModel: { type: 'string' },
                 MotorModel: { type: 'string' },
                 SerialNumber: { type: 'string' },
+                PowerRating: { type: 'number' },
+                PowerUnit: { type: 'string', enum: ['HP', 'KW'] },
                 IsActive: { type: 'boolean' }
             }
         },

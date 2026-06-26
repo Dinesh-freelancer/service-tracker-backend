@@ -14,9 +14,10 @@ const CreateJob = () => {
             PumpModel: '',
             MotorModel: '',
             SerialNumber: '',
-            HP: '',
+            PowerRating: '',
+            PowerUnit: 'HP',
             AssetType: 'Pumpset',
-            Phase: '3-PHASE' // Defaulting to 3-PHASE as it is common
+            Phase: ''
         }
     });
 
@@ -172,17 +173,18 @@ const CreateJob = () => {
             if (isNewAsset) {
                 payload.NewAsset = {
                     InternalTag: data.InternalTag, // Optional, auto-generated if empty
-                    Brand: data.Brand,
+                    Brand: data.Brand || null,
                     AssetType: data.AssetType || 'Pumpset',
-                    PumpType: data.PumpType,
-                    AssetDescription: data.AssetDescription,
-                    PumpModel: data.PumpModel,
-                    MotorModel: data.MotorModel,
-                    SerialNumber: data.SerialNumber,
-                    HP: data.HP,
-                    Phase: data.Phase, // Added Phase field
-                    WarrantyExpiry: data.WarrantyExpiry,
-                    InstallationDate: data.InstallationDate
+                    PumpType: data.PumpType || null,
+                    AssetDescription: data.AssetDescription || null,
+                    PumpModel: data.PumpModel || null,
+                    MotorModel: data.MotorModel || null,
+                    SerialNumber: data.SerialNumber || null,
+                    PowerRating: data.PowerRating || null,
+                    PowerUnit: data.PowerUnit || 'HP',
+                    Phase: data.Phase || null, // Added Phase field
+                    WarrantyExpiry: data.WarrantyExpiry || null,
+                    InstallationDate: data.InstallationDate || null
                 };
             } else {
                 if (!selectedAssetId) {
@@ -344,11 +346,34 @@ const CreateJob = () => {
                                         <option value="" disabled>-- Select an Asset --</option>
                                         {assets.map(a => (
                                             <option key={a.AssetId} value={a.AssetId}>
-                                                {a.InternalTag} - {a.PumpBrand} {a.PumpModel} (Serial: {a.SerialNumber})
+                                                {a.InternalTag} - {a.AssetType} {a.PumpType ? `(${a.PumpType})` : ''} - {a.Brand} {a.PumpModel} (Serial: {a.SerialNumber})
                                             </option>
                                         ))}
                                         <option value="NEW">+ Register New Asset</option>
                                     </select>
+
+                                    {/* Selected Asset Details Card */}
+                                    {!isNewAsset && selectedAssetId && (
+                                        <div className="mt-4 p-4 bg-blue-50 dark:bg-slate-700/50 rounded-lg border border-blue-100 dark:border-slate-600 animate-in fade-in">
+                                            <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Selected Asset Details</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-4 text-sm">
+                                                {assets.filter(a => a.AssetId === parseInt(selectedAssetId)).map(a => (
+                                                    <React.Fragment key={a.AssetId}>
+                                                        <div><span className="text-slate-500 block text-xs">Asset Type</span> <span className="font-medium dark:text-slate-200">{a.AssetType || 'N/A'}</span></div>
+                                                        <div><span className="text-slate-500 block text-xs">Pump Type</span> <span className="font-medium dark:text-slate-200">{a.PumpType || 'N/A'}</span></div>
+                                                        <div><span className="text-slate-500 block text-xs">Brand</span> <span className="font-medium dark:text-slate-200">{a.Brand || 'N/A'}</span></div>
+                                                        <div><span className="text-slate-500 block text-xs">Pump Model</span> <span className="font-medium dark:text-slate-200">{a.PumpModel || 'N/A'}</span></div>
+                                                        <div><span className="text-slate-500 block text-xs">Motor Model</span> <span className="font-medium dark:text-slate-200">{a.MotorModel || 'N/A'}</span></div>
+                                                        <div><span className="text-slate-500 block text-xs">Power Rating</span> <span className="font-medium dark:text-slate-200">{a.PowerRating ? `${a.PowerRating} ${a.PowerUnit || 'HP'}` : 'N/A'}</span></div>
+                                                        <div><span className="text-slate-500 block text-xs">Serial Number</span> <span className="font-medium dark:text-slate-200">{a.SerialNumber || 'N/A'}</span></div>
+                                                        {a.AssetDescription && (
+                                                            <div className="col-span-2"><span className="text-slate-500 block text-xs">Description</span> <span className="font-medium dark:text-slate-200">{a.AssetDescription}</span></div>
+                                                        )}
+                                                    </React.Fragment>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* New Asset Form */}
                                     <div className={isNewAsset ? "grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-2" : "hidden"}>
@@ -386,12 +411,13 @@ const CreateJob = () => {
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Phase</label>
                                                 <select {...register('Phase')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                                                    <option value="">-- Select Phase --</option>
                                                     <option value="1-PHASE">1-PHASE</option>
                                                     <option value="3-PHASE">3-PHASE</option>
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-slate-500 mb-1">Brand *</label>
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Brand</label>
                                                 <input {...register('Brand')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="Manufacturer (e.g. Kirloskar)" />
                                             </div>
 
@@ -407,9 +433,18 @@ const CreateJob = () => {
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Serial Number</label>
                                                 <input {...register('SerialNumber')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
                                             </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-slate-500 mb-1">HP / Power</label>
-                                                <input {...register('HP')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-500 mb-1">Power Rating</label>
+                                                    <input {...register('PowerRating')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-500 mb-1">Unit</label>
+                                                    <select {...register('PowerUnit')} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                                                        <option value="HP">HP</option>
+                                                        <option value="KW">KW</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                     </div>
 
