@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
 import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
@@ -30,6 +30,13 @@ const JobDetails = () => {
 
     const [editingPart, setEditingPart] = useState(null);
     const [editPartQty, setEditPartQty] = useState(1);
+
+    const [editingAsset, setEditingAsset] = useState(false);
+    const [editAssetData, setEditAssetData] = useState({
+        AssetType: '',
+        PumpType: '',
+        AssetDescription: ''
+    });
 
     // Doc Form
     const [docType, setDocType] = useState('Photo');
@@ -213,6 +220,37 @@ const JobDetails = () => {
             if (!res.ok) throw new Error('Failed to delete document');
 
             toast.success('Document deleted');
+            fetchJob();
+        } catch (err) {
+            toast.error(err.message);
+        }
+    };
+
+    const handleEditAssetClick = () => {
+        setEditAssetData({
+            AssetType: job.AssetType || 'Pumpset',
+            PumpType: job.PumpType || '',
+            AssetDescription: job.AssetDescription || ''
+        });
+        setEditingAsset(true);
+    };
+
+    const handleUpdateAsset = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${apiUrl}/assets/${job.AssetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(editAssetData)
+            });
+
+            if (!res.ok) throw new Error('Failed to update asset details');
+
+            toast.success('Asset updated successfully');
+            setEditingAsset(false);
             fetchJob();
         } catch (err) {
             toast.error(err.message);
@@ -451,8 +489,29 @@ const JobDetails = () => {
                                 <div className="font-medium text-slate-900 dark:text-white">{job.SerialNumber || 'N/A'}</div>
                             </div>
                              <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
-                                <div className="text-xs text-slate-500 uppercase">HP</div>
-                                <div className="font-medium text-slate-900 dark:text-white">{job.HP || 'N/A'}</div>
+                                <div className="text-xs text-slate-500 uppercase">Power Rating</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{job.PowerRating ? `${job.PowerRating} ${job.PowerUnit || 'HP'}` : 'N/A'}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                                <div className="text-xs text-slate-500 uppercase">Asset Type</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{job.AssetType || 'N/A'}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                                <div className="text-xs text-slate-500 uppercase">Pump Type</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{job.PumpType || 'N/A'}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg md:col-span-2 relative group">
+                                <div className="text-xs text-slate-500 uppercase">Asset Description</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{job.AssetDescription || 'N/A'}</div>
+                                {!isCustomer && (
+                                    <button
+                                        onClick={handleEditAssetClick}
+                                        className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-600 bg-white dark:bg-slate-800 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                                        title="Edit Asset Details"
+                                    >
+                                        <Edit size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -747,7 +806,7 @@ const JobDetails = () => {
 
                             {/* Winding Details View */}
                             {activeTab === 'winding' && !isCustomer && (
-                                <WindingDetails assetId={job.AssetId} phase={job.Phase} defaultHp={job.HP} />
+                                <WindingDetails assetId={job.AssetId} phase={job.Phase} defaultHp={job.PowerRating} />
                             )}
 
                             {/* Asset History View */}
@@ -764,8 +823,13 @@ const JobDetails = () => {
                                             <div><span className="text-slate-500 block">Motor Model</span> <span className="font-medium text-slate-900 dark:text-white">{job.MotorModel || 'N/A'}</span></div>
                                             <div><span className="text-slate-500 block">Pump Model</span> <span className="font-medium text-slate-900 dark:text-white">{job.PumpModel || 'N/A'}</span></div>
                                             <div><span className="text-slate-500 block">Serial Number</span> <span className="font-medium text-slate-900 dark:text-white">{job.SerialNumber || 'N/A'}</span></div>
-                                            <div><span className="text-slate-500 block">HP</span> <span className="font-medium text-slate-900 dark:text-white">{job.HP || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Power Rating</span> <span className="font-medium text-slate-900 dark:text-white">{job.PowerRating ? `${job.PowerRating} ${job.PowerUnit || 'HP'}` : 'N/A'}</span></div>
                                             <div><span className="text-slate-500 block">Phase</span> <span className="font-medium text-slate-900 dark:text-white">{job.Phase || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Asset Type</span> <span className="font-medium text-slate-900 dark:text-white">{job.AssetType || 'N/A'}</span></div>
+                                            <div><span className="text-slate-500 block">Pump Type</span> <span className="font-medium text-slate-900 dark:text-white">{job.PumpType || 'N/A'}</span></div>
+                                            {job.AssetDescription && (
+                                                <div className="col-span-2 md:col-span-4"><span className="text-slate-500 block">Description</span> <span className="font-medium text-slate-900 dark:text-white">{job.AssetDescription}</span></div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -925,6 +989,64 @@ const JobDetails = () => {
                             <div className="flex justify-end gap-2 mt-6">
                                 <button onClick={() => setShowStatusModal(false)} className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">Cancel</button>
                                 <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50 font-medium">Update Status</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Asset Modal */}
+            {editingAsset && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Edit Asset Details</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 dark:text-slate-300">Asset Type</label>
+                                <select
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                    value={editAssetData.AssetType}
+                                    onChange={(e) => setEditAssetData({...editAssetData, AssetType: e.target.value})}
+                                >
+                                    <option value="Pumpset">Pumpset (Combined)</option>
+                                    <option value="Motor Only">Motor Only</option>
+                                    <option value="Pump Only">Pump Only</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+
+                            {editAssetData.AssetType !== 'Others' && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 dark:text-slate-300">Pump Type</label>
+                                    <select
+                                        className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                        value={editAssetData.PumpType}
+                                        onChange={(e) => setEditAssetData({...editAssetData, PumpType: e.target.value})}
+                                    >
+                                        <option value="">-- Select Pump Type --</option>
+                                        <option value="V3 Borewell">V3 Borewell</option>
+                                        <option value="V4 Borewell">V4 Borewell</option>
+                                        <option value="V6 Borewell">V6 Borewell</option>
+                                        <option value="Dewatering">Dewatering</option>
+                                        <option value="Sewage">Sewage</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1 dark:text-slate-300">Asset Description</label>
+                                <textarea
+                                    className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                    rows={3}
+                                    value={editAssetData.AssetDescription}
+                                    onChange={(e) => setEditAssetData({...editAssetData, AssetDescription: e.target.value})}
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6">
+                                <button onClick={() => setEditingAsset(false)} className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">Cancel</button>
+                                <button onClick={handleUpdateAsset} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors font-medium">Save</button>
                             </div>
                         </div>
                     </div>

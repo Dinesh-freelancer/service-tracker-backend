@@ -129,10 +129,7 @@ async function createServiceRequest(req, res, next) {
         try {
             // Hybrid Flow: Create Asset if needed
             if (!assetId && NewAsset) {
-                // Validate NewAsset basics
-                if (!NewAsset.Brand) {
-                    throw new Error('New Asset requires Brand');
-                }
+                // Brand validation removed to allow empty values
 
                 // Ensure CustomerId is consistent
                 NewAsset.CustomerId = jobData.CustomerId;
