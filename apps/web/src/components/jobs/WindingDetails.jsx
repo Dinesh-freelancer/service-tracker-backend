@@ -118,6 +118,7 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
         wire_id_3phase: '', wire_od_3phase: '',
         turns_run: '', turns_start: '', turns_3phase: '',
         slot_turns_run: {}, slot_turns_start: {}, slot_turns_3phase: {},
+        weight: '', weight_run: '', weight_start: '',
         notes: ''
     });
 
@@ -144,6 +145,9 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                             hp: data.hp ?? '',
                             kw: data.kw ?? '',
                             slots: data.slots ?? '',
+                            weight: data.weight ?? '',
+                            weight_run: data.weight_run ?? '',
+                            weight_start: data.weight_start ?? '',
                             // Ensure JSON fields are objects even if null from DB
                             slot_turns_run: data.slot_turns_run || {},
                             slot_turns_start: data.slot_turns_start || {},
@@ -185,12 +189,14 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
             if (payload.phase === '1-PHASE') {
                 payload.swg_3phase = null; payload.wire_id_3phase = null; payload.wire_od_3phase = null;
                 payload.turns_3phase = null; payload.slot_turns_3phase = null;
+                payload.weight = null;
             } else {
                 payload.swg_run = null; payload.swg_start = null;
                 payload.wire_id_run = null; payload.wire_od_run = null;
                 payload.wire_id_start = null; payload.wire_od_start = null;
                 payload.turns_run = null; payload.turns_start = null;
                 payload.slot_turns_run = null; payload.slot_turns_start = null;
+                payload.weight_run = null; payload.weight_start = null;
             }
 
             const res = await fetch(`${apiUrl}/winding-details/asset/${assetId}`, {
@@ -217,6 +223,9 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                     hp: updatedData.hp ?? '',
                     kw: updatedData.kw ?? '',
                     slots: updatedData.slots ?? '',
+                    weight: updatedData.weight ?? '',
+                    weight_run: updatedData.weight_run ?? '',
+                    weight_start: updatedData.weight_start ?? '',
                     slot_turns_run: updatedData.slot_turns_run || {},
                     slot_turns_start: updatedData.slot_turns_start || {},
                     slot_turns_3phase: updatedData.slot_turns_3phase || {},
@@ -317,6 +326,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                                     <label className="block text-xs text-slate-500 mb-1">Wire OD (mm)</label>
                                     <input type="number" step="0.001" name="wire_od_run" value={formData.wire_od_run} onChange={handleChange} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
                                 </div>
+                                <div className="col-span-2">
+                                    <label className="block text-xs text-slate-500 mb-1">Weight Run (Kgs)</label>
+                                    <input type="number" step="0.001" name="weight_run" value={formData.weight_run} onChange={handleChange} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
+                                </div>
                             </div>
                             <SlotTurnsBuilder title="Slot Pitch & Turns" data={formData.slot_turns_run} onChange={(val) => handleJsonChange('slot_turns_run', val)} />
                         </div>
@@ -341,6 +354,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                                     <label className="block text-xs text-slate-500 mb-1">Wire OD (mm)</label>
                                     <input type="number" step="0.001" name="wire_od_start" value={formData.wire_od_start} onChange={handleChange} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
                                 </div>
+                                <div className="col-span-2">
+                                    <label className="block text-xs text-slate-500 mb-1">Weight Start (Kgs)</label>
+                                    <input type="number" step="0.001" name="weight_start" value={formData.weight_start} onChange={handleChange} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
+                                </div>
                             </div>
                             <SlotTurnsBuilder title="Slot Pitch & Turns" data={formData.slot_turns_start} onChange={(val) => handleJsonChange('slot_turns_start', val)} />
                         </div>
@@ -364,6 +381,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                             <div>
                                 <label className="block text-xs text-slate-500 mb-1">Wire OD (mm)</label>
                                 <input type="number" step="0.001" name="wire_od_3phase" value={formData.wire_od_3phase} onChange={handleChange} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-slate-500 mb-1">Weight (Kgs)</label>
+                                <input type="number" step="0.001" name="weight" value={formData.weight} onChange={handleChange} className="w-full p-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
                             </div>
                         </div>
                         <div className="md:w-1/2">

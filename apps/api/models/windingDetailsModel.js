@@ -10,6 +10,7 @@ const ALLOWED_COLUMNS = [
     'wire_id_3phase', 'wire_od_3phase',
     'turns_run', 'turns_start', 'turns_3phase',
     'slot_turns_run', 'slot_turns_start', 'slot_turns_3phase',
+    'weight', 'weight_run', 'weight_start',
     'notes'
 ];
 
