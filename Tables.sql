@@ -314,7 +314,7 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   KEY `idx_user` (`UserId`),
   KEY `idx_isread` (`IsRead`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `users` (`UserId`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
 
 CREATE TABLE IF NOT EXISTS `auditdetails` (
   `AuditId` int NOT NULL AUTO_INCREMENT,
@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS `auditdetails` (
   PRIMARY KEY (`AuditId`),
   KEY `idx_audit_job` (`JobNumber`),
   CONSTRAINT `auditdetails_ibfk_1` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
 
 -- -----------------------------------------------------
 -- LEVEL 4: FINAL CHILD TABLES
@@ -389,7 +389,7 @@ CREATE TABLE IF NOT EXISTS `windingdetails` (
   PRIMARY KEY (`id`),
   KEY `idx_jobNumber` (`jobNumber`),
   CONSTRAINT `fk_winding_job` FOREIGN KEY (`jobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
 
 -- -----------------------------------------------------
 -- TRIGGERS
@@ -434,4 +434,4 @@ CREATE TABLE IF NOT EXISTS `sales_items` (
   `CreatedAt` timestamp DEFAULT CURRENT_TIMESTAMP,
   `UpdatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`ItemId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;

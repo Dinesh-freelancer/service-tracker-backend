@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
+import WarrantyClaimTab from './WarrantyClaimTab';
 import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
 
 const JobDetails = () => {
@@ -20,6 +21,12 @@ const JobDetails = () => {
     // Status Form
     const [newStatus, setNewStatus] = useState('');
     const [resolutionType, setResolutionType] = useState('');
+    const [resolutionNotes, setResolutionNotes] = useState('');
+    const [holdReason, setHoldReason] = useState('');
+    const [statusFailureReason, setStatusFailureReason] = useState('');
+    const [statusFailureDescription, setStatusFailureDescription] = useState('');
+
+    const resolutionOptions = ['Completed Successfully', 'Estimate Rejected', 'Customer Unreachable', 'Change of Mind', 'Warranty Denied', 'Abandoned/Unclaimed', 'Duplicate', 'Other'];
 
     // Part Form
     const [partSearch, setPartSearch] = useState('');
@@ -59,7 +66,9 @@ const JobDetails = () => {
     const [jobInfoForm, setJobInfoForm] = useState({
         FailureReason: '',
         FailureDescription: '',
-        ServicesNeeded: []
+        ServicesNeeded: [],
+        IsWarranty: false,
+        BillingType: 'Chargeable'
     });
     const [newService, setNewService] = useState('');
     const [failureReasonsList, setFailureReasonsList] = useState([]);
@@ -93,7 +102,9 @@ const JobDetails = () => {
             setJobInfoForm({
                 FailureReason: data.FailureReason || '',
                 FailureDescription: data.FailureDescription || '',
-                ServicesNeeded: Array.isArray(data.ServicesNeeded) ? data.ServicesNeeded : (typeof data.ServicesNeeded === 'string' ? JSON.parse(data.ServicesNeeded) : [])
+                ServicesNeeded: typeof data.ServicesNeeded === 'string' ? JSON.parse(data.ServicesNeeded) : (data.ServicesNeeded || []),
+                IsWarranty: data.IsWarranty === 1 || data.IsWarranty === true,
+                BillingType: data.BillingType || 'Chargeable'
             });
             setNewStatus(data.Status);
         } catch (err) {
@@ -135,17 +146,24 @@ const JobDetails = () => {
     const handleSaveJobInfo = async () => {
         try {
             const token = localStorage.getItem('token');
+            const payload = {
+                FailureReason: jobInfoForm.FailureReason,
+                FailureDescription: jobInfoForm.FailureDescription,
+                ServicesNeeded: JSON.stringify(jobInfoForm.ServicesNeeded)
+            };
+
+            if (userRole === 'Admin' || userRole === 'Owner') {
+                payload.IsWarranty = jobInfoForm.IsWarranty;
+                payload.BillingType = jobInfoForm.BillingType;
+            }
+
             const res = await fetch(`${apiUrl}/jobs/${jobNumber}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    FailureReason: jobInfoForm.FailureReason,
-                    FailureDescription: jobInfoForm.FailureDescription,
-                    ServicesNeeded: JSON.stringify(jobInfoForm.ServicesNeeded)
-                })
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) throw new Error('Failed to update job info');
@@ -188,12 +206,47 @@ const JobDetails = () => {
             const token = localStorage.getItem('token');
             const payload = { Status: newStatus };
 
-            if (['Completed', 'Cancelled', 'Rejected'].includes(newStatus)) {
-                if (!resolutionType) {
-                    toast.error('Please select a Resolution Type');
+            if (['Cancelled', 'Rejected', 'Fulfilled', 'Closed'].includes(newStatus)) {
+                if (!resolutionType && !job.ResolutionType) {
+                    toast.error('Please select a Resolution Type for this status');
                     return;
                 }
-                payload.ResolutionType = resolutionType;
+                if (resolutionType) {
+                    payload.ResolutionType = resolutionType;
+                }
+            }
+
+            if (newStatus === 'On Hold') {
+                if (!holdReason && resolutionType !== 'Estimate Rejected' && !job.HoldReason) {
+                    toast.error('Hold Reason is required');
+                    return;
+                }
+                if (holdReason) {
+                    payload.HoldReason = holdReason;
+                }
+            }
+
+            const currentResType = resolutionType || job.ResolutionType;
+
+            if (currentResType === 'Other') {
+                if (!resolutionNotes && !job.ResolutionNotes) {
+                    toast.error('Resolution Notes are required when Resolution Type is Other');
+                    return;
+                }
+                if (resolutionNotes) {
+                    payload.ResolutionNotes = resolutionNotes;
+                }
+            }
+
+            if (currentResType === 'Warranty Denied') {
+                const finalReason = statusFailureReason || job.FailureReason;
+                const finalDesc = statusFailureDescription || job.FailureDescription;
+                if (!finalReason || !finalDesc) {
+                    toast.error('Failure Reason and Description are required when Warranty is Denied');
+                    return;
+                }
+                if (statusFailureReason) payload.FailureReason = statusFailureReason;
+                if (statusFailureDescription) payload.FailureDescription = statusFailureDescription;
             }
 
             const res = await fetch(`${apiUrl}/jobs/${jobNumber}`, {
@@ -386,7 +439,6 @@ const JobDetails = () => {
         : documents.filter(d => d.AssetId === job.AssetId && d.JobNumber !== job.JobNumber);
 
     const statusOptions = ['Intake', 'Assessing', 'Awaiting Approval', 'Approved', 'In Progress', 'On Hold', 'Completed', 'Ready for Pickup', 'Fulfilled', 'Cancelled', 'Closed'];
-    const resolutionOptions = ['Completed Successfully', 'Estimate Rejected', 'Customer Unreachable', 'Change of Mind', 'Warranty Denied', 'Abandoned/Unclaimed', 'Duplicate', 'Other'];
 
     return (
         <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -574,6 +626,22 @@ const JobDetails = () => {
                                         <label className="block text-xs font-medium text-slate-500 mb-1">Failure Reason</label>
                                         <div className="text-sm text-slate-800 dark:text-slate-200">{job.FailureReason || 'N/A'}</div>
                                     </div>
+                                    {!isCustomer && (userRole === 'Admin' || userRole === 'Owner') && (
+                                        <div className="flex gap-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Warranty Status</label>
+                                                <div className="text-sm text-slate-800 dark:text-slate-200">
+                                                    {job.IsWarranty ? 'Under Warranty' : 'Not Warranty'}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Billing Type</label>
+                                                <div className="text-sm text-slate-800 dark:text-slate-200">
+                                                    {job.BillingType || 'Chargeable'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div>
                                         <label className="block text-xs font-medium text-slate-500 mb-1">Failure Description</label>
                                         <div className="text-sm text-slate-800 dark:text-slate-200">{job.FailureDescription || 'N/A'}</div>
@@ -604,6 +672,34 @@ const JobDetails = () => {
                                 </>
                             ) : (
                                 <>
+                                    {!isCustomer && (userRole === 'Admin' || userRole === 'Owner') && (
+                                        <div className="flex gap-4 mb-4">
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Is Warranty</label>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={jobInfoForm.IsWarranty}
+                                                        onChange={(e) => setJobInfoForm({...jobInfoForm, IsWarranty: e.target.checked})}
+                                                        className="w-4 h-4 rounded border-slate-300"
+                                                    />
+                                                    <span className="text-sm dark:text-white">Under Warranty</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-medium text-slate-500 mb-1">Billing Type</label>
+                                                <select
+                                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                    value={jobInfoForm.BillingType}
+                                                    onChange={(e) => setJobInfoForm({...jobInfoForm, BillingType: e.target.value})}
+                                                >
+                                                    <option value="Chargeable">Chargeable</option>
+                                                    <option value="Free of Cost">Free of Cost</option>
+                                                    <option value="Split Bill">Split Bill</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div>
                                         <label className="block text-xs font-medium text-slate-500 mb-1">Failure Reason</label>
                                         <input
@@ -673,6 +769,14 @@ const JobDetails = () => {
                                 >
                                     Job Documents
                                 </button>
+                                {!isCustomer && (userRole === 'Admin' || userRole === 'Owner') && job.IsWarranty && (
+                                    <button
+                                        onClick={() => setActiveTab('warranty')}
+                                        className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'warranty' ? 'border-red-600 text-red-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Warranty Claim
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => setActiveTab('parts')}
                                     className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'parts' ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
@@ -776,6 +880,13 @@ const JobDetails = () => {
                                             })}
                                         </div>
                                     )}
+                                </div>
+                            )}
+
+                            {/* Warranty Claim View */}
+                            {activeTab === 'warranty' && (
+                                <div className="space-y-4">
+                                    <WarrantyClaimTab jobNumber={jobNumber} />
                                 </div>
                             )}
 
@@ -999,7 +1110,7 @@ const JobDetails = () => {
                                 </select>
                             </div>
 
-                            {['Completed', 'Cancelled', 'Rejected'].includes(newStatus) && (
+                            {['Cancelled', 'Rejected', 'Fulfilled', 'Closed'].includes(newStatus) && (
                                 <div>
                                     <label className="block text-sm font-medium mb-1 dark:text-slate-300">Resolution Type *</label>
                                     <select
@@ -1007,10 +1118,65 @@ const JobDetails = () => {
                                         value={resolutionType}
                                         onChange={(e) => setResolutionType(e.target.value)}
                                     >
-                                        <option value="">-- Select Resolution --</option>
+                                        <option value="">{job.ResolutionType || '-- Select Resolution --'}</option>
                                         {resolutionOptions.map(r => <option key={r} value={r}>{r}</option>)}
                                     </select>
                                 </div>
+                            )}
+
+                            {newStatus === 'On Hold' && (resolutionType !== 'Estimate Rejected') && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 dark:text-slate-300">Hold Reason *</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                        value={holdReason}
+                                        onChange={(e) => setHoldReason(e.target.value)}
+                                        placeholder={job.HoldReason || "Reason for hold..."}
+                                    />
+                                </div>
+                            )}
+
+                            {(resolutionType || job.ResolutionType) === 'Other' && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 dark:text-slate-300">Resolution Notes *</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                        value={resolutionNotes}
+                                        onChange={(e) => setResolutionNotes(e.target.value)}
+                                        placeholder={job.ResolutionNotes || "Explain resolution..."}
+                                    />
+                                </div>
+                            )}
+
+                            {(resolutionType || job.ResolutionType) === 'Warranty Denied' && (!job.FailureReason || !job.FailureDescription || statusFailureReason || statusFailureDescription) && (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 dark:text-slate-300">Failure Reason *</label>
+                                        <input
+                                            type="text"
+                                            list="status-failure-reasons-list"
+                                            className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                            value={statusFailureReason}
+                                            onChange={(e) => setStatusFailureReason(e.target.value)}
+                                            placeholder={job.FailureReason || "Select or type reason..."}
+                                        />
+                                        <datalist id="status-failure-reasons-list">
+                                            {failureReasonsList.map((reason, i) => <option key={i} value={reason} />)}
+                                        </datalist>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 dark:text-slate-300">Failure Description *</label>
+                                        <textarea
+                                            className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                                            value={statusFailureDescription}
+                                            onChange={(e) => setStatusFailureDescription(e.target.value)}
+                                            rows={2}
+                                            placeholder={job.FailureDescription || "Detailed description..."}
+                                        />
+                                    </div>
+                                </>
                             )}
 
                             <div className="flex justify-end gap-2 mt-6">

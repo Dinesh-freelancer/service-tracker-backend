@@ -409,7 +409,7 @@ async function seed() {
 
         // 2. Seed Workers
         if (workerUser) {
-            await connection.query('INSERT INTO worker (WorkerName, Phone, Skills) VALUES (?, ?, ?)',
+            await connection.query('INSERT INTO worker (WorkerName, ContactInfo, Skills) VALUES (?, ?, ?)',
                 ['Rajesh Kumar', '9876543210', 'Winding, Assembly']);
             console.log('Workers seeded.');
             // Link back to User

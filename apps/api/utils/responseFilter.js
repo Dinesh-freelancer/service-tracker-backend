@@ -68,9 +68,9 @@ function filterServiceRequest(job, role) {
         Status: job.Status,
         Notes: job.Notes,
         ResolutionType: job.ResolutionType,
-            FailureReason: job.FailureReason,
-            FailureDescription: job.FailureDescription,
-            ServicesNeeded: job.ServicesNeeded,
+        FailureReason: job.FailureReason,
+        FailureDescription: job.FailureDescription,
+        ServicesNeeded: job.ServicesNeeded,
         History: job.History, // Audit Trail visible to Staff
         WorkLogs: job.WorkLogs ? filterWorkLogList(job.WorkLogs, role) : undefined,
         Documents: job.Documents ? filterDocumentList(job.Documents, role) : undefined,
@@ -86,6 +86,8 @@ function filterServiceRequest(job, role) {
         filtered.EstimatedAmount = job.EstimatedAmount;
         filtered.BilledAmount = job.BilledAmount;
         filtered.Payments = job.Payments ? filterPaymentList(job.Payments, role) : undefined;
+        filtered.IsWarranty = job.IsWarranty;
+        filtered.BillingType = job.BillingType;
     } else {
         filtered.EstimatedAmount = STRING_HIDDEN;
         filtered.BilledAmount = STRING_HIDDEN;

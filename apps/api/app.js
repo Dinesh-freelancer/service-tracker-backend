@@ -159,6 +159,8 @@ app.use('/api/spares', sparePriceRoutes);
 const salesItemRoutes = require('./routes/salesItems');
 app.use('/api/sales-items', salesItemRoutes);
 
+const warrantyClaimRoutes = require('./routes/warrantyClaims');
+app.use('/api/warranty-claims', warrantyClaimRoutes);
 
 // Error handler
 const errorHandler = require('./middleware/errorHandler');

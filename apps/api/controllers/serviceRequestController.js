@@ -223,10 +223,54 @@ async function updateServiceRequest(req, res, next) {
         }
 
 
+        // Prevent direct jumping from Intake to Completed
+        if (existingJob.Status === 'Intake' && updates.Status === 'Completed') {
+            return res.status(400).json({ error: 'Cannot jump directly from Intake to Completed. Job must pass through Assessing.' });
+        }
+
+        // Warranty Lock: If IsWarranty = true, prevent moving to Ready for Pickup or Fulfilled if claim is pending
+        const isWarrantyFlag = updates.IsWarranty !== undefined ? updates.IsWarranty : existingJob.IsWarranty;
+        if (isWarrantyFlag && (updates.Status === 'Ready for Pickup' || updates.Status === 'Fulfilled')) {
+            const warrantyClaimModel = require('../models/warrantyClaimModel');
+            const claim = await warrantyClaimModel.getClaimByJobNumber(jobNumber);
+            if (!claim || claim.WarrantyStatus === 'Pending SR Completion') {
+                return res.status(400).json({ error: 'Cannot move to ' + updates.Status + '. Warranty claim must be processed past Pending.' });
+            }
+        }
+
+        // Required Notes on Failure for Warranty Denied
+        const newResolutionType = updates.ResolutionType !== undefined ? updates.ResolutionType : existingJob.ResolutionType;
+        if (newResolutionType === 'Warranty Denied') {
+            const failureReason = updates.FailureReason !== undefined ? updates.FailureReason : existingJob.FailureReason;
+            const failureDescription = updates.FailureDescription !== undefined ? updates.FailureDescription : existingJob.FailureDescription;
+            if (!failureReason || !failureDescription) {
+                return res.status(400).json({ error: 'Failure Reason and Failure Description are required when Warranty is Denied.' });
+            }
+        }
+
+        // Resolution Notes for Other
+        if (newResolutionType === 'Other') {
+            const resolutionNotes = updates.ResolutionNotes !== undefined ? updates.ResolutionNotes : existingJob.ResolutionNotes;
+            if (!resolutionNotes) {
+                return res.status(400).json({ error: 'Resolution Notes are required when Resolution Type is Other.' });
+            }
+        }
+
+        // Validate Hold Reason for On Hold
+        if (updates.Status === 'On Hold') {
+            const holdReason = updates.HoldReason !== undefined ? updates.HoldReason : existingJob.HoldReason;
+            if (!holdReason && newResolutionType !== 'Estimate Rejected') {
+                 return res.status(400).json({ error: 'Hold Reason is required when job is On Hold.' });
+            }
+        }
+
         // Validate ResolutionType for terminal statuses and On Hold (when rejecting estimates)
-        const terminalStatuses = ['Completed', 'Cancelled', 'Rejected', 'Fulfilled'];
+        const terminalStatuses = ['Completed', 'Cancelled', 'Fulfilled', 'Closed'];
         if (updates.Status && terminalStatuses.includes(updates.Status)) {
-            if (!updates.ResolutionType && !existingJob.ResolutionType) {
+            // The workflow specifically calls out Fulfilled, Cancelled, Closed for strict resolution types.
+            // Completed is in terminalStatuses here from old code, I will adapt based on the instructions.
+            // "The ResolutionType column should remain NULL while a job is active. It must be strictly enforced as mandatory only when a ticket enters one of the three final terminal states: 1. When Status is set to Fulfilled ... 2. When Status is set to Cancelled ... 3. When Status is set to Closed"
+            if (['Fulfilled', 'Cancelled', 'Closed'].includes(updates.Status) && !newResolutionType) {
                  return res.status(400).json({ error: `ResolutionType is required when status is ${updates.Status}` });
             }
         }
@@ -237,6 +281,15 @@ async function updateServiceRequest(req, res, next) {
         }
 
         const result = await serviceRequestModel.updateServiceRequest(jobNumber, updates);
+
+        // If IsWarranty is toggled to true, create an empty warranty claim if it doesn't exist
+        if (updates.IsWarranty === true) {
+            const warrantyClaimModel = require('../models/warrantyClaimModel');
+            const claimExists = await warrantyClaimModel.getClaimByJobNumber(jobNumber);
+            if (!claimExists) {
+                await warrantyClaimModel.createClaim(jobNumber);
+            }
+        }
 
         // Trigger Notification if Status Changed
         if (updates.Status && existingJob.Status !== updates.Status) {
