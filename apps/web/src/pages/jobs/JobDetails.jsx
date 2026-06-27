@@ -152,7 +152,7 @@ const JobDetails = () => {
                 ServicesNeeded: JSON.stringify(jobInfoForm.ServicesNeeded)
             };
 
-            if (userRole === 'Admin' || userRole === 'Owner') {
+            if (role === 'Admin' || role === 'Owner') {
                 payload.IsWarranty = jobInfoForm.IsWarranty;
                 payload.BillingType = jobInfoForm.BillingType;
             }
@@ -626,7 +626,7 @@ const JobDetails = () => {
                                         <label className="block text-xs font-medium text-slate-500 mb-1">Failure Reason</label>
                                         <div className="text-sm text-slate-800 dark:text-slate-200">{job.FailureReason || 'N/A'}</div>
                                     </div>
-                                    {!isCustomer && (userRole === 'Admin' || userRole === 'Owner') && (
+                                    {!isCustomer && (role === 'Admin' || role === 'Owner') && (
                                         <div className="flex gap-4">
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Warranty Status</label>
@@ -672,7 +672,7 @@ const JobDetails = () => {
                                 </>
                             ) : (
                                 <>
-                                    {!isCustomer && (userRole === 'Admin' || userRole === 'Owner') && (
+                                    {!isCustomer && (role === 'Admin' || role === 'Owner') && (
                                         <div className="flex gap-4 mb-4">
                                             <div className="flex-1">
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Is Warranty</label>
@@ -769,7 +769,7 @@ const JobDetails = () => {
                                 >
                                     Job Documents
                                 </button>
-                                {!isCustomer && (userRole === 'Admin' || userRole === 'Owner') && job.IsWarranty && (
+                                {!isCustomer && (role === 'Admin' || role === 'Owner') && job.IsWarranty && (
                                     <button
                                         onClick={() => setActiveTab('warranty')}
                                         className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'warranty' ? 'border-red-600 text-red-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
