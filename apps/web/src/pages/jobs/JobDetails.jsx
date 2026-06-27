@@ -769,7 +769,7 @@ const JobDetails = () => {
                                 >
                                     Job Documents
                                 </button>
-                                {!isCustomer && (role === 'Admin' || role === 'Owner') && job.IsWarranty && (
+                                {!isCustomer && (role === 'Admin' || role === 'Owner') && job.IsWarranty === true && (
                                     <button
                                         onClick={() => setActiveTab('warranty')}
                                         className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'warranty' ? 'border-red-600 text-red-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}

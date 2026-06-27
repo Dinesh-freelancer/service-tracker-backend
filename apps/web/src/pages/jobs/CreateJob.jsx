@@ -476,6 +476,31 @@ const CreateJob = () => {
                                 />
                             </div>
 
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Is Warranty</label>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <input
+                                            type="checkbox"
+                                            {...register('IsWarranty')}
+                                            className="w-4 h-4 rounded border-slate-300"
+                                        />
+                                        <span className="text-sm dark:text-white">Under Warranty</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Billing Type</label>
+                                    <select
+                                        {...register('BillingType')}
+                                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white bg-white"
+                                    >
+                                        <option value="Chargeable">Chargeable</option>
+                                        <option value="Free of Cost">Free of Cost</option>
+                                        <option value="Split Bill">Split Bill</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Issue Description / Notes</label>
                                 <textarea

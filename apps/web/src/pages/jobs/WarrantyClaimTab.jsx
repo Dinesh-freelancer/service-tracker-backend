@@ -118,7 +118,7 @@ const WarrantyClaimTab = ({ jobNumber }) => {
                     <input
                         type="text"
                         placeholder="e.g., WEG, Siemens, ABB"
-                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         value={claimData.OEMManufacturer}
                         onChange={(e) => setClaimData({ ...claimData, OEMManufacturer: e.target.value })}
                     />
@@ -126,7 +126,7 @@ const WarrantyClaimTab = ({ jobNumber }) => {
                 <div>
                     <label className="block text-sm font-medium mb-1 dark:text-slate-300">Warranty Status</label>
                     <select
-                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         value={claimData.WarrantyStatus}
                         onChange={(e) => setClaimData({ ...claimData, WarrantyStatus: e.target.value })}
                     >
@@ -141,7 +141,7 @@ const WarrantyClaimTab = ({ jobNumber }) => {
                     <input
                         type="text"
                         placeholder="Manufacturer Tracking #"
-                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         value={claimData.ClaimReferenceNumber}
                         onChange={(e) => setClaimData({ ...claimData, ClaimReferenceNumber: e.target.value })}
                     />
@@ -152,7 +152,7 @@ const WarrantyClaimTab = ({ jobNumber }) => {
                         type="number"
                         step="0.01"
                         placeholder="Reimbursed Amount"
-                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         value={claimData.OEMCreditNoteAmount}
                         onChange={(e) => setClaimData({ ...claimData, OEMCreditNoteAmount: e.target.value })}
                     />
@@ -192,23 +192,23 @@ const WarrantyClaimTab = ({ jobNumber }) => {
                                 claimData.PartReplacementDetails.map((part, index) => (
                                     <tr key={index} className="border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                         <td className="p-2">
-                                            <input type="text" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent dark:text-white" value={part.part_name} onChange={(e) => updatePartRow(index, 'part_name', e.target.value)} placeholder="Name" />
+                                            <input type="text" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent text-slate-800 dark:text-white" value={part.part_name} onChange={(e) => updatePartRow(index, 'part_name', e.target.value)} placeholder="Name" />
                                         </td>
                                         <td className="p-2">
-                                            <input type="text" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent dark:text-white" value={part.part_number} onChange={(e) => updatePartRow(index, 'part_number', e.target.value)} placeholder="Number" />
+                                            <input type="text" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent text-slate-800 dark:text-white" value={part.part_number} onChange={(e) => updatePartRow(index, 'part_number', e.target.value)} placeholder="Number" />
                                         </td>
                                         <td className="p-2">
-                                            <input type="number" step="0.1" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent dark:text-white" value={part.quantity} onChange={(e) => updatePartRow(index, 'quantity', e.target.value)} placeholder="0" />
+                                            <input type="number" step="0.1" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent text-slate-800 dark:text-white" value={part.quantity} onChange={(e) => updatePartRow(index, 'quantity', e.target.value)} placeholder="0" />
                                         </td>
                                         <td className="p-2">
-                                            <input type="text" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent dark:text-white" value={part.unit_of_measure} onChange={(e) => updatePartRow(index, 'unit_of_measure', e.target.value)} placeholder="Nos" />
+                                            <input type="text" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent text-slate-800 dark:text-white" value={part.unit_of_measure} onChange={(e) => updatePartRow(index, 'unit_of_measure', e.target.value)} placeholder="Nos" />
                                         </td>
                                         <td className="p-2">
-                                            <input type="number" step="0.01" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent dark:text-white" value={part.unit_cost} onChange={(e) => updatePartRow(index, 'unit_cost', e.target.value)} placeholder="0.00" />
+                                            <input type="number" step="0.01" className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent text-slate-800 dark:text-white" value={part.unit_cost} onChange={(e) => updatePartRow(index, 'unit_cost', e.target.value)} placeholder="0.00" />
                                         </td>
                                         <td className="p-2">
                                             <select
-                                                className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent dark:text-white dark:bg-slate-800"
+                                                className="w-full p-1.5 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent text-slate-800 dark:text-white dark:bg-slate-800"
                                                 value={part.coverage_type}
                                                 onChange={(e) => updatePartRow(index, 'coverage_type', e.target.value)}
                                             >
