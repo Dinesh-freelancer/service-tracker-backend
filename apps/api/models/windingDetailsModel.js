@@ -42,7 +42,8 @@ async function upsertWindingDetails(data) {
             if (JSON_COLUMNS.includes(key) && details[key] !== null && typeof details[key] === 'object') {
                 safeDetails[key] = JSON.stringify(details[key]);
             } else {
-                safeDetails[key] = details[key];
+                // Convert empty strings to null to avoid 'Incorrect integer value' errors in MySQL
+                safeDetails[key] = details[key] === "" ? null : details[key];
             }
         }
     });
