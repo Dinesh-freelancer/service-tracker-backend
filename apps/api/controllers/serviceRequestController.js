@@ -161,7 +161,7 @@ async function createServiceRequest(req, res, next) {
 
             if (finalJobData.IsWarranty) {
                 const warrantyClaimModel = require('../models/warrantyClaimModel');
-                await warrantyClaimModel.createClaim(finalJobData.JobNumber);
+                await warrantyClaimModel.createClaim(finalJobData.JobNumber, {}, connection);
             }
 
             await connection.commit();

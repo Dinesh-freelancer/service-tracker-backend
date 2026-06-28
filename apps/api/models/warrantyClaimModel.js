@@ -6,9 +6,10 @@ const warrantyClaimModel = {
     return rows[0];
   },
 
-  createClaim: async (jobNumber, claimData = {}) => {
+  createClaim: async (jobNumber, claimData = {}, connection = null) => {
+    const db = connection || pool;
     const { OEMManufacturer = null, WarrantyStatus = 'Pending SR Completion', ClaimReferenceNumber = null, PartReplacementDetails = null, OEMCreditNoteAmount = null } = claimData;
-    const [result] = await pool.query(
+    const [result] = await db.query(
       `INSERT INTO warranty_claims (JobNumber, OEMManufacturer, WarrantyStatus, ClaimReferenceNumber, PartReplacementDetails, OEMCreditNoteAmount)
        VALUES (?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
