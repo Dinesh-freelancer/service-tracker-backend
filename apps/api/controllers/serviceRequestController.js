@@ -152,10 +152,17 @@ async function createServiceRequest(req, res, next) {
                 DateReceived: jobData.DateReceived,
                 Status: 'Intake', // Default
                 ResolutionType: null,
-                Notes: jobData.Notes || ''
+                Notes: jobData.Notes || '',
+                IsWarranty: jobData.IsWarranty ? 1 : 0,
+                BillingType: jobData.BillingType || 'Chargeable'
             };
 
             const serviceRequest = await serviceRequestModel.addServiceRequest(finalJobData, connection);
+
+            if (finalJobData.IsWarranty) {
+                const warrantyClaimModel = require('../models/warrantyClaimModel');
+                await warrantyClaimModel.createClaim(finalJobData.JobNumber);
+            }
 
             await connection.commit();
 

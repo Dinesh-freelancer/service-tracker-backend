@@ -689,7 +689,7 @@ const JobDetails = () => {
                                             <div className="flex-1">
                                                 <label className="block text-xs font-medium text-slate-500 mb-1">Billing Type</label>
                                                 <select
-                                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                    className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 bg-white text-slate-800 dark:bg-slate-800 dark:text-white"
                                                     value={jobInfoForm.BillingType}
                                                     onChange={(e) => setJobInfoForm({...jobInfoForm, BillingType: e.target.value})}
                                                 >
@@ -705,7 +705,7 @@ const JobDetails = () => {
                                         <input
                                             type="text"
                                             list="failure-reasons-list"
-                                            className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                            className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 bg-white text-slate-800 dark:bg-slate-800 dark:text-white"
                                             value={jobInfoForm.FailureReason}
                                             onChange={(e) => setJobInfoForm({...jobInfoForm, FailureReason: e.target.value})}
                                             placeholder="Select or type reason..."
@@ -717,7 +717,7 @@ const JobDetails = () => {
                                     <div>
                                         <label className="block text-xs font-medium text-slate-500 mb-1">Failure Description</label>
                                         <textarea
-                                            className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                            className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 bg-white text-slate-800 dark:bg-slate-800 dark:text-white"
                                             value={jobInfoForm.FailureDescription}
                                             onChange={(e) => setJobInfoForm({...jobInfoForm, FailureDescription: e.target.value})}
                                             rows={3}
@@ -729,7 +729,7 @@ const JobDetails = () => {
                                         <div className="flex gap-2 mb-2">
                                             <input
                                                 type="text"
-                                                className="flex-1 p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                className="flex-1 p-2 border rounded dark:bg-slate-700 dark:border-slate-600 bg-white text-slate-800 dark:bg-slate-800 dark:text-white"
                                                 value={newService}
                                                 onChange={(e) => setNewService(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
