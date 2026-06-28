@@ -290,7 +290,7 @@ async function updateServiceRequest(req, res, next) {
         const result = await serviceRequestModel.updateServiceRequest(jobNumber, updates);
 
         // If IsWarranty is toggled to true, create an empty warranty claim if it doesn't exist
-        if (updates.IsWarranty === true) {
+        if (updates.IsWarranty === true || updates.IsWarranty === 1) {
             const warrantyClaimModel = require('../models/warrantyClaimModel');
             const claimExists = await warrantyClaimModel.getClaimByJobNumber(jobNumber);
             if (!claimExists) {

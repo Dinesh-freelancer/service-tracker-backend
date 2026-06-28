@@ -153,7 +153,7 @@ const JobDetails = () => {
             };
 
             if (role === 'Admin' || role === 'Owner') {
-                payload.IsWarranty = jobInfoForm.IsWarranty;
+                payload.IsWarranty = jobInfoForm.IsWarranty ? 1 : 0;
                 payload.BillingType = jobInfoForm.BillingType;
             }
 
