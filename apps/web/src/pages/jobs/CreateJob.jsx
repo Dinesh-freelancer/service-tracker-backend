@@ -167,7 +167,9 @@ const CreateJob = () => {
             const payload = {
                 CustomerId: selectedCustomer.CustomerId,
                 DateReceived: data.DateReceived,
-                Notes: data.Notes
+                Notes: data.Notes,
+                IsWarranty: data.IsWarranty || false,
+                BillingType: data.BillingType || 'Chargeable'
             };
 
             if (isNewAsset) {
@@ -492,7 +494,7 @@ const CreateJob = () => {
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Billing Type</label>
                                     <select
                                         {...register('BillingType')}
-                                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white bg-white"
+                                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-white bg-white"
                                     >
                                         <option value="Chargeable">Chargeable</option>
                                         <option value="Free of Cost">Free of Cost</option>
