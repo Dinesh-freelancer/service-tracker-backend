@@ -185,7 +185,7 @@ const WorkLogs = () => {
                                            <td className="p-4"><span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs">{log.SubStatus}</span></td>
                                            <td className="p-4 text-slate-600 dark:text-slate-300">{log.WorkDescription || '-'}</td>
                                            <td className="p-4 text-slate-500 text-xs">
-                                               {new Date(log.StartTime || log.CreatedAt).toLocaleString()}
+                                               {new Date(log.StartTime || log.CreatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                            </td>
                                        </tr>
                                    ))

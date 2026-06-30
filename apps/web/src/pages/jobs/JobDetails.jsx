@@ -1,10 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2, Edit, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
 import WarrantyClaimTab from './WarrantyClaimTab';
 import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+const SortableServiceItem = ({ srv, id, toggleServiceCompletion, removeService }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id });
+    const style = { transform: CSS.Transform.toString(transform), transition };
+    return (
+        <li ref={setNodeRef} style={style} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded border border-slate-200 dark:border-slate-600">
+            <div className="flex items-center gap-2 flex-1">
+                <button type="button" className="cursor-grab text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 touch-none" {...attributes} {...listeners}>
+                    <GripVertical size={16} />
+                </button>
+                <input
+                    type="checkbox"
+                    checked={srv.completed}
+                    onChange={() => toggleServiceCompletion()}
+                    className="rounded border-slate-300 w-4 h-4 cursor-pointer"
+                />
+                <span className={`text-sm flex-1 ${srv.completed ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>{srv.name}</span>
+            </div>
+            <button type="button" onClick={() => removeService()} className="text-red-500 hover:text-red-700 ml-2"><X size={16}/></button>
+        </li>
+    );
+};
 
 const JobDetails = () => {
     const { jobNumber } = useParams();
@@ -73,6 +98,14 @@ const JobDetails = () => {
     const [newService, setNewService] = useState('');
     const [failureReasonsList, setFailureReasonsList] = useState([]);
 
+    // DND Sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
 
     const fetchJob = async () => {
         try {
@@ -102,7 +135,10 @@ const JobDetails = () => {
             setJobInfoForm({
                 FailureReason: data.FailureReason || '',
                 FailureDescription: data.FailureDescription || '',
-                ServicesNeeded: typeof data.ServicesNeeded === 'string' ? JSON.parse(data.ServicesNeeded) : (data.ServicesNeeded || []),
+                ServicesNeeded: (typeof data.ServicesNeeded === 'string' ? JSON.parse(data.ServicesNeeded) : (data.ServicesNeeded || [])).map(s => ({
+                    ...s,
+                    id: s.id || Math.random().toString(36).substring(2, 9)
+                })),
                 IsWarranty: data.IsWarranty === 1 || data.IsWarranty === true,
                 BillingType: data.BillingType || 'Chargeable'
             });
@@ -149,7 +185,7 @@ const JobDetails = () => {
             const payload = {
                 FailureReason: jobInfoForm.FailureReason,
                 FailureDescription: jobInfoForm.FailureDescription,
-                ServicesNeeded: JSON.stringify(jobInfoForm.ServicesNeeded)
+                ServicesNeeded: JSON.stringify(jobInfoForm.ServicesNeeded.map(({id, ...rest}) => rest))
             };
 
             if (role === 'Admin' || role === 'Owner') {
@@ -180,7 +216,7 @@ const JobDetails = () => {
         if (!newService.trim()) return;
         setJobInfoForm(prev => ({
             ...prev,
-            ServicesNeeded: [...prev.ServicesNeeded, { name: newService.trim(), completed: false }]
+            ServicesNeeded: [...prev.ServicesNeeded, { id: Math.random().toString(36).substring(2, 9), name: newService.trim(), completed: false }]
         }));
         setNewService('');
     };
@@ -199,6 +235,17 @@ const JobDetails = () => {
             newServices.splice(index, 1);
             return { ...prev, ServicesNeeded: newServices };
         });
+    };
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (active && over && active.id !== over.id) {
+            setJobInfoForm((prev) => {
+                const oldIndex = prev.ServicesNeeded.findIndex((item) => item.id === active.id);
+                const newIndex = prev.ServicesNeeded.findIndex((item) => item.id === over.id);
+                return { ...prev, ServicesNeeded: arrayMove(prev.ServicesNeeded, oldIndex, newIndex) };
+            });
+        }
     };
 
     const handleUpdateStatus = async () => {
@@ -737,22 +784,21 @@ const JobDetails = () => {
                                             />
                                             <button type="button" onClick={addService} className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
                                         </div>
-                                        <ul className="space-y-2">
-                                            {jobInfoForm.ServicesNeeded.map((srv, idx) => (
-                                                <li key={idx} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded border border-slate-200 dark:border-slate-600">
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={srv.completed}
-                                                            onChange={() => toggleServiceCompletion(idx)}
-                                                            className="rounded border-slate-300 w-4 h-4 cursor-pointer"
+                                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                            <SortableContext items={jobInfoForm.ServicesNeeded.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                                                <ul className="space-y-2">
+                                                    {jobInfoForm.ServicesNeeded.map((srv, idx) => (
+                                                        <SortableServiceItem
+                                                            key={srv.id}
+                                                            id={srv.id}
+                                                            srv={srv}
+                                                            toggleServiceCompletion={() => toggleServiceCompletion(idx)}
+                                                            removeService={() => removeService(idx)}
                                                         />
-                                                        <span className={`text-sm ${srv.completed ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>{srv.name}</span>
-                                                    </div>
-                                                    <button type="button" onClick={() => removeService(idx)} className="text-red-500 hover:text-red-700"><X size={16}/></button>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                                    ))}
+                                                </ul>
+                                            </SortableContext>
+                                        </DndContext>
                                     </div>
                                 </>
                             )}
@@ -1048,7 +1094,7 @@ const JobDetails = () => {
                                             {job.History.map(h => (
                                                 <div key={h.HistoryId} className="flex gap-4 p-3 border-l-2 border-slate-200 dark:border-slate-700 pl-4">
                                                     <div className="min-w-[100px] text-xs text-slate-500">
-                                                        {new Date(h.ChangedAt).toLocaleString()}
+                                                        {new Date(h.ChangedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                                     </div>
                                                     <div>
                                                         <div className="text-sm font-medium text-slate-900 dark:text-white">
