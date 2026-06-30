@@ -38,6 +38,16 @@ const DashboardLayout = () => {
   const role = localStorage.getItem('role') || 'Worker'; // Default to Worker if not found
   const username = localStorage.getItem('rememberedUsername') || 'User';
 
+  // Start closed on mobile, open on desktop
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+    handleResize(); // Initial check
+  }, []);
+
   const isAdminOrOwner = role === 'Admin' || role === 'Owner';
 
   const handleLogout = () => {
@@ -104,10 +114,8 @@ const DashboardLayout = () => {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <motion.aside
-        className={`fixed lg:sticky top-0 left-0 z-30 h-screen bg-white dark:bg-slate-800 shadow-xl border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 overflow-x-hidden ${isSidebarOpen ? 'w-64' : 'w-20'}`}
-        initial={false}
-        animate={{ width: isSidebarOpen ? 256 : 80 }}
+      <aside
+        className={`fixed lg:sticky top-0 left-0 z-30 h-screen bg-white dark:bg-slate-800 shadow-xl border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 overflow-x-hidden ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'}`}
       >
         {/* Logo Area */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 dark:border-slate-700">
@@ -189,7 +197,7 @@ const DashboardLayout = () => {
                 </button>
             </div>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
