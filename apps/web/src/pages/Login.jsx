@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'react-hot-toast';
-import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { clsx } from 'clsx';
 
 import Input from '../components/ui/Input';
@@ -160,6 +160,12 @@ const Login = () => {
           RIGHT SPLIT: FORM
          ------------------------------------------------------------------------- */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 relative">
+        <div className="absolute top-6 left-6">
+            <Link to="/" className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+                <ArrowLeft size={16} />
+                Back to Home
+            </Link>
+        </div>
         <div className="absolute top-6 right-6">
             <ThemeToggle />
         </div>

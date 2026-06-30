@@ -165,8 +165,9 @@ const WorkLogs = () => {
            <>
                {activeTab === 'logs' && (
                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                       <table className="w-full text-left text-sm">
-                           <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase text-xs">
+                       <div className="overflow-x-auto">
+                           <table className="w-full text-left text-sm">
+                               <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase text-xs">
                                <tr>
                                    <th className="p-4">Job #</th>
                                    <th className="p-4">Action</th>
@@ -189,15 +190,17 @@ const WorkLogs = () => {
                                        </tr>
                                    ))
                                )}
-                           </tbody>
-                       </table>
+                               </tbody>
+                           </table>
+                       </div>
                    </div>
                )}
 
                {activeTab === 'attendance' && (
                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                       <table className="w-full text-left text-sm">
-                           <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase text-xs">
+                       <div className="overflow-x-auto">
+                           <table className="w-full text-left text-sm">
+                               <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase text-xs">
                                <tr>
                                    <th className="p-4">Date</th>
                                    <th className="p-4">Status</th>
@@ -225,8 +228,9 @@ const WorkLogs = () => {
                                        </tr>
                                    ))
                                )}
-                           </tbody>
-                       </table>
+                               </tbody>
+                           </table>
+                       </div>
                    </div>
                )}
            </>

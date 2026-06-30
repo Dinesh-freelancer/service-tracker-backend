@@ -183,7 +183,7 @@ const Purchases = () => {
                         {/* Items Table */}
                         <div>
                             <h3 className="font-bold text-slate-900 dark:text-white mb-3">Received Items</h3>
-                            <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                            <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden overflow-x-auto">
                                 <table className="w-full text-left text-sm">
                                     <thead className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                                         <tr>
