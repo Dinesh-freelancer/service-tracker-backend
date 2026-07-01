@@ -87,6 +87,7 @@ const JobDetails = () => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const role = localStorage.getItem('role'); // Assuming role is stored or decoded from token
     const isCustomer = role === 'Customer';
+    const isWorker = role === 'Worker';
 
     const [editingJobInfo, setEditingJobInfo] = useState(false);
     const [jobInfoForm, setJobInfoForm] = useState({
