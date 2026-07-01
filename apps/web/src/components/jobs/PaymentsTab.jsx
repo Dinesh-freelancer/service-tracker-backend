@@ -14,9 +14,16 @@ const PaymentsTab = ({ jobNumber, billedAmount, paymentStatus, onJobUpdate }) =>
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
     const [editingPaymentId, setEditingPaymentId] = useState(null);
 
+    const getISTTimeStr = () => {
+        const now = new Date();
+        const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+        const nowIst = new Date(now.getTime() + istOffset);
+        return nowIst.toISOString().slice(0, 16);
+    };
+
     const [paymentForm, setPaymentForm] = useState({
         Amount: '',
-        PaymentDate: new Date().toISOString().slice(0, 16),
+        PaymentDate: getISTTimeStr(),
         PaymentType: 'Final',
         PaymentMode: 'Cash'
     });
@@ -76,7 +83,7 @@ const PaymentsTab = ({ jobNumber, billedAmount, paymentStatus, onJobUpdate }) =>
         setModalMode('add');
         setPaymentForm({
             Amount: '',
-            PaymentDate: new Date().toISOString().slice(0, 16), // Use slice(0,16) for datetime-local
+            PaymentDate: getISTTimeStr(), // Use slice(0,16) for datetime-local
             PaymentType: 'Final',
             PaymentMode: 'Cash'
         });
