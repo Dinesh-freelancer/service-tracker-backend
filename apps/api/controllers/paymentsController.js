@@ -93,7 +93,7 @@ async function getPayment(req, res, next) {
  */
 async function createPayment(req, res, next) {
     try {
-        const payment = await paymentsModel.addPayment(req.body);
+        const payment = await paymentsModel.createPayment(req.body);
         res.status(201).json(payment);
     } catch (err) {
         next(err);
@@ -103,5 +103,30 @@ async function createPayment(req, res, next) {
 module.exports = {
     listPayments,
     getPayment,
-    createPayment
+    createPayment,
+    updatePayment,
+    deletePayment
 };
+/**
+ * Updates a payment.
+ */
+async function updatePayment(req, res, next) {
+    try {
+        await paymentsModel.updatePayment(req.params.paymentId, req.body);
+        res.json({ message: 'Payment updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * Deletes a payment.
+ */
+async function deletePayment(req, res, next) {
+    try {
+        await paymentsModel.deletePayment(req.params.paymentId);
+        res.json({ message: 'Payment deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
+}

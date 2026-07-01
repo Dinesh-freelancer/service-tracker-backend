@@ -88,6 +88,7 @@ function filterServiceRequest(job, role) {
         filtered.Payments = job.Payments ? filterPaymentList(job.Payments, role) : undefined;
         filtered.IsWarranty = job.IsWarranty;
         filtered.BillingType = job.BillingType;
+        filtered.PaymentStatus = job.PaymentStatus;
     } else {
         filtered.EstimatedAmount = STRING_HIDDEN;
         filtered.BilledAmount = STRING_HIDDEN;

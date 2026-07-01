@@ -145,6 +145,10 @@ router.post('/',
  *           schema:
  *             type: object
  *             properties:
+ *               BilledAmount:
+ *                 type: number
+ *               PaymentStatus:
+ *                 type: string
  *               Status:
  *                 type: string
  *               Notes:

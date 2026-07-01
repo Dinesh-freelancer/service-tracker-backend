@@ -201,6 +201,16 @@ async function updateServiceRequest(req, res, next) {
         }
 
         // IDOR and Security Check for Customer Role
+
+        if (req.user && req.user.Role === 'Worker') {
+            const forbiddenKeys = ['BilledAmount', 'PaymentStatus', 'EstimatedAmount'];
+            for (const key of forbiddenKeys) {
+                if (updates[key] !== undefined) {
+                    return res.status(403).json({ error: `Access denied: Workers cannot update field: ${key}` });
+                }
+            }
+        }
+
         if (req.user && req.user.Role === 'Customer') {
             if (existingJob.CustomerId !== req.user.CustomerId) {
                 return res.status(403).json({ error: 'Access denied: You can only update your own jobs.' });
