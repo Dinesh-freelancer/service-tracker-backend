@@ -93,7 +93,16 @@ async function getPayment(req, res, next) {
  */
 async function createPayment(req, res, next) {
     try {
-        const payment = await paymentsModel.createPayment(req.body);
+        const paymentData = { ...req.body };
+        // MySQL DATETIME expects YYYY-MM-DD HH:MM:SS format
+        if (paymentData.PaymentDate) {
+             const d = new Date(paymentData.PaymentDate);
+             if (!isNaN(d.getTime())) {
+                  paymentData.PaymentDate = d.toISOString().slice(0, 19).replace('T', ' ');
+             }
+        }
+
+        const payment = await paymentsModel.createPayment(paymentData);
         res.status(201).json(payment);
     } catch (err) {
         next(err);
