@@ -170,7 +170,7 @@ const JobsList = ({ title = "Service Requests" }) => {
                         <th className="p-4 font-semibold">Device</th>
                         <th className="p-4 font-semibold">Date Received</th>
                         <th className="p-4 font-semibold text-center">Status</th>
-                        {isAdminOrOwner && <th className="p-4 font-semibold text-right">Amount (₹)</th>}
+                        {isAdminOrOwner && <th className="p-4 font-semibold text-center">Payment Status</th>}
                         <th className="p-4 font-semibold text-center">Actions</th>
                     </tr>
                 </thead>
@@ -222,8 +222,13 @@ const JobsList = ({ title = "Service Requests" }) => {
                                     </span>
                                 </td>
                                 {isAdminOrOwner && (
-                                    <td className="p-4 text-right font-medium text-slate-700 dark:text-slate-200">
-                                        {job.EstimatedAmount ? `₹${job.EstimatedAmount}` : '-'}
+                                    <td className="p-4 text-center font-medium text-slate-700 dark:text-slate-200">
+                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium
+                                            ${job.PaymentStatus === 'Paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                                              job.PaymentStatus === 'Partial' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+                                            {job.PaymentStatus || 'Unpaid'}
+                                        </span>
                                     </td>
                                 )}
                                 <td className="p-4 text-center">
