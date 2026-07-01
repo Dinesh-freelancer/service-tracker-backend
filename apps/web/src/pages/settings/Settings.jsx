@@ -79,7 +79,7 @@ const Settings = () => {
                 </div>
                 <h3 className="font-bold text-slate-900 dark:text-white mb-2">System Info</h3>
                 <div className="text-sm text-slate-500 space-y-1">
-                    <div className="flex justify-between"><span>Version</span> <span>2.1.0 (Phase 2)</span></div>
+                    <div className="flex justify-between"><span>Version</span> <span>1.0.0</span></div>
                     <div className="flex justify-between"><span>Environment</span> <span>Production</span></div>
                 </div>
             </div>
