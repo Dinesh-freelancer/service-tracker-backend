@@ -63,7 +63,18 @@ async function deletePayment(paymentId) {
     await pool.query('DELETE FROM payments WHERE PaymentId = ?', [paymentId]);
 }
 
+async function getPaymentsByCustomerId(customerId) {
+    const [rows] = await pool.query(
+        `SELECT p.* FROM payments p
+         JOIN servicerequest sr ON p.JobNumber = sr.JobNumber
+         WHERE sr.CustomerId = ? ORDER BY p.PaymentDate DESC`,
+        [customerId]
+    );
+    return rows;
+}
+
 module.exports = {
+    getPaymentsByCustomerId,
     getAllPayments,
     getPaymentsByJob,
     getPaymentById,

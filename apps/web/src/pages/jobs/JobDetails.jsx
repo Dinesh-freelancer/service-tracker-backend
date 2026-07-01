@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Image, PenTool, Calendar, User, Box, Shield, Wrench, Clock, Plus, Save, X, Search, Activity, Database, Trash2, Edit, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import WindingDetails from '../../components/jobs/WindingDetails';
+import PaymentsTab from '../../components/jobs/PaymentsTab';
 import WarrantyClaimTab from './WarrantyClaimTab';
 import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -837,6 +838,14 @@ const JobDetails = () => {
                                         Winding Details
                                     </button>
                                 )}
+                                {!isCustomer && !isWorker && job.BillingType !== 'Free of Cost' && (
+                                    <button
+                                        onClick={() => setActiveTab('payments')}
+                                        className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'payments' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Payments
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => setActiveTab('asset-history')}
                                     className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === 'asset-history' ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
@@ -991,6 +1000,16 @@ const JobDetails = () => {
                             {/* Winding Details View */}
                             {activeTab === 'winding' && !isCustomer && (
                                 <WindingDetails assetId={job.AssetId} phase={job.Phase} defaultHp={job.PowerRating} />
+                            )}
+
+                            {/* Payments View */}
+                            {activeTab === 'payments' && !isCustomer && !isWorker && job.BillingType !== 'Free of Cost' && (
+                                <PaymentsTab
+                                    jobNumber={job.JobNumber}
+                                    billedAmount={job.BilledAmount}
+                                    paymentStatus={job.PaymentStatus}
+                                    onJobUpdate={fetchJob}
+                                />
                             )}
 
                             {/* Asset History View */}

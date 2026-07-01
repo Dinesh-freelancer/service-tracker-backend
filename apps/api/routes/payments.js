@@ -93,7 +93,7 @@ router.get('/:paymentId',
  *                 format: date-time
  *               PaymentType:
  *                 type: string
- *                 enum: [Advance, Partial, Final]
+ *                 enum: [Advance, Partial, Final, Refund, Other]
  *               PaymentMode:
  *                 type: string
  *                 enum: [Cash, Cheque, Online, Credit]
@@ -105,4 +105,66 @@ router.post('/',
     authorize(...ADMIN_OWNER),
     paymentsController.createPayment);
 
+
+/**
+ * @swagger
+ * /payments/{paymentId}:
+ *   put:
+ *     summary: Update a payment
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: paymentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               Amount:
+ *                 type: number
+ *               PaymentDate:
+ *                 type: string
+ *                 format: date-time
+ *               PaymentType:
+ *                 type: string
+ *                 enum: [Advance, Partial, Final, Refund, Other]
+ *               PaymentMode:
+ *                 type: string
+ *                 enum: [Cash, Cheque, Online, Credit]
+ *     responses:
+ *       200:
+ *         description: Payment updated
+ */
+router.put('/:paymentId',
+    authorize(...ADMIN_OWNER),
+    paymentsController.updatePayment);
+
+/**
+ * @swagger
+ * /payments/{paymentId}:
+ *   delete:
+ *     summary: Delete a payment
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: paymentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Payment deleted
+ */
+router.delete('/:paymentId',
+    authorize(...ADMIN_OWNER),
+    paymentsController.deletePayment);
 module.exports = router;
