@@ -162,6 +162,9 @@ app.use('/api/sales-items', salesItemRoutes);
 const warrantyClaimRoutes = require('./routes/warrantyClaims');
 app.use('/api/warranty-claims', warrantyClaimRoutes);
 
+const todoRoutes = require('./routes/todoRoutes');
+app.use('/api/todos', todoRoutes);
+
 // Error handler
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
