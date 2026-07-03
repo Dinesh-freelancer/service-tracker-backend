@@ -2315,7 +2315,7 @@ const JobDetails = () => {
                 <input
                   type="text"
                   placeholder="e.g., Impeller side, Cable test result..."
-                  className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 mb-4"
+                  className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600 mb-4"
                   value={docDescription}
                   onChange={(e) => setDocDescription(e.target.value)}
                 />
