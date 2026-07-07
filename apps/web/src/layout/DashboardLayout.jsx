@@ -66,6 +66,7 @@ const DashboardLayout = () => {
 
     const adminItems = [
       { name: 'Jobs', icon: Briefcase, path: '/dashboard/jobs' },
+      { name: 'FOC Claims', icon: FileText, path: '/dashboard/foc-claims' },
       { name: 'To Do', icon: CheckSquare, path: '/dashboard/todos' },
       { name: 'Customers', icon: Users, path: '/dashboard/customers' },
       { name: 'Workers', icon: User, path: '/dashboard/workers' },

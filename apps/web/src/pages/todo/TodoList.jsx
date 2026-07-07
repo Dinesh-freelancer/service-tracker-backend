@@ -281,6 +281,16 @@ const TodoList = () => {
                     <span className="text-xs px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                         {todo.Category}
                     </span>
+                    {todo.Status && (
+                        <span className={`text-xs px-2 py-1 rounded-md font-medium ${
+                            todo.Status === 'Completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            todo.Status === 'In Progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                            todo.Status === 'Cancelled' ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' :
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500'
+                        }`}>
+                            {todo.Status}
+                        </span>
+                    )}
                     {todo.RelatedJobNumber && (
                         <span className="text-xs px-2 py-1 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 flex items-center gap-1">
                             Job: {todo.RelatedJobNumber}
