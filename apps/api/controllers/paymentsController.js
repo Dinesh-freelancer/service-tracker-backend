@@ -34,7 +34,7 @@ async function listPayments(req, res, next) {
         }
 
         const jobNumber = req.query.jobNumber || null;
-        let payments = await paymentsModel.getAllPayments(jobNumber);
+        let payments = await paymentsModel.getAllPayments({ jobNumber });
 
         payments = filterPaymentList(payments, role);
 
