@@ -30,8 +30,16 @@ async function getClaimById(id) {
 }
 
 async function createClaim(claimData) {
-    const fields = Object.keys(claimData);
-    const values = Object.values(claimData);
+    // Filter out undefined values but keep nulls
+    const filteredData = Object.entries(claimData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+
+    const fields = Object.keys(filteredData);
+    const values = Object.values(filteredData);
     const placeholders = fields.map(() => '?').join(', ');
 
     const [result] = await pool.query(
@@ -42,8 +50,16 @@ async function createClaim(claimData) {
 }
 
 async function updateClaim(id, claimData) {
-    const fields = Object.keys(claimData).map(field => `${field} = ?`);
-    const values = Object.values(claimData);
+    // Filter out undefined values but keep nulls
+    const filteredData = Object.entries(claimData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+
+    const fields = Object.keys(filteredData).map(field => `${field} = ?`);
+    const values = Object.values(filteredData);
     values.push(id);
 
     const [result] = await pool.query(
