@@ -24,6 +24,19 @@ const FreeOfCostClaims = () => {
     const [claimStatus, setClaimStatus] = useState('Pending');
     const [claimAmount, setClaimAmount] = useState('');
     const [notes, setNotes] = useState('');
+    const [annexNumberField, setAnnexNumberField] = useState('');
+
+    // Annexure Form State
+    const [activeTab, setActiveTab] = useState('claims');
+    const [annexures, setAnnexures] = useState([]);
+    const [showAnnexModal, setShowAnnexModal] = useState(false);
+    const [editingAnnex, setEditingAnnex] = useState(null);
+    const [annexNumber, setAnnexNumber] = useState('');
+    const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [annexClaimAmount, setAnnexClaimAmount] = useState('');
+    const [postService, setPostService] = useState('');
+    const [consignmentNumber, setConsignmentNumber] = useState('');
+    const [postDate, setPostDate] = useState('');
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const statuses = ['Pending', 'On Hold', 'Submitted', 'Approved', 'Post Sent'];
@@ -33,7 +46,7 @@ const FreeOfCostClaims = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            let url = `${apiUrl}/foc-claims`;
+            let url = `${apiUrl}/api/foc-claims`;
             if (filterStatus) {
                 url += `?status=${filterStatus}`;
             }
@@ -53,6 +66,29 @@ const FreeOfCostClaims = () => {
     useEffect(() => {
         fetchClaims();
     }, [filterStatus]);
+
+    const fetchAnnexures = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/api/annexures`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Failed to fetch annexures');
+            const data = await response.json();
+            setAnnexures(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'annexures') {
+            fetchAnnexures();
+        }
+    }, [activeTab]);
 
     // Job Search Effect
     useEffect(() => {
@@ -92,6 +128,7 @@ const FreeOfCostClaims = () => {
             setClaimStatus(claim.ClaimStatus);
             setClaimAmount(claim.ClaimAmount || '');
             setNotes(claim.Notes || '');
+            setAnnexNumberField(claim.AnnexNumber || '');
         } else {
             setEditingClaim(null);
             setJobNumber('');
@@ -102,6 +139,7 @@ const FreeOfCostClaims = () => {
             setClaimStatus('Pending');
             setClaimAmount('');
             setNotes('');
+            setAnnexNumberField('');
         }
         setShowModal(true);
     };
@@ -112,8 +150,8 @@ const FreeOfCostClaims = () => {
             const token = localStorage.getItem('token');
             const method = editingClaim ? 'PUT' : 'POST';
             const url = editingClaim
-                ? `${apiUrl}/foc-claims/${editingClaim.Id}`
-                : `${apiUrl}/foc-claims`;
+                ? `${apiUrl}/api/foc-claims/${editingClaim.Id}`
+                : `${apiUrl}/api/foc-claims`;
 
             const payload = {
                 JobNumber: jobNumber || null,
@@ -122,7 +160,8 @@ const FreeOfCostClaims = () => {
                 SRType: srType,
                 ClaimStatus: claimStatus,
                 ClaimAmount: claimAmount ? parseFloat(claimAmount) : null,
-                Notes: notes
+                Notes: notes,
+                AnnexNumber: annexNumberField || null
             };
 
             const response = await fetch(url, {
@@ -147,7 +186,7 @@ const FreeOfCostClaims = () => {
         if (!window.confirm('Are you sure you want to delete this claim?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${apiUrl}/foc-claims/${id}`, {
+            const response = await fetch(`${apiUrl}/api/foc-claims/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -175,7 +214,19 @@ const FreeOfCostClaims = () => {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Free Of Cost Claims</h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage and track FOC service requests and claims</p>
                 </div>
-                <div className="flex gap-3">
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-slate-200 dark:border-slate-700 mt-4 mb-6">
+                <button onClick={() => setActiveTab('claims')} className={`px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'claims' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'}`}>Claims</button>
+                <button onClick={() => setActiveTab('annexures')} className={`px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'annexures' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'}`}>Annexures</button>
+            </div>
+
+            {activeTab === 'claims' && (
+                <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div></div>
+                <div className="flex gap-3 mb-4">
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
@@ -226,6 +277,11 @@ const FreeOfCostClaims = () => {
                                         <div className="flex items-center gap-1.5">
                                             <FileText size={14} />
                                             <span className="font-medium text-blue-600 dark:text-blue-400">{claim.JobNumber}</span>
+                                        </div>
+                                    )}
+                                    {claim.AnnexNumber && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-semibold">
+                                            Annex: {claim.AnnexNumber}
                                         </div>
                                     )}
                                     <div className="flex items-center gap-1.5">
@@ -376,6 +432,21 @@ const FreeOfCostClaims = () => {
                                     )}
                                 </div>
 
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Annexure Number (Optional)</label>
+                                    <input
+                                        type="text"
+                                        list="annexuresList"
+                                        value={annexNumberField}
+                                        onChange={(e) => setAnnexNumberField(e.target.value)}
+                                        className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Type or select annexure"
+                                    />
+                                    <datalist id="annexuresList">
+                                        {annexures.map(a => <option key={a.AnnexNumber} value={a.AnnexNumber} />)}
+                                    </datalist>
+                                </div>
+
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label>
                                     <textarea
@@ -405,6 +476,100 @@ const FreeOfCostClaims = () => {
                         </form>
                     </div>
                 </div>
+            )}
+            </>
+            )}
+
+            {activeTab === 'annexures' && (
+                <>
+                <div className="flex justify-end gap-3 mb-4">
+                    <button
+                        onClick={() => handleOpenAnnexModal()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2 font-medium transition-colors"
+                    >
+                        <Plus size={18} /> New Annexure
+                    </button>
+                </div>
+
+                {loading ? (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                ) : error ? (
+                    <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-100 text-center">{error}</div>
+                ) : annexures.length === 0 ? (
+                    <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <FileText size={48} className="mx-auto text-slate-400 mb-4 opacity-50" />
+                        <h3 className="text-lg font-medium text-slate-900 dark:text-white">No Annexures found</h3>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {annexures.map((annex) => (
+                            <div key={annex.AnnexNumber} className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:shadow-md transition-all">
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-3">
+                                        <h3 className="font-semibold text-lg text-slate-900 dark:text-white">{annex.AnnexNumber}</h3>
+                                        {annex.InvoiceNumber && <span className="text-xs px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Inv: {annex.InvoiceNumber}</span>}
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                                        {annex.ClaimAmount && <div className="font-medium text-slate-700 dark:text-slate-300">₹{parseFloat(annex.ClaimAmount).toLocaleString('en-IN')}</div>}
+                                        {annex.PostDate && <div><Clock size={14} className="inline mr-1" />{annex.PostDate.split('T')[0]}</div>}
+                                        {annex.ConsignmentNumber && <div>Tracking: {annex.ConsignmentNumber}</div>}
+                                    </div>
+                                    {annex.PostService && <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">Post Service: {annex.PostService}</p>}
+                                </div>
+                                <div className="flex items-center gap-2 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                                    <button onClick={() => handleOpenAnnexModal(annex)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"><Edit size={18} /></button>
+                                    <button onClick={() => handleAnnexDelete(annex.AnnexNumber)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Trash2 size={18} /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {showAnnexModal && (
+                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10">
+                                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">{editingAnnex ? 'Edit Annexure' : 'New Annexure'}</h2>
+                                <button onClick={() => setShowAnnexModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X size={24} /></button>
+                            </div>
+
+                            <form onSubmit={handleAnnexSubmit} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Annexure Number *</label>
+                                    <input type="text" value={annexNumber} onChange={(e) => setAnnexNumber(e.target.value)} required disabled={!!editingAnnex} className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Invoice Number</label>
+                                    <input type="text" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Claim Amount</label>
+                                    <input type="number" step="0.01" value={annexClaimAmount} onChange={(e) => setAnnexClaimAmount(e.target.value)} className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Post Service</label>
+                                    <input type="text" value={postService} onChange={(e) => setPostService(e.target.value)} className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Consignment Number</label>
+                                    <input type="text" value={consignmentNumber} onChange={(e) => setConsignmentNumber(e.target.value)} className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Post Date</label>
+                                    <input type="date" value={postDate} onChange={(e) => setPostDate(e.target.value)} className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                    <button type="button" onClick={() => setShowAnnexModal(false)} className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700">Cancel</button>
+                                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 shadow-sm">{editingAnnex ? 'Update Annexure' : 'Create Annexure'}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+                </>
             )}
         </div>
     );

@@ -469,3 +469,52 @@ async function seed() {
 }
 
 seed();
+
+async function updateFocSchema() {
+    const mysql = require('mysql2/promise');
+    const path = require('path');
+    const dotenv = require('dotenv');
+
+    const apiEnvPath = path.resolve(__dirname, '../.env');
+    dotenv.config({ path: apiEnvPath });
+
+    const connection = await mysql.createConnection({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || 'root',
+        database: process.env.DB_NAME || 'service_db',
+        port: process.env.DB_PORT || 3306,
+    });
+
+    try {
+        console.log("Creating annexure table...");
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS annexure (
+                AnnexNumber VARCHAR(100) PRIMARY KEY,
+                InvoiceNumber VARCHAR(100),
+                ClaimAmount DECIMAL(12, 2),
+                PostService TEXT,
+                ConsignmentNumber VARCHAR(255),
+                PostDate DATE
+            )
+        `);
+
+        console.log("Adding AnnexNumber to free_of_cost_claims...");
+        await connection.query(`
+            ALTER TABLE free_of_cost_claims
+            ADD COLUMN AnnexNumber VARCHAR(100) NULL,
+            ADD CONSTRAINT fk_foc_annexure
+            FOREIGN KEY (AnnexNumber) REFERENCES annexure(AnnexNumber) ON DELETE SET NULL
+        `);
+        console.log("Migration successful");
+    } catch(e) {
+        if(e.code !== 'ER_DUP_FIELDNAME') {
+            console.error(e);
+        } else {
+             console.log("Migration already applied.");
+        }
+    } finally {
+        await connection.end();
+    }
+}
+updateFocSchema();
