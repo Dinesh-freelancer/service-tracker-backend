@@ -33,7 +33,7 @@ const FreeOfCostClaims = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            let url = `${apiUrl}/api/foc-claims`;
+            let url = `${apiUrl}/foc-claims`;
             if (filterStatus) {
                 url += `?status=${filterStatus}`;
             }
@@ -64,7 +64,7 @@ const FreeOfCostClaims = () => {
             setIsSearchingJobs(true);
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`${apiUrl}/api/jobs?search=${encodeURIComponent(jobSearch)}`, {
+                const res = await fetch(`${apiUrl}/jobs?search=${encodeURIComponent(jobSearch)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -112,8 +112,8 @@ const FreeOfCostClaims = () => {
             const token = localStorage.getItem('token');
             const method = editingClaim ? 'PUT' : 'POST';
             const url = editingClaim
-                ? `${apiUrl}/api/foc-claims/${editingClaim.Id}`
-                : `${apiUrl}/api/foc-claims`;
+                ? `${apiUrl}/foc-claims/${editingClaim.Id}`
+                : `${apiUrl}/foc-claims`;
 
             const payload = {
                 JobNumber: jobNumber || null,
@@ -147,7 +147,7 @@ const FreeOfCostClaims = () => {
         if (!window.confirm('Are you sure you want to delete this claim?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${apiUrl}/api/foc-claims/${id}`, {
+            const response = await fetch(`${apiUrl}/foc-claims/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
