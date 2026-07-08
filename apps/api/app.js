@@ -164,9 +164,11 @@ app.use('/api/warranty-claims', warrantyClaimRoutes);
 
 const todoRoutes = require('./routes/todoRoutes');
 const focRoutes = require('./routes/focRoutes');
+const annexureRoutes = require('./routes/annexureRoutes');
 
 app.use('/api/todos', todoRoutes);
 app.use('/api/foc-claims', focRoutes);
+app.use('/api/annexures', annexureRoutes);
 
 // Error handler
 const errorHandler = require('./middleware/errorHandler');

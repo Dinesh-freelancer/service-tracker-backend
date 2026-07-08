@@ -588,6 +588,15 @@ CREATE TABLE IF NOT EXISTS `subtasks` (
   CONSTRAINT `fk_subtask_todo_1` FOREIGN KEY (`TodoId`) REFERENCES `todos` (`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS annexure (
+    AnnexNumber VARCHAR(100) PRIMARY KEY,
+    InvoiceNumber VARCHAR(100),
+    ClaimAmount DECIMAL(12, 2),
+    PostService TEXT,
+    ConsignmentNumber VARCHAR(255),
+    PostDate DATE
+);
+
 CREATE TABLE IF NOT EXISTS free_of_cost_claims (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     JobNumber VARCHAR(50),
@@ -597,5 +606,7 @@ CREATE TABLE IF NOT EXISTS free_of_cost_claims (
     ClaimStatus ENUM('Pending', 'On Hold', 'Submitted', 'Approved', 'Post Sent'),
     ClaimAmount DECIMAL(10, 2),
     Notes TEXT,
-    FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber) ON DELETE SET NULL
+    AnnexNumber VARCHAR(100) NULL,
+    FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber) ON DELETE SET NULL,
+    FOREIGN KEY (AnnexNumber) REFERENCES annexure(AnnexNumber) ON DELETE SET NULL
 );
