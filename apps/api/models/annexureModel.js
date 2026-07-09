@@ -11,8 +11,16 @@ async function getAnnexureById(annexNumber) {
 }
 
 async function createAnnexure(annexureData) {
-    const fields = Object.keys(annexureData);
-    const values = Object.values(annexureData);
+    // Filter out undefined values but keep nulls
+    const filteredData = Object.entries(annexureData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+
+    const fields = Object.keys(filteredData);
+    const values = Object.values(filteredData);
     const placeholders = fields.map(() => '?').join(', ');
 
     await pool.query(
@@ -23,8 +31,16 @@ async function createAnnexure(annexureData) {
 }
 
 async function updateAnnexure(annexNumber, annexureData) {
-    const fields = Object.keys(annexureData).map(field => `${field} = ?`);
-    const values = Object.values(annexureData);
+    // Filter out undefined values but keep nulls
+    const filteredData = Object.entries(annexureData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+
+    const fields = Object.keys(filteredData).map(field => `${field} = ?`);
+    const values = Object.values(filteredData);
     values.push(annexNumber);
 
     const [result] = await pool.query(
