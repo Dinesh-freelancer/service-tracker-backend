@@ -34,6 +34,8 @@ const JobsList = ({ title = "Service Requests" }) => {
   const page = parseInt(searchParams.get("page") || "1");
   const statusFilter = searchParams.get("status") || "";
   const searchQuery = searchParams.get("search") || "";
+  const sortBy = searchParams.get("sortBy") || "JobNumber";
+  const sortOrder = searchParams.get("sortOrder") || "desc";
 
   const role = localStorage.getItem("role") || "Worker";
   const isAdminOrOwner = role === "Admin" || role === "Owner";
