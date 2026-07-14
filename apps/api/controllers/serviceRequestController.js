@@ -43,6 +43,8 @@ async function listServiceRequests(req, res, next) {
         }
 
         const filters = buildSearchFilters(req.query, searchableFields);
+        filters.sortBy = req.query.sortBy;
+        filters.sortOrder = req.query.sortOrder;
 
         let rows, totalCount;
 

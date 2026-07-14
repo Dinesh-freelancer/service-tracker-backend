@@ -28,7 +28,13 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
         params = [...(filters.params || [])];
     }
 
-    query += ` ORDER BY sr.DateReceived DESC LIMIT ? OFFSET ?`;
+    if (filters.sortBy === 'JobNumber') {
+        query += ` ORDER BY sr.JobNumber ${filters.sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+    } else {
+        query += ` ORDER BY sr.DateReceived DESC`;
+    }
+
+    query += ` LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
     const [rows] = await pool.query(query, params);
     const countParams = filters.params || [];

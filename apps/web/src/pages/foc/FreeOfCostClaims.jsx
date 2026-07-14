@@ -9,6 +9,8 @@ const FreeOfCostClaims = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingClaim, setEditingClaim] = useState(null);
     const [filterStatus, setFilterStatus] = useState('');
+    const [sortBy, setSortBy] = useState('SRNumber');
+    const [sortOrder, setSortOrder] = useState('desc');
 
     // Job search state for the modal
     const [jobSearch, setJobSearch] = useState('');
@@ -65,7 +67,7 @@ const FreeOfCostClaims = () => {
 
     useEffect(() => {
         fetchClaims();
-    }, [filterStatus]);
+    }, [filterStatus, sortBy, sortOrder]);
 
     const fetchAnnexures = async () => {
         try {

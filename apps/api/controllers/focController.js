@@ -4,7 +4,9 @@ async function getAllClaims(req, res, next) {
     try {
         const filters = {
             status: req.query.status,
-            jobNumber: req.query.jobNumber
+            jobNumber: req.query.jobNumber,
+            sortBy: req.query.sortBy,
+            sortOrder: req.query.sortOrder
         };
         const claims = await focModel.getAllClaims(filters);
         res.json(claims);
