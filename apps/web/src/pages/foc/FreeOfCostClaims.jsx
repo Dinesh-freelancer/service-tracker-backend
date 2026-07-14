@@ -27,6 +27,7 @@ const FreeOfCostClaims = () => {
     const [claimAmount, setClaimAmount] = useState('');
     const [notes, setNotes] = useState('');
     const [annexNumberField, setAnnexNumberField] = useState('');
+    const [focNumber, setFocNumber] = useState('');
 
     // Annexure Form State
     const [activeTab, setActiveTab] = useState('claims');
@@ -41,7 +42,7 @@ const FreeOfCostClaims = () => {
     const [postDate, setPostDate] = useState('');
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const statuses = ['Pending', 'On Hold', 'Submitted', 'Approved', 'Post Sent'];
+    const statuses = ['Pending', 'On Hold', 'Submitted', 'Approved', 'Post Sent', 'False'];
     const srTypes = ['Repair', 'Site Visit'];
 
     const fetchClaims = async () => {
@@ -131,6 +132,7 @@ const FreeOfCostClaims = () => {
             setClaimAmount(claim.ClaimAmount || '');
             setNotes(claim.Notes || '');
             setAnnexNumberField(claim.AnnexNumber || '');
+            setFocNumber(claim.FOCNumber || '');
         } else {
             setEditingClaim(null);
             setJobNumber('');
@@ -142,6 +144,7 @@ const FreeOfCostClaims = () => {
             setClaimAmount('');
             setNotes('');
             setAnnexNumberField('');
+            setFocNumber('');
         }
         setShowModal(true);
     };
@@ -163,7 +166,8 @@ const FreeOfCostClaims = () => {
                 ClaimStatus: claimStatus,
                 ClaimAmount: claimAmount ? parseFloat(claimAmount) : null,
                 Notes: notes,
-                AnnexNumber: annexNumberField || null
+                AnnexNumber: annexNumberField || null,
+                FOCNumber: focNumber || null
             };
 
             const response = await fetch(url, {
@@ -272,6 +276,7 @@ const FreeOfCostClaims = () => {
             case 'Submitted': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
             case 'On Hold': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
             case 'Post Sent': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+            case 'False': return 'bg-gray-100 text-gray-800 dark:bg-gray-700/50 dark:text-gray-400';
             default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
         }
     };
@@ -351,6 +356,11 @@ const FreeOfCostClaims = () => {
                             <div className="flex-1 space-y-2">
                                 <div className="flex items-center gap-3">
                                     <h3 className="font-semibold text-lg text-slate-900 dark:text-white">SR: {claim.SRNumber}</h3>
+                                    {claim.FOCNumber && (
+                                        <span className="font-medium text-sm text-slate-600 dark:text-slate-400">
+                                            FOC: {claim.FOCNumber}
+                                        </span>
+                                    )}
                                     <span className={`text-xs px-2 py-1 rounded-md font-medium ${getStatusStyle(claim.ClaimStatus)}`}>
                                         {claim.ClaimStatus}
                                     </span>
@@ -439,6 +449,17 @@ const FreeOfCostClaims = () => {
                                         onChange={(e) => setSrDate(e.target.value)}
                                         className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500"
                                         required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">FOC Number</label>
+                                    <input
+                                        type="text"
+                                        maxLength="15"
+                                        value={focNumber}
+                                        onChange={(e) => setFocNumber(e.target.value)}
+                                        className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-blue-500"
                                     />
                                 </div>
 
