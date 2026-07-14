@@ -173,6 +173,23 @@ const JobsList = ({ title = "Service Requests" }) => {
         {/* Status Filter */}
         <div className="flex items-center space-x-2 w-full md:w-auto">
           <Filter size={18} className="text-slate-500" />
+          <div className="flex items-center gap-2">
+            <select
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+              value={sortBy}
+              onChange={handleSortByChange}
+            >
+              <option value="JobNumber">Sort: Job Number</option>
+              <option value="DateReceived">Sort: Default</option>
+            </select>
+            <button
+                onClick={toggleSortOrder}
+                className="p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 shadow-sm"
+                title={`Sort ${sortOrder === 'desc' ? 'Ascending' : 'Descending'}`}
+            >
+                <span className="font-bold">{sortOrder === 'desc' ? '↓' : '↑'}</span>
+            </button>
+          </div>
           <select
             value={statusFilter}
             onChange={handleStatusChange}
