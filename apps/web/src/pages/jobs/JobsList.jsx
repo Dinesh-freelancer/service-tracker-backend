@@ -50,6 +50,8 @@ const JobsList = ({ title = "Service Requests" }) => {
         limit: 10,
         ...(statusFilter && { status: statusFilter }),
         ...(searchQuery && { search: searchQuery }),
+        sortBy,
+        sortOrder
       });
 
       const response = await fetch(`${apiUrl}/jobs?${query}`, {
@@ -76,17 +78,25 @@ const JobsList = ({ title = "Service Requests" }) => {
 
   useEffect(() => {
     fetchJobs();
-  }, [page, statusFilter, searchQuery]);
+  }, [page, statusFilter, searchQuery, sortBy, sortOrder]);
 
   // Handlers
   const handleSearch = (e) => {
     e.preventDefault();
     const term = e.target.elements.search.value;
-    setSearchParams({ page: 1, status: statusFilter, search: term });
+    setSearchParams({ page: 1, status: statusFilter, search: term, sortBy, sortOrder });
   };
 
   const handleStatusChange = (e) => {
-    setSearchParams({ page: 1, status: e.target.value, search: searchQuery });
+    setSearchParams({ page: 1, status: e.target.value, search: searchQuery, sortBy, sortOrder });
+  };
+
+  const handleSortByChange = (e) => {
+      setSearchParams({ page: 1, status: statusFilter, search: searchQuery, sortBy: e.target.value, sortOrder });
+  };
+
+  const toggleSortOrder = () => {
+      setSearchParams({ page: 1, status: statusFilter, search: searchQuery, sortBy, sortOrder: sortOrder === 'desc' ? 'asc' : 'desc' });
   };
 
   const handlePageChange = (newPage) => {
@@ -95,6 +105,8 @@ const JobsList = ({ title = "Service Requests" }) => {
         page: newPage,
         status: statusFilter,
         search: searchQuery,
+        sortBy,
+        sortOrder
       });
     }
   };

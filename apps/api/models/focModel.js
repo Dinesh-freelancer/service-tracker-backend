@@ -18,7 +18,17 @@ async function getAllClaims(filters = {}) {
         query += ' WHERE ' + whereClauses.join(' AND ');
     }
 
-    query += ' ORDER BY Id DESC';
+    if (filters.sortBy === 'Id') {
+        query += ' ORDER BY Id';
+    } else {
+        query += ' ORDER BY SRNumber';
+    }
+
+    if (filters.sortOrder === 'asc') {
+        query += ' ASC';
+    } else {
+        query += ' DESC';
+    }
 
     const [rows] = await pool.query(query, params);
     return rows;
