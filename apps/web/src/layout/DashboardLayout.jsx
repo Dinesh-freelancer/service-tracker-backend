@@ -20,7 +20,7 @@ import {
   Calendar as CalendarIcon,
   Image as ImageIcon,
   MessageSquare
-} from 'lucide-react';
+, CheckSquare} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
 import toast, { Toaster } from 'react-hot-toast';
@@ -66,6 +66,8 @@ const DashboardLayout = () => {
 
     const adminItems = [
       { name: 'Jobs', icon: Briefcase, path: '/dashboard/jobs' },
+      { name: 'FOC Claims', icon: FileText, path: '/dashboard/foc-claims' },
+      { name: 'To Do', icon: CheckSquare, path: '/dashboard/todos' },
       { name: 'Customers', icon: Users, path: '/dashboard/customers' },
       { name: 'Workers', icon: User, path: '/dashboard/workers' },
       { name: 'Attendance', icon: CalendarIcon, path: '/dashboard/attendance' },

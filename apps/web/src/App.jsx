@@ -7,6 +7,8 @@ import Placeholder from './pages/Placeholder';
 import JobsList from './pages/jobs/JobsList';
 import CreateJob from './pages/jobs/CreateJob';
 import JobDetails from './pages/jobs/JobDetails';
+import TodoList from './pages/todo/TodoList';
+import FreeOfCostClaims from './pages/foc/FreeOfCostClaims';
 import DashboardLayout from './layout/DashboardLayout';
 import UserManagement from './pages/settings/UserManagement';
 import Workers from './pages/admin/Workers';
@@ -57,6 +59,8 @@ function App() {
           <Route path="jobs" element={<JobsList />} />
           <Route path="jobs/new" element={<CreateJob />} />
           <Route path="jobs/:jobNumber" element={<JobDetails />} />
+            <Route path="todos" element={<ProtectedRoute allowedRoles={['Admin', 'Owner']}><TodoList /></ProtectedRoute>} />
+            <Route path="foc-claims" element={<ProtectedRoute allowedRoles={['Admin', 'Owner']}><FreeOfCostClaims /></ProtectedRoute>} />
           <Route path="users" element={<UserManagement />} />
           <Route path="workers" element={<Workers />} />
           <Route path="attendance" element={<Attendance />} />
