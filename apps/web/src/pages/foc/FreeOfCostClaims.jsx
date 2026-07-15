@@ -49,7 +49,7 @@ const FreeOfCostClaims = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            let url = `${apiUrl}/api/foc-claims?sortBy=${sortBy}&sortOrder=${sortOrder}`;
+            let url = `${apiUrl}/foc-claims?sortBy=${sortBy}&sortOrder=${sortOrder}`;
             if (filterStatus) {
                 url += `&status=${filterStatus}`;
             }
