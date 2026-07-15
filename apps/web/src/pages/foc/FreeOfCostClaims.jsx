@@ -49,9 +49,9 @@ const FreeOfCostClaims = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            let url = `${apiUrl}/foc-claims`;
+            let url = `${apiUrl}/api/foc-claims?sortBy=${sortBy}&sortOrder=${sortOrder}`;
             if (filterStatus) {
-                url += `?status=${filterStatus}`;
+                url += `&status=${filterStatus}`;
             }
             const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -300,7 +300,7 @@ const FreeOfCostClaims = () => {
                 <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div></div>
-                <div className="flex gap-3 mb-4">
+                <div className="flex flex-col sm:flex-row gap-3 w-full justify-end">
                     <div className="flex items-center gap-2">
                         <select
                             value={sortBy}
