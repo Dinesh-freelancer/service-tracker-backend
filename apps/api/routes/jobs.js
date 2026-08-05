@@ -13,11 +13,6 @@ router.use(sensitiveInfoToggle);
 // Roles
 const ALL_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER, constants.AUTH_ROLE_CUSTOMER];
 const STAFF_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
-// Admin/Owner for sensitive actions if needed, but per request, consistency is key.
-// Actually, createServiceRequest was Admin/Owner only. assets.js lets Workers create.
-// I will keep list/get as ALL_ROLES (or at least STAFF_ROLES + CUSTOMER if customer is handled in controller).
-// Controller handles customer logic. So ALL_ROLES is fine.
-// For create/update, I'll use STAFF_ROLES to align with assets.js.
 
 /**
  * @swagger
@@ -52,9 +47,23 @@ const STAFF_ROLES = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, const
  *       200:
  *         description: List of jobs
  */
-router.get('/',
-    authorize(...ALL_ROLES),
-    serviceRequestController.listServiceRequests);
+router.get('/', authorize(...ALL_ROLES), serviceRequestController.listServiceRequests);
+
+/**
+ * @swagger
+ * /jobs/next-job-number:
+ *   get:
+ *     summary: Get next auto-generated job number
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Next job number
+ */
+router.get('/next-job-number', authorize(...STAFF_ROLES), serviceRequestController.getNextJobNumber);
+
+router.get('/failure-reasons', authorize(...ALL_ROLES), failureReasonController.getFailureReasons);
 
 /**
  * @swagger
@@ -77,11 +86,7 @@ router.get('/',
  *       404:
  *         description: Job not found
  */
-router.get('/failure-reasons', authorize(...ALL_ROLES), failureReasonController.getFailureReasons);
-
-router.get('/:jobNumber',
-    authorize(...ALL_ROLES),
-    serviceRequestController.getServiceRequest);
+router.get('/:jobNumber', authorize(...ALL_ROLES), serviceRequestController.getServiceRequest);
 
 /**
  * @swagger
@@ -118,11 +123,7 @@ router.get('/:jobNumber',
  *       201:
  *         description: Job created
  */
-router.post('/',
-    authorize(...STAFF_ROLES),
-    createServiceRequestValidators,
-    validateRequest,
-    serviceRequestController.createServiceRequest);
+router.post('/', authorize(...STAFF_ROLES), createServiceRequestValidators, validateRequest, serviceRequestController.createServiceRequest);
 
 /**
  * @swagger
@@ -157,8 +158,6 @@ router.post('/',
  *       200:
  *         description: Job updated
  */
-router.put('/:jobNumber',
-    authorize(...ALL_ROLES),
-    serviceRequestController.updateServiceRequest);
+router.put('/:jobNumber', authorize(...ALL_ROLES), serviceRequestController.updateServiceRequest);
 
 module.exports = router;

@@ -7,7 +7,8 @@ import toast from 'react-hot-toast';
 const CreateJob = () => {
     const navigate = useNavigate();
     const { register, handleSubmit, watch, control, setValue, getValues, formState: { errors } } = useForm({
-        defaultValues: {
+                defaultValues: {
+            JobNumber: '',
             DateReceived: new Date().toISOString().split('T')[0],
             Notes: '',
             Brand: '',
@@ -37,7 +38,33 @@ const CreateJob = () => {
     // UI States
     const [loadingOrgs, setLoadingOrgs] = useState(false);
     const [loadingCustomers, setLoadingCustomers] = useState(false);
+
     const [loadingAssets, setLoadingAssets] = useState(false);
+
+    // Auto-generate Job Number
+    const [loadingJobNumber, setLoadingJobNumber] = useState(false);
+
+    useEffect(() => {
+        const fetchNextJobNumber = async () => {
+            try {
+                setLoadingJobNumber(true);
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/jobs/next-job-number`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setValue('JobNumber', data.nextJobNumber);
+                }
+            } catch (err) {
+                console.error('Failed to fetch next job number', err);
+            } finally {
+                setLoadingJobNumber(false);
+            }
+        };
+        fetchNextJobNumber();
+    }, [setValue]);
+
     const [customerSearch, setCustomerSearch] = useState('');
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -163,11 +190,13 @@ const CreateJob = () => {
         try {
             const token = localStorage.getItem('token');
 
+
             // Construct Payload
             const payload = {
                 CustomerId: selectedCustomer.CustomerId,
                 DateReceived: data.DateReceived,
                 Notes: data.Notes,
+                JobNumber: data.JobNumber,
                 IsWarranty: data.IsWarranty || false,
                 BillingType: data.BillingType || 'Chargeable'
             };
@@ -467,16 +496,30 @@ const CreateJob = () => {
                     {/* Step 3: Job Details */}
                     <div className={step === 3 ? 'block' : 'hidden'}>
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Job Details</h3>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date Received</label>
-                                <input
-                                    type="date"
-                                    {...register('DateReceived', { required: true })}
-                                    className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                                />
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Job Number</label>
+                                    <input
+                                        type="text"
+                                        {...register('JobNumber')}
+                                        placeholder="YYYYMMDDNNN (Leave blank to auto-generate)"
+                                        className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">Leave blank to auto-generate, or provide your own in YYYYMMDDNNN format.</p>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date Received</label>
+                                    <input
+                                        type="date"
+                                        {...register('DateReceived', { required: true })}
+                                        className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                </div>
                             </div>
+
 
                             <div className="flex gap-4">
                                 <div className="flex-1">

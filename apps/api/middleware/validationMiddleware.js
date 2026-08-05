@@ -45,6 +45,7 @@ const createCustomerValidators = [
  */
 const createServiceRequestValidators = [
     body('CustomerId').notEmpty().isInt().withMessage('Valid Customer ID is required'),
+    body("JobNumber").optional().isString().withMessage("JobNumber must be a string"),
     // Optional because we might pass AssetId OR NewAsset object
     body('AssetId').optional().isInt(),
     // Validate NewAsset object if present? Handled in controller logic or custom validator here.
