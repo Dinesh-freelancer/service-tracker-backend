@@ -17,6 +17,16 @@ const pool = require('../db');
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
  */
+// Get next job number
+async function getNextJobNumber(req, res, next) {
+    try {
+        const nextJobNumber = await serviceRequestModel.generateJobNumber();
+        res.json({ nextJobNumber });
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function listServiceRequests(req, res, next) {
     try {
         const role = req.user ? req.user.Role : null;
@@ -146,9 +156,31 @@ async function createServiceRequest(req, res, next) {
                 throw new Error('AssetId is required or valid NewAsset data must be provided.');
             }
 
+
+            let providedJobNumber = jobData.JobNumber;
+            let finalJobNumber;
+
+
+            if (providedJobNumber && providedJobNumber.trim() !== '') {
+                // Check if provided Job Number matches YYYYMMDDNNN format
+                const formatRegex = /^\d{8}\d{3}$/;
+                if (!formatRegex.test(providedJobNumber)) {
+                    throw new Error('Invalid Job Number format. Must be YYYYMMDDNNN.');
+                }
+
+                // Check if it already exists
+                const existing = await serviceRequestModel.getServiceRequestByJobNumber(providedJobNumber, connection);
+                if (existing) {
+                    throw new Error('Job Number already exists. Please choose another one.');
+                }
+                finalJobNumber = providedJobNumber;
+            } else {
+                finalJobNumber = await serviceRequestModel.generateJobNumber(connection);
+            }
+
             // Prepare Final Job Data
             const finalJobData = {
-                JobNumber: await serviceRequestModel.generateJobNumber(connection),
+                JobNumber: finalJobNumber,
                 AssetId: assetId,
                 CustomerId: jobData.CustomerId,
                 DateReceived: jobData.DateReceived,
@@ -342,6 +374,7 @@ async function updateServiceRequest(req, res, next) {
 }
 
 module.exports = {
+    getNextJobNumber,
     listServiceRequests,
     getServiceRequest,
     createServiceRequest,
