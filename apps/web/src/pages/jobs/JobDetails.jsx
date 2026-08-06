@@ -207,6 +207,7 @@ const JobDetails = () => {
       }
 
       setJobInfoForm({
+        Notes: data.Notes || "",
         FailureReason: data.FailureReason || "",
         FailureDescription: data.FailureDescription || "",
         ServicesNeeded: (typeof data.ServicesNeeded === "string"
@@ -263,6 +264,7 @@ const JobDetails = () => {
     try {
       const token = localStorage.getItem("token");
       const payload = {
+        Notes: jobInfoForm.Notes,
         FailureReason: jobInfoForm.FailureReason,
         FailureDescription: jobInfoForm.FailureDescription,
         ServicesNeeded: JSON.stringify(
@@ -976,6 +978,24 @@ const JobDetails = () => {
                       </div>
                     </div>
                   )}
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                      Issue / Notes
+                    </label>
+                    <textarea
+                      className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 bg-white text-slate-800 dark:bg-slate-800 dark:text-white"
+                      value={jobInfoForm.Notes || ''}
+                      onChange={(e) =>
+                        setJobInfoForm({
+                          ...jobInfoForm,
+                          Notes: e.target.value,
+                        })
+                      }
+                      rows={3}
+                      placeholder="Notes..."
+                    />
+                  </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 mb-1">
                       Failure Reason
