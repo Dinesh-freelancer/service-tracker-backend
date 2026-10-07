@@ -261,17 +261,21 @@ const SparesSearch = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Type</label>
-                                <select
+                                <input
+                                    list="pump-types-list-spare-mode"
+                                    type="text"
+                                    placeholder="Type or select Pump Type..."
                                     value={pumpType}
                                     onChange={(e) => {
                                         setPumpType(e.target.value);
                                         setPumpSize('');
                                     }}
-                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200"
-                                >
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                                />
+                                <datalist id="pump-types-list-spare-mode">
                                     <option value="">All Types</option>
-                                    {pumpOptions.types.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
+                                    {pumpOptions.types.map(t => <option key={t} value={t} />)}
+                                </datalist>
                             </div>
                         </>
                     ) : (
@@ -293,17 +297,21 @@ const SparesSearch = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Type</label>
-                                <select
+                                <input
+                                    list="pump-types-list-pump-mode"
+                                    type="text"
+                                    placeholder="Type or select Pump Type..."
                                     value={pumpType}
                                     onChange={(e) => {
                                         setPumpType(e.target.value);
                                         setPumpSize('');
                                     }}
-                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200"
-                                >
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                                />
+                                <datalist id="pump-types-list-pump-mode">
                                     <option value="">All Types</option>
-                                    {pumpOptions.types.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
+                                    {pumpOptions.types.map(t => <option key={t} value={t} />)}
+                                </datalist>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Size</label>
