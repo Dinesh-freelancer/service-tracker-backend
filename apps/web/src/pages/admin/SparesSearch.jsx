@@ -38,22 +38,30 @@ const SparesSearch = () => {
     const token = localStorage.getItem('token');
 
     useEffect(() => {
-        fetchPumpOptions();
-    }, []);
+        fetchPumpOptions(pumpCategory, pumpType);
+    }, [pumpCategory, pumpType]);
 
     useEffect(() => {
         setPage(1);
         fetchSpares(1);
     }, [searchMode, pumpCategory, pumpType, pumpSize, limit]);
 
-    const fetchPumpOptions = async () => {
+    const fetchPumpOptions = async (category = pumpCategory, type = pumpType) => {
         try {
-            const res = await fetch(`${apiUrl}/spares/pump-options`, {
+            const params = new URLSearchParams({
+                pumpCategory: category || '',
+                pumpType: type || ''
+            });
+            const res = await fetch(`${apiUrl}/spares/pump-options?${params.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
                 const data = await res.json();
-                setPumpOptions(data);
+                setPumpOptions(prev => ({
+                    categories: data.categories || prev.categories,
+                    types: data.types || [],
+                    sizes: data.sizes || []
+                }));
             }
         } catch (err) {
             console.error('Failed to load pump options', err);
@@ -240,7 +248,11 @@ const SparesSearch = () => {
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Category</label>
                                 <select
                                     value={pumpCategory}
-                                    onChange={(e) => setPumpCategory(e.target.value)}
+                                    onChange={(e) => {
+                                        setPumpCategory(e.target.value);
+                                        setPumpType('');
+                                        setPumpSize('');
+                                    }}
                                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200"
                                 >
                                     <option value="">All Categories</option>
@@ -251,7 +263,10 @@ const SparesSearch = () => {
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Type</label>
                                 <select
                                     value={pumpType}
-                                    onChange={(e) => setPumpType(e.target.value)}
+                                    onChange={(e) => {
+                                        setPumpType(e.target.value);
+                                        setPumpSize('');
+                                    }}
                                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200"
                                 >
                                     <option value="">All Types</option>
@@ -265,7 +280,11 @@ const SparesSearch = () => {
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Category</label>
                                 <select
                                     value={pumpCategory}
-                                    onChange={(e) => setPumpCategory(e.target.value)}
+                                    onChange={(e) => {
+                                        setPumpCategory(e.target.value);
+                                        setPumpType('');
+                                        setPumpSize('');
+                                    }}
                                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200"
                                 >
                                     <option value="">All Categories</option>
@@ -276,7 +295,10 @@ const SparesSearch = () => {
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Pump Type</label>
                                 <select
                                     value={pumpType}
-                                    onChange={(e) => setPumpType(e.target.value)}
+                                    onChange={(e) => {
+                                        setPumpType(e.target.value);
+                                        setPumpSize('');
+                                    }}
                                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200"
                                 >
                                     <option value="">All Types</option>

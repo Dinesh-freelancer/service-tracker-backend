@@ -70,7 +70,11 @@ async function searchSpares(req, res, next) {
  */
 async function getPumpOptions(req, res, next) {
     try {
-        const options = await sparePriceModel.getPumpOptions();
+        const filters = {
+            pumpCategory: req.query.pumpCategory || '',
+            pumpType: req.query.pumpType || ''
+        };
+        const options = await sparePriceModel.getPumpOptions(filters);
         res.status(200).json(options);
     } catch (err) {
         next(err);

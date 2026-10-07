@@ -281,11 +281,37 @@ async function searchSpares(filters = {}) {
 /**
  * Get distinct pump dropdown options for cascading filters.
  */
-async function getPumpOptions() {
+async function getPumpOptions(filters = {}) {
     await ensureTableExists();
+    const { pumpCategory = '', pumpType = '' } = filters;
+
     const [categories] = await pool.query('SELECT DISTINCT pump_category FROM spare_price_search ORDER BY pump_category');
-    const [types] = await pool.query('SELECT DISTINCT pump_type FROM spare_price_search ORDER BY pump_type');
-    const [sizes] = await pool.query('SELECT DISTINCT pump_size FROM spare_price_search ORDER BY pump_size');
+
+    let typeSql = 'SELECT DISTINCT pump_type FROM spare_price_search';
+    let typeParams = [];
+    if (pumpCategory) {
+        typeSql += ' WHERE pump_category = ?';
+        typeParams.push(pumpCategory);
+    }
+    typeSql += ' ORDER BY pump_type';
+    const [types] = await pool.query(typeSql, typeParams);
+
+    let sizeSql = 'SELECT DISTINCT pump_size FROM spare_price_search';
+    let sizeWhere = [];
+    let sizeParams = [];
+    if (pumpCategory) {
+        sizeWhere.push('pump_category = ?');
+        sizeParams.push(pumpCategory);
+    }
+    if (pumpType) {
+        sizeWhere.push('pump_type = ?');
+        sizeParams.push(pumpType);
+    }
+    if (sizeWhere.length > 0) {
+        sizeSql += ' WHERE ' + sizeWhere.join(' AND ');
+    }
+    sizeSql += ' ORDER BY pump_size';
+    const [sizes] = await pool.query(sizeSql, sizeParams);
 
     return {
         categories: categories.map(c => c.pump_category).filter(Boolean),
