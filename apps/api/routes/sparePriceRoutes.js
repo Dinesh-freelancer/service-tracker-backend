@@ -3,67 +3,26 @@ const router = express.Router();
 const sparePriceController = require('../controllers/sparePriceController');
 const { validateSpareUpsert } = require('../middleware/spareValidationMiddleware');
 const { verifySparesApiKey } = require('../middleware/securityMiddleware');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-/**
- * @swagger
- * /api/spares/upsert:
- *   post:
- *     summary: Upsert a spare part price record
- *     tags: [Spares]
- *     security:
- *       - ApiKeyAuth: []
- *     parameters:
- *       - in: header
- *         name: x-api-key
- *         schema:
- *           type: string
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - pumpCategory
- *               - pumpType
- *               - pumpSize
- *               - spareName
- *               - basicMaterial
- *               - unitPrice
- *               - uom
- *             properties:
- *               pumpCategory:
- *                 type: string
- *               pumpType:
- *                 type: string
- *               pumpSize:
- *                 type: string
- *               spareName:
- *                 type: string
- *               basicMaterial:
- *                 type: string
- *               partNo:
- *                 type: string
- *               unitPrice:
- *                 type: number
- *               uom:
- *                 type: string
- *               sapMaterial:
- *                 type: string
- *     responses:
- *       200:
- *         description: Success
- *       400:
- *         description: Validation Error
- *       403:
- *         description: Invalid API Key
- */
+// API Key authenticated route for external service upserts
 router.post(
     '/upsert',
     verifySparesApiKey,
     validateSpareUpsert,
     sparePriceController.upsertSpare
+);
+
+// Dashboard routes (JWT authenticated)
+router.get('/search', authenticateToken, sparePriceController.searchSpares);
+router.get('/pump-options', authenticateToken, sparePriceController.getPumpOptions);
+
+// JSON File upload sync route (allows sync payload up to 50MB)
+router.post(
+    '/sync',
+    authenticateToken,
+    express.json({ limit: '50mb' }),
+    sparePriceController.syncSpares
 );
 
 module.exports = router;

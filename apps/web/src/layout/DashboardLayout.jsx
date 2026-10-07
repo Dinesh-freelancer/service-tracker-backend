@@ -19,8 +19,10 @@ import {
   User,
   Calendar as CalendarIcon,
   Image as ImageIcon,
-  MessageSquare
-, CheckSquare} from 'lucide-react';
+  MessageSquare,
+  PackageSearch,
+  CheckSquare
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
 import toast, { Toaster } from 'react-hot-toast';
@@ -71,6 +73,7 @@ const DashboardLayout = () => {
       { name: 'Customers', icon: Users, path: '/dashboard/customers' },
       { name: 'Workers', icon: User, path: '/dashboard/workers' },
       { name: 'Attendance', icon: CalendarIcon, path: '/dashboard/attendance' },
+      { name: 'Spares Search', icon: PackageSearch, path: '/dashboard/spares' },
       { name: 'Inventory', icon: ShoppingBag, path: '/dashboard/inventory' },
       { name: 'Purchases', icon: ShoppingCart, path: '/dashboard/purchases' },
       { name: 'Reports', icon: FileText, path: '/dashboard/reports' },

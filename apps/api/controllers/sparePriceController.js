@@ -1,32 +1,85 @@
 const sparePriceModel = require('../models/sparePriceModel');
 
 /**
- * Handles the upsert request for a spare part.
- * @param {Object} req - Request object.
- * @param {Object} res - Response object.
- * @param {Function} next - Next middleware.
+ * Handles upsert request for a single spare part.
  */
 async function upsertSpare(req, res, next) {
     try {
         const spareData = req.body;
-
-        // At this point, validation middleware has already run.
-        // req.body fields are trimmed by express-validator if we used sanitizers,
-        // but explicit trimming in validation chain is good.
-
         await sparePriceModel.upsertSpare(spareData);
-
-        // Minimal response for performance
         res.status(200).json({ status: 'ok' });
     } catch (err) {
-        // Log locally if needed, but per requirements "minimal logging".
-        // Pass to global error handler which might log it.
-        // If high-volume, we might want to avoid console.log for every error if it's spammy,
-        // but 500s are serious.
+        next(err);
+    }
+}
+
+/**
+ * Handles bulk sync request from JSON array payload.
+ */
+async function syncSpares(req, res, next) {
+    try {
+        let items = req.body;
+
+        // If wrapped in object
+        if (!Array.isArray(items) && items && Array.isArray(items.spares)) {
+            items = items.spares;
+        }
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: 'Payload must be a non-empty array of spare objects.' });
+        }
+
+        const result = await sparePriceModel.bulkSyncSpares(items);
+        res.status(200).json({
+            status: 'success',
+            message: `Successfully synced ${result.totalProcessed} spares.`,
+            ...result
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * Handles search and pagination for spares.
+ */
+async function searchSpares(req, res, next) {
+    try {
+        const filters = {
+            mode: req.query.mode || 'spare',
+            query: req.query.query || '',
+            pumpCategory: req.query.pumpCategory || '',
+            pumpType: req.query.pumpType || '',
+            pumpSize: req.query.pumpSize || '',
+            spareName: req.query.spareName || '',
+            partNo: req.query.partNo || '',
+            sapMaterial: req.query.sapMaterial || '',
+            page: parseInt(req.query.page) || 1,
+            limit: parseInt(req.query.limit) || 20
+        };
+
+        const result = await sparePriceModel.searchSpares(filters);
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * Returns distinct filter options for pumps.
+ */
+async function getPumpOptions(req, res, next) {
+    try {
+        const options = await sparePriceModel.getPumpOptions();
+        res.status(200).json(options);
+    } catch (err) {
         next(err);
     }
 }
 
 module.exports = {
-    upsertSpare
+    upsertSpare,
+    syncSpares,
+    searchSpares,
+    getPumpOptions
 };
