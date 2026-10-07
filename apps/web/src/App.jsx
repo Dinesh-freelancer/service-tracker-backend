@@ -26,6 +26,7 @@ import CreatePurchase from './pages/admin/CreatePurchase';
 import Attendance from './pages/admin/Attendance';
 import SalesItems from './pages/admin/SalesItems';
 import Enquiries from './pages/admin/Enquiries';
+import SparesSearch from './pages/admin/SparesSearch';
 import Buy from './pages/public/Buy';
 import BuyDetails from './pages/public/BuyDetails';
 import './App.css';
@@ -64,6 +65,7 @@ function App() {
           <Route path="users" element={<UserManagement />} />
           <Route path="workers" element={<Workers />} />
           <Route path="attendance" element={<Attendance />} />
+          <Route path="spares" element={<SparesSearch />} />
 
           <Route path="customers" element={<Customers />} />
           <Route path="enquiries" element={<Enquiries />} />
