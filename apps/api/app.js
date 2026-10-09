@@ -165,10 +165,14 @@ app.use('/api/warranty-claims', warrantyClaimRoutes);
 
 const todoRoutes = require('./routes/todoRoutes');
 const focRoutes = require('./routes/focRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const quoteRoutes = require('./routes/quoteRoutes');
 const annexureRoutes = require('./routes/annexureRoutes');
 
 app.use('/api/todos', todoRoutes);
 app.use('/api/foc-claims', focRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/quotes', quoteRoutes);
 app.use('/api/annexures', annexureRoutes);
 
 // Error handler

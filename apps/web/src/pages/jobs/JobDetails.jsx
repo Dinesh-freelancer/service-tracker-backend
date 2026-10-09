@@ -29,6 +29,7 @@ import toast from "react-hot-toast";
 import WindingDetails from "../../components/jobs/WindingDetails";
 import PaymentsTab from "../../components/jobs/PaymentsTab";
 import WarrantyClaimTab from "./WarrantyClaimTab";
+import QuoteTab from "../../components/jobs/QuoteTab";
 import { extractUrlFromEmbed, isDirectImageLink } from "../../utils/helpers";
 import {
   DndContext,
@@ -1095,6 +1096,12 @@ const JobDetails = () => {
             <div className="border-b border-slate-100 dark:border-slate-700 overflow-x-auto">
               <div className="flex">
                 <button
+                  onClick={() => setActiveTab("quote")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "quote" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
+                >
+                  Quotation
+                </button>
+                <button
                   onClick={() => setActiveTab("job-docs")}
                   className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "job-docs" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
                 >
@@ -1149,6 +1156,11 @@ const JobDetails = () => {
               </div>
             </div>
             <div className="p-6">
+              {/* Quotation View */}
+              {activeTab === "quote" && (
+                <QuoteTab job={job} />
+              )}
+
               {/* Job Docs View */}
               {activeTab === "job-docs" && (
                 <div className="space-y-4">

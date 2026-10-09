@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   `PartId` int NOT NULL AUTO_INCREMENT,
   `PartName` varchar(100) NOT NULL,
   `Unit` varchar(10) DEFAULT 'Nos',
+  `HSNCode` varchar(20) DEFAULT NULL,
   `DefaultCostPrice` decimal(10,2) DEFAULT NULL,
   `DefaultSellingPrice` decimal(10,2) DEFAULT NULL,
   `Supplier` varchar(100) DEFAULT NULL,
@@ -89,6 +90,21 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   `Notes` text,
   PRIMARY KEY (`PartId`),
   UNIQUE KEY `PartName` (`PartName`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `services` (
+
+  `ServiceId` int NOT NULL AUTO_INCREMENT,
+  `ServiceName` varchar(255) NOT NULL,
+  `SACCode` varchar(20) DEFAULT '998719',
+  `DefaultRate` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `Description` text,
+  `IsActive` tinyint(1) DEFAULT '1',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ServiceId`),
+  UNIQUE KEY `ServiceName` (`ServiceName`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -611,3 +627,45 @@ CREATE TABLE IF NOT EXISTS free_of_cost_claims (
     FOREIGN KEY (JobNumber) REFERENCES servicerequest(JobNumber) ON DELETE SET NULL,
     FOREIGN KEY (AnnexNumber) REFERENCES annexure(AnnexNumber) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS `quotes` (
+
+  `QuoteId` int NOT NULL AUTO_INCREMENT,
+  `QuoteNumber` varchar(50) NOT NULL,
+  `JobNumber` varchar(50) NOT NULL,
+  `Revision` int NOT NULL DEFAULT '1',
+  `Status` enum('Draft','Sent','Approved','Rejected','Revised') NOT NULL DEFAULT 'Draft',
+  `Subtotal` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `Discount` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `DismantlingCharge` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `TaxRate` decimal(5,2) NOT NULL DEFAULT '18.00',
+  `TaxAmount` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `GrandTotal` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `ValidityDays` int NOT NULL DEFAULT '15',
+  `TermsAndConditions` text,
+  `CreatedBy` int DEFAULT NULL,
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`QuoteId`),
+  UNIQUE KEY `uk_quote_number_rev` (`QuoteNumber`, `Revision`),
+  KEY `fk_quote_job` (`JobNumber`),
+  CONSTRAINT `fk_quote_job` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `quote_items` (
+
+  `QuoteItemId` int NOT NULL AUTO_INCREMENT,
+  `QuoteId` int NOT NULL,
+  `ItemType` enum('Part','Service','Custom') NOT NULL DEFAULT 'Part',
+  `ReferenceId` int DEFAULT NULL,
+  `Description` varchar(255) NOT NULL,
+  `HSNSAC` varchar(20) DEFAULT NULL,
+  `Qty` decimal(10,2) NOT NULL DEFAULT '1.00',
+  `UnitPrice` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `Amount` decimal(10,2) GENERATED ALWAYS AS ((`Qty` * `UnitPrice`)) STORED,
+  PRIMARY KEY (`QuoteItemId`),
+  KEY `fk_qi_quote` (`QuoteId`),
+  CONSTRAINT `fk_qi_quote` FOREIGN KEY (`QuoteId`) REFERENCES `quotes` (`QuoteId`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

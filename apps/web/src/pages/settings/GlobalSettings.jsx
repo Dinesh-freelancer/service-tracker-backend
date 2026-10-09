@@ -126,6 +126,44 @@ const GlobalSettings = () => {
                 </div>
             </div>
 
+              {/* Quote Defaults */}
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
+                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">
+                  Quotation Defaults
+                </h3>
+                <div className="space-y-4">
+                  <Input
+                    label="Default GST Tax Rate (%)"
+                    type="number"
+                    value={settings.TaxRate || '18'}
+                    onChange={(e) => setSettings({ ...settings, TaxRate: e.target.value })}
+                  />
+                  <Input
+                    label="Default Dismantling Charge (₹)"
+                    type="number"
+                    value={settings.DefaultDismantlingCharge || '500'}
+                    onChange={(e) => setSettings({ ...settings, DefaultDismantlingCharge: e.target.value })}
+                  />
+                  <Input
+                    label="Default Validity (Days)"
+                    type="number"
+                    value={settings.DefaultValidityDays || '15'}
+                    onChange={(e) => setSettings({ ...settings, DefaultValidityDays: e.target.value })}
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Default Terms & Conditions
+                    </label>
+                    <textarea
+                      rows={4}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                      value={settings.QuoteTerms || '1. Quotation is valid for 15 days from the date of issue.\n2. In case of job cancellation after inspection, dismantling charge will be applicable.\n3. Payment mode: Cash / UPI / NEFT.'}
+                      onChange={(e) => setSettings({ ...settings, QuoteTerms: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
             <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
                 <button
                     onClick={handleSave}
