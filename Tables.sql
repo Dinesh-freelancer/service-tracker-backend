@@ -669,3 +669,35 @@ CREATE TABLE IF NOT EXISTS `quote_items` (
   CONSTRAINT `fk_qi_quote` FOREIGN KEY (`QuoteId`) REFERENCES `quotes` (`QuoteId`) ON DELETE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `incident_logs` (
+
+  `LogId` int NOT NULL AUTO_INCREMENT,
+  `LogType` varchar(100) NOT NULL DEFAULT 'General',
+  `LogDate` date NOT NULL,
+  `Title` varchar(255) NOT NULL,
+  `Description` text,
+  `Severity` enum('Info','Minor','Major','Critical') NOT NULL DEFAULT 'Info',
+  `JobNumber` varchar(50) DEFAULT NULL,
+  `EmbedTag` text,
+  `CreatedBy` int NOT NULL,
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`LogId`),
+  KEY `fk_inc_job` (`JobNumber`),
+  KEY `fk_inc_user` (`CreatedBy`),
+  CONSTRAINT `fk_inc_job` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE SET NULL,
+  CONSTRAINT `fk_inc_user` FOREIGN KEY (`CreatedBy`) REFERENCES `users` (`UserId`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `incident_log_workers` (
+
+  `LogId` int NOT NULL,
+  `WorkerId` int NOT NULL,
+  PRIMARY KEY (`LogId`, `WorkerId`),
+  KEY `fk_ilw_worker` (`WorkerId`),
+  CONSTRAINT `fk_ilw_log` FOREIGN KEY (`LogId`) REFERENCES `incident_logs` (`LogId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ilw_worker` FOREIGN KEY (`WorkerId`) REFERENCES `worker` (`WorkerId`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
