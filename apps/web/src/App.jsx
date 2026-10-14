@@ -10,6 +10,7 @@ import JobDetails from './pages/jobs/JobDetails';
 import TodoList from './pages/todo/TodoList';
 import FreeOfCostClaims from './pages/foc/FreeOfCostClaims';
 import DashboardLayout from './layout/DashboardLayout';
+import IncidentLogs from './pages/admin/IncidentLogs';
 import UserManagement from './pages/settings/UserManagement';
 import Workers from './pages/admin/Workers';
 import Customers from './pages/admin/Customers';
@@ -62,6 +63,7 @@ function App() {
           <Route path="jobs/:jobNumber" element={<JobDetails />} />
             <Route path="todos" element={<ProtectedRoute allowedRoles={['Admin', 'Owner']}><TodoList /></ProtectedRoute>} />
             <Route path="foc-claims" element={<ProtectedRoute allowedRoles={['Admin', 'Owner']}><FreeOfCostClaims /></ProtectedRoute>} />
+          <Route path="incident-logs" element={<ProtectedRoute allowedRoles={['Admin', 'Owner']}><IncidentLogs /></ProtectedRoute>} />
           <Route path="users" element={<UserManagement />} />
           <Route path="workers" element={<Workers />} />
           <Route path="attendance" element={<Attendance />} />

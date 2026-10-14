@@ -66,6 +66,40 @@ async function run() {
         CONSTRAINT fk_qi_quote FOREIGN KEY (QuoteId) REFERENCES quotes (QuoteId) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+
+    // Incident logs table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS incident_logs (
+        LogId INT AUTO_INCREMENT PRIMARY KEY,
+        LogType VARCHAR(100) NOT NULL DEFAULT 'General',
+        LogDate DATE NOT NULL,
+        Title VARCHAR(255) NOT NULL,
+        Description TEXT,
+        Severity ENUM('Info','Minor','Major','Critical') NOT NULL DEFAULT 'Info',
+        JobNumber VARCHAR(50) DEFAULT NULL,
+        EmbedTag TEXT,
+        CreatedBy INT NOT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY fk_inc_job (JobNumber),
+        KEY fk_inc_user (CreatedBy),
+        CONSTRAINT fk_inc_job FOREIGN KEY (JobNumber) REFERENCES servicerequest (JobNumber) ON DELETE SET NULL,
+        CONSTRAINT fk_inc_user FOREIGN KEY (CreatedBy) REFERENCES users (UserId)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Incident log workers junction table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS incident_log_workers (
+        LogId INT NOT NULL,
+        WorkerId INT NOT NULL,
+        PRIMARY KEY (LogId, WorkerId),
+        KEY fk_ilw_worker (WorkerId),
+        CONSTRAINT fk_ilw_log FOREIGN KEY (LogId) REFERENCES incident_logs (LogId) ON DELETE CASCADE,
+        CONSTRAINT fk_ilw_worker FOREIGN KEY (WorkerId) REFERENCES worker (WorkerId) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
     console.log("Database updated successfully.");
   } catch (e) {
     console.log("Error:", e.message);
