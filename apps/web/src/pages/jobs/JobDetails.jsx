@@ -1209,7 +1209,10 @@ const JobDetails = () => {
                             const isImage = isDirectImageLink(url);
                             const isEmbeddable =
                               url.includes("drive.google.com") ||
-                              url.includes("docs.google.com");
+                              url.includes("docs.google.com") ||
+                              url.includes("onedrive.live.com") ||
+                              url.includes("1drv.ms") ||
+                              url.includes("sharepoint.com");
 
                             return (
                               <div
@@ -1303,7 +1306,9 @@ const JobDetails = () => {
                                     <iframe
                                       src={url}
                                       className="w-full h-full border-0"
-                                      allow="autoplay"
+                                      allow="autoplay; fullscreen"
+                                      allowFullScreen
+                                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                                       title={doc.DocumentType}
                                     ></iframe>
                                   </div>
@@ -1319,7 +1324,10 @@ const JobDetails = () => {
                             const isImage = isDirectImageLink(url);
                             const isEmbeddable =
                               url.includes("drive.google.com") ||
-                              url.includes("docs.google.com");
+                              url.includes("docs.google.com") ||
+                              url.includes("onedrive.live.com") ||
+                              url.includes("1drv.ms") ||
+                              url.includes("sharepoint.com");
                             const isExpanded = expandedDocId === doc.DocumentId;
 
                             return (
@@ -1420,7 +1428,9 @@ const JobDetails = () => {
                                         <iframe
                                           src={url}
                                           className="w-full h-full border-0"
-                                          allow="autoplay"
+                                          allow="autoplay; fullscreen"
+                                          allowFullScreen
+                                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                                           title={doc.DocumentType}
                                         ></iframe>
                                       </div>
