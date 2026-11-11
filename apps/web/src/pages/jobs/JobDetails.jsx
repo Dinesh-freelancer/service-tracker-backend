@@ -30,7 +30,7 @@ import WindingDetails from "../../components/jobs/WindingDetails";
 import PaymentsTab from "../../components/jobs/PaymentsTab";
 import WarrantyClaimTab from "./WarrantyClaimTab";
 import QuoteTab from "../../components/jobs/QuoteTab";
-import { extractUrlFromEmbed, isDirectImageLink } from "../../utils/helpers";
+import { extractUrlFromEmbed, isDirectImageLink, getDirectImageUrl } from "../../utils/helpers";
 import ImageViewer from "../../components/jobs/ImageViewer";
 import {
   DndContext,
@@ -1206,14 +1206,23 @@ const JobDetails = () => {
                       {docView === "grid" ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {displayedDocs.map((doc) => {
-                            const url = extractUrlFromEmbed(doc.EmbedTag);
-                            const isImage = isDirectImageLink(url);
+                            const embedUrl = extractUrlFromEmbed(doc.EmbedTag);
+                            // For Photo documents, try to get a direct <img>-compatible URL.
+                            // getDirectImageUrl converts Google Drive /preview → /uc?export=view,
+                            // OneDrive embed → download, or returns null if not possible.
+                            const directImgUrl =
+                              doc.DocumentType === "Photo" || isDirectImageLink(embedUrl)
+                                ? getDirectImageUrl(embedUrl)
+                                : null;
+                            const isImage = directImgUrl !== null;
+                            const url = isImage ? directImgUrl : embedUrl;
                             const isEmbeddable =
-                              url.includes("drive.google.com") ||
-                              url.includes("docs.google.com") ||
-                              url.includes("onedrive.live.com") ||
-                              url.includes("1drv.ms") ||
-                              url.includes("sharepoint.com");
+                              !isImage &&
+                              (url.includes("drive.google.com") ||
+                                url.includes("docs.google.com") ||
+                                url.includes("onedrive.live.com") ||
+                                url.includes("1drv.ms") ||
+                                url.includes("sharepoint.com"));
 
                             return (
                               <div
@@ -1315,14 +1324,23 @@ const JobDetails = () => {
                       ) : (
                         <div className="space-y-2">
                           {displayedDocs.map((doc) => {
-                            const url = extractUrlFromEmbed(doc.EmbedTag);
-                            const isImage = isDirectImageLink(url);
+                            const embedUrl = extractUrlFromEmbed(doc.EmbedTag);
+                            // For Photo documents, try to get a direct <img>-compatible URL.
+                            // getDirectImageUrl converts Google Drive /preview → /uc?export=view,
+                            // OneDrive embed → download, or returns null if not possible.
+                            const directImgUrl =
+                              doc.DocumentType === "Photo" || isDirectImageLink(embedUrl)
+                                ? getDirectImageUrl(embedUrl)
+                                : null;
+                            const isImage = directImgUrl !== null;
+                            const url = isImage ? directImgUrl : embedUrl;
                             const isEmbeddable =
-                              url.includes("drive.google.com") ||
-                              url.includes("docs.google.com") ||
-                              url.includes("onedrive.live.com") ||
-                              url.includes("1drv.ms") ||
-                              url.includes("sharepoint.com");
+                              !isImage &&
+                              (url.includes("drive.google.com") ||
+                                url.includes("docs.google.com") ||
+                                url.includes("onedrive.live.com") ||
+                                url.includes("1drv.ms") ||
+                                url.includes("sharepoint.com"));
                             const isExpanded = expandedDocId === doc.DocumentId;
 
                             return (

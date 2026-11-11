@@ -100,6 +100,23 @@ async function run() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
+    // Salary payments table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS salarypayments (
+        id INT NOT NULL AUTO_INCREMENT,
+        workerId INT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        paymentType ENUM('Salary','Advance','Overtime') NOT NULL DEFAULT 'Salary',
+        paymentMode VARCHAR(30) DEFAULT 'Cash',
+        notes TEXT,
+        createdtime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY fk_salarypayment_worker (workerId),
+        KEY idx_salarypayment_createdtime (createdtime),
+        CONSTRAINT fk_salarypayment_worker FOREIGN KEY (workerId) REFERENCES worker (WorkerId) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
     console.log("Database updated successfully.");
   } catch (e) {
     console.log("Error:", e.message);

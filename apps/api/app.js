@@ -92,6 +92,9 @@ app.use('/api/payments', paymentsRoutes);
 const workersRoutes = require('./routes/workers');
 app.use('/api/workers', workersRoutes);
 
+const salaryPaymentsRoutes = require('./routes/salaryPayments');
+app.use('/api/salary-payments', salaryPaymentsRoutes);
+
 const attendanceRoutes = require('./routes/attendance');
 app.use('/api/attendance', attendanceRoutes);
 

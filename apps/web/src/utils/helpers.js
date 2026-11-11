@@ -1,61 +1,82 @@
+// Determines if the URL is a direct image link (has an image file extension)
+export const isDirectImageLink = (url) => {
+    if (!url) return false;
+    return /\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i.test(url.split('#')[0]);
+};
+
+/**
+ * Extracts and normalises the URL from either a plain URL string or an
+ * <iframe ...> embed tag.  Returns a URL ready to pass to an <iframe src>.
+ */
 export const extractUrlFromEmbed = (embedString) => {
     if (!embedString) return '#';
 
     let url = embedString;
 
-    // Check if it's an iframe tag
+    // If the stored value is an <iframe> tag, pull out its src attribute
     if (embedString.trim().toLowerCase().startsWith('<iframe')) {
-        // Regex to extract the src attribute
-        const match = embedString.match(/src\s*=\s*"([^"]+)"/i) || embedString.match(/src\s*=\s*'([^']+)'/i);
+        const match =
+            embedString.match(/src\s*=\s*"([^"]+)"/i) ||
+            embedString.match(/src\s*=\s*'([^']+)'/i);
         if (match && match[1]) {
             url = match[1];
         }
     }
 
-    // Normalize Google Drive links for embedding
-    // Changes /view?usp=sharing or similar to /preview
+    // Google Drive: convert /view?usp=sharing → /preview  (iframe-friendly)
     if (url.includes('drive.google.com/file/d/')) {
-        url = url.replace(/\/view.*$/, '/preview');
+        url = url.replace(/\/view(\?.*)?$/, '/preview');
     }
 
-    // Normalize OneDrive personal sharing links for embedding
-    // e.g. https://onedrive.live.com/...?resid=...&authkey=... -> embed URL
+    // OneDrive personal: add action=embedview if not already an embed URL
     if (url.includes('onedrive.live.com') && !url.includes('embed')) {
-        // Convert view/download links to embed links
-        url = url.replace(/\/(view|download)\?/, '/embed?').replace(/\?.*$/, (match) => {
-            // Keep query params but switch action to embed
-            return match.replace(/action=[^&]*/, 'action=embedview');
-        });
-        // If no action param, append embedview
-        if (!url.includes('action=embedview') && !url.includes('embed')) {
-            url = url + (url.includes('?') ? '&' : '?') + 'action=embedview';
+        url = url.replace(/\/(view|download)\?/, '/embed?');
+        if (!url.includes('action=embedview')) {
+            url += (url.includes('?') ? '&' : '?') + 'action=embedview';
         }
     }
 
-    // Normalize OneDrive short share links (1drv.ms) — leave as-is; they redirect correctly
-    // Normalize SharePoint/OneDrive for Business document links for embedding
-    // e.g. https://tenant.sharepoint.com/:w:/s/site/FILE -> embed format
+    // SharePoint / OneDrive for Business: add action=embedview
     if (
-        (url.includes('sharepoint.com') || url.includes('-my.sharepoint.com')) &&
+        url.includes('sharepoint.com') &&
         !url.includes('embed.aspx') &&
         !url.includes('action=embedview')
     ) {
-        // Replace /:x:/ sharing prefix paths with the embed viewer
-        // Convert standard view URLs to &action=embedview
-        if (url.includes('/_layouts/')) {
-            // Already a layouts URL, try adding embedview param
-            url = url + (url.includes('?') ? '&' : '?') + 'action=embedview';
-        } else if (url.match(/\/:.\//)) {
-            // Short-form sharing URL — append embedview
-            url = url + (url.includes('?') ? '&' : '?') + 'action=embedview';
-        }
+        url += (url.includes('?') ? '&' : '?') + 'action=embedview';
     }
 
     return url;
 };
 
-// Determines if the URL is a direct image link
-export const isDirectImageLink = (url) => {
-    if (!url) return false;
-    return /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(url.split('?')[0]);
+/**
+ * Returns a URL that can be used directly in an <img src> attribute.
+ * For cloud-storage links that only work inside iframes this attempts to
+ * derive a direct download / thumbnail URL.
+ *
+ * Returns null when no reliable direct-image URL can be derived – the caller
+ * should then fall back to an iframe viewer.
+ */
+export const getDirectImageUrl = (url) => {
+    if (!url || url === '#') return null;
+
+    // Already a direct image link
+    if (isDirectImageLink(url)) return url;
+
+    // Google Drive  →  https://drive.google.com/uc?export=view&id=FILE_ID
+    // Handles /file/d/ID/view, /file/d/ID/preview, /uc?id=ID, etc.
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) {
+        return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    }
+
+    // OneDrive personal  →  swap embed/view for download
+    if (url.includes('onedrive.live.com')) {
+        return url
+            .replace(/\/(embed|view|embedview)\b/, '/download')
+            .replace(/action=embedview/, 'action=download');
+    }
+
+    // SharePoint / OneDrive for Business – no reliable unauthenticated transform;
+    // return null so the caller shows an iframe instead.
+    return null;
 };
