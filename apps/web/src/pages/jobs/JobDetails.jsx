@@ -31,6 +31,7 @@ import PaymentsTab from "../../components/jobs/PaymentsTab";
 import WarrantyClaimTab from "./WarrantyClaimTab";
 import QuoteTab from "../../components/jobs/QuoteTab";
 import { extractUrlFromEmbed, isDirectImageLink } from "../../utils/helpers";
+import ImageViewer from "../../components/jobs/ImageViewer";
 import {
   DndContext,
   closestCenter,
@@ -1294,13 +1295,7 @@ const JobDetails = () => {
 
                                 {/* Inline Viewer */}
                                 {isImage ? (
-                                  <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded overflow-hidden">
-                                    <img
-                                      src={url}
-                                      alt={doc.DocumentType}
-                                      className="w-full h-full object-contain"
-                                    />
-                                  </div>
+                                  <ImageViewer src={url} alt={doc.DocumentType} />
                                 ) : isEmbeddable ? (
                                   <div className="w-full aspect-[4/3] bg-slate-100 dark:bg-slate-900 rounded overflow-hidden relative">
                                     <iframe
@@ -1416,13 +1411,7 @@ const JobDetails = () => {
                                     </div>
 
                                     {isImage ? (
-                                      <div className="w-full max-h-[500px] flex justify-center bg-slate-200 dark:bg-slate-900 rounded overflow-hidden">
-                                        <img
-                                          src={url}
-                                          alt={doc.DocumentType}
-                                          className="max-w-full max-h-[500px] object-contain"
-                                        />
-                                      </div>
+                                      <ImageViewer src={url} alt={doc.DocumentType} />
                                     ) : isEmbeddable ? (
                                       <div className="w-full aspect-[4/3] bg-slate-200 dark:bg-slate-900 rounded overflow-hidden relative">
                                         <iframe
