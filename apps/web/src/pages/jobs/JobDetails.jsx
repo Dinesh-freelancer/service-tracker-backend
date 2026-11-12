@@ -1267,7 +1267,7 @@ const JobDetails = () => {
                                       ).toLocaleDateString()}
                                     </div>
                                     <a
-                                      href={url}
+                                      href={embedUrl}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="text-xs text-blue-500 hover:underline truncate inline-flex items-center gap-1"
@@ -1304,7 +1304,11 @@ const JobDetails = () => {
 
                                 {/* Inline Viewer */}
                                 {isImage ? (
-                                  <ImageViewer src={url} alt={doc.DocumentType} />
+                                  <ImageViewer
+                                    src={url}
+                                    fallbackUrl={embedUrl}
+                                    alt={doc.DocumentType}
+                                  />
                                 ) : isEmbeddable ? (
                                   <div className="w-full aspect-[4/3] bg-slate-100 dark:bg-slate-900 rounded overflow-hidden relative">
                                     <iframe
@@ -1429,7 +1433,11 @@ const JobDetails = () => {
                                     </div>
 
                                     {isImage ? (
-                                      <ImageViewer src={url} alt={doc.DocumentType} />
+                                      <ImageViewer
+                                        src={url}
+                                        fallbackUrl={embedUrl}
+                                        alt={doc.DocumentType}
+                                      />
                                     ) : isEmbeddable ? (
                                       <div className="w-full aspect-[4/3] bg-slate-200 dark:bg-slate-900 rounded overflow-hidden relative">
                                         <iframe

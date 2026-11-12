@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Image, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { parseJwt } from '../../utils/auth';
-import { extractUrlFromEmbed, isDirectImageLink } from '../../utils/helpers';
+import { extractUrlFromEmbed, isDirectImageLink, getDirectImageUrl } from '../../utils/helpers';
+import ImageViewer from '../../components/jobs/ImageViewer';
 
 const MyDocuments = () => {
     const [documents, setDocuments] = useState([]);
@@ -70,9 +71,20 @@ const MyDocuments = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {documents.map(doc => {
-                        const url = extractUrlFromEmbed(doc.EmbedTag);
-                        const isImage = isDirectImageLink(url);
-                        const isEmbeddable = url.includes('drive.google.com') || url.includes('docs.google.com');
+                        const embedUrl = extractUrlFromEmbed(doc.EmbedTag);
+                        const directImgUrl =
+                            doc.DocumentType === 'Photo' || isDirectImageLink(embedUrl)
+                                ? getDirectImageUrl(embedUrl)
+                                : null;
+                        const isImage = directImgUrl !== null;
+                        const url = isImage ? directImgUrl : embedUrl;
+                        const isEmbeddable =
+                            !isImage &&
+                            (url.includes('drive.google.com') ||
+                                url.includes('docs.google.com') ||
+                                url.includes('onedrive.live.com') ||
+                                url.includes('1drv.ms') ||
+                                url.includes('sharepoint.com'));
 
                         return (
                             <div key={doc.DocumentId} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow flex flex-col h-full">
@@ -92,12 +104,19 @@ const MyDocuments = () => {
                                 {/* Inline Viewer */}
                                 <div className="flex-1 flex flex-col justify-end">
                                     {isImage ? (
-                                        <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded overflow-hidden mb-4 relative">
-                                            <img src={url} alt={doc.DocumentType} className="w-full h-full object-contain absolute inset-0" />
+                                        <div className="mb-4">
+                                            <ImageViewer src={url} fallbackUrl={embedUrl} alt={doc.DocumentType} />
                                         </div>
                                     ) : isEmbeddable ? (
                                         <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded overflow-hidden mb-4 relative">
-                                            <iframe src={url} className="w-full h-full border-0 absolute inset-0" allow="autoplay" title={doc.DocumentType}></iframe>
+                                            <iframe
+                                                src={url}
+                                                className="w-full h-full border-0 absolute inset-0"
+                                                allow="autoplay; fullscreen"
+                                                allowFullScreen
+                                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+                                                title={doc.DocumentType}
+                                            ></iframe>
                                         </div>
                                     ) : (
                                         <div className="w-full aspect-video bg-slate-50 dark:bg-slate-900/50 rounded flex flex-col items-center justify-center mb-4 text-slate-400">
@@ -107,7 +126,7 @@ const MyDocuments = () => {
                                     )}
 
                                     <a
-                                        href={url}
+                                        href={embedUrl}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="block w-full text-center py-2 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm text-blue-600 dark:text-blue-400 transition-colors mt-auto shrink-0"

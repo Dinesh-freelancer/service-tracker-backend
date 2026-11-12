@@ -11,15 +11,18 @@ export const isDirectImageLink = (url) => {
 export const extractUrlFromEmbed = (embedString) => {
     if (!embedString) return '#';
 
-    let url = embedString;
+    let url = embedString.trim();
 
-    // If the stored value is an <iframe> tag, pull out its src attribute
-    if (embedString.trim().toLowerCase().startsWith('<iframe')) {
+    // If the stored value is an <iframe> or <img> tag, pull out its src attribute
+    if (
+        url.toLowerCase().startsWith('<iframe') ||
+        url.toLowerCase().startsWith('<img')
+    ) {
         const match =
-            embedString.match(/src\s*=\s*"([^"]+)"/i) ||
-            embedString.match(/src\s*=\s*'([^']+)'/i);
+            url.match(/src\s*=\s*"([^"]+)"/i) ||
+            url.match(/src\s*=\s*'([^']+)'/i);
         if (match && match[1]) {
-            url = match[1];
+            url = match[1].replace(/&amp;/gi, '&');
         }
     }
 
@@ -62,18 +65,23 @@ export const getDirectImageUrl = (url) => {
     // Already a direct image link
     if (isDirectImageLink(url)) return url;
 
-    // Google Drive  →  https://drive.google.com/uc?export=view&id=FILE_ID
-    // Handles /file/d/ID/view, /file/d/ID/preview, /uc?id=ID, etc.
-    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    // Google Drive  →  thumbnail endpoint works directly in <img src>
+    // (drive.google.com/uc?export=view is blocked by Google's CORP/ORB policy in <img> tags)
+    const driveMatch =
+        url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+        url.match(/drive\.google\.com\/(?:open|uc|thumbnail)\?.*?\bid=([a-zA-Z0-9_-]+)/);
     if (driveMatch) {
-        return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+        return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1600`;
     }
 
-    // OneDrive personal  →  swap embed/view for download
+    // OneDrive personal  →  /embed URLs for photos serve the image directly in <img>
+    // (swapping /embed to /download fails in <img>; strip action=embedview if added)
     if (url.includes('onedrive.live.com')) {
         return url
-            .replace(/\/(embed|view|embedview)\b/, '/download')
-            .replace(/action=embedview/, 'action=download');
+            .replace(/\/(view|download)\b/, '/embed')
+            .replace(/([?&])action=(embedview|download)(&|$)/, (m, p1, _p2, p3) =>
+                p3 === '&' ? p1 : ''
+            );
     }
 
     // SharePoint / OneDrive for Business – no reliable unauthenticated transform;

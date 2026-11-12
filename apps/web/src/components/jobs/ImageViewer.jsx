@@ -1,21 +1,35 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 
 /**
  * ImageViewer – displays an image fitted to its container with
  * zoom-in / zoom-out / reset controls and mouse-drag panning when zoomed.
+ * Falls back to an embedded <iframe> if the direct <img> fails to load.
  *
  * Props:
- *   src   – image URL
- *   alt   – alt text
- *   className – extra classes applied to the outer wrapper div
+ *   src         – direct image URL
+ *   fallbackUrl – optional iframe-compatible embed URL if <img> fails
+ *   alt         – alt text
+ *   className   – extra classes applied to the outer wrapper div
  */
-export default function ImageViewer({ src, alt = "Image", className = "" }) {
+export default function ImageViewer({
+  src,
+  fallbackUrl = null,
+  alt = "Image",
+  className = "",
+}) {
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const dragStart = useRef(null);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    setImgError(false);
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  }, [src]);
 
   const MIN_SCALE = 1;
   const MAX_SCALE = 5;
@@ -76,6 +90,24 @@ export default function ImageViewer({ src, alt = "Image", className = "" }) {
     zoom(e.deltaY < 0 ? STEP : -STEP);
   };
 
+  if (imgError && fallbackUrl) {
+    return (
+      <div
+        className={`relative w-full bg-slate-100 dark:bg-slate-900 rounded overflow-hidden ${className}`}
+        style={{ aspectRatio: "4/3" }}
+      >
+        <iframe
+          src={fallbackUrl}
+          className="w-full h-full border-0"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+          title={alt}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative w-full bg-slate-100 dark:bg-slate-900 rounded overflow-hidden select-none ${className}`}
@@ -96,6 +128,7 @@ export default function ImageViewer({ src, alt = "Image", className = "" }) {
           src={src}
           alt={alt}
           draggable={false}
+          onError={() => setImgError(true)}
           style={{
             transform: `scale(${scale}) translate(${offset.x / scale}px, ${offset.y / scale}px)`,
             transformOrigin: "center center",
