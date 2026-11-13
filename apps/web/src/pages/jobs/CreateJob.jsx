@@ -6,11 +6,14 @@ import toast from 'react-hot-toast';
 
 const CreateJob = () => {
     const navigate = useNavigate();
+    const role = localStorage.getItem('role');
+    const isOwnerOrAdmin = role === 'Owner' || role === 'Admin';
     const { register, handleSubmit, watch, control, setValue, getValues, formState: { errors } } = useForm({
                 defaultValues: {
             JobNumber: '',
             DateReceived: new Date().toISOString().split('T')[0],
             Notes: '',
+            FolderLink: '',
             Brand: '',
             PumpModel: '',
             MotorModel: '',
@@ -200,6 +203,10 @@ const CreateJob = () => {
                 IsWarranty: data.IsWarranty || false,
                 BillingType: data.BillingType || 'Chargeable'
             };
+
+            if (isOwnerOrAdmin && data.FolderLink && data.FolderLink.trim() !== '') {
+                payload.FolderLink = data.FolderLink.trim();
+            }
 
             if (isNewAsset) {
                 payload.NewAsset = {
@@ -545,6 +552,20 @@ const CreateJob = () => {
                                     </select>
                                 </div>
                             </div>
+
+                            {isOwnerOrAdmin && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                        Google Drive Folder Link <span className="text-xs text-slate-400 font-normal">(Optional, Owner/Admin only)</span>
+                                    </label>
+                                    <input
+                                        type="url"
+                                        {...register('FolderLink')}
+                                        placeholder="https://drive.google.com/drive/folders/..."
+                                        className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Issue Description / Notes</label>

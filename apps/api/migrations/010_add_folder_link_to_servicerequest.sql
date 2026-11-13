@@ -1,0 +1,2 @@
+ALTER TABLE `servicerequest`
+ADD COLUMN `FolderLink` VARCHAR(512) NULL DEFAULT NULL;

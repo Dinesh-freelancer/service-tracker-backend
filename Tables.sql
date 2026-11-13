@@ -252,6 +252,7 @@ CREATE TABLE IF NOT EXISTS `servicerequest` (
   `ServicesNeeded` json DEFAULT NULL,
   `IsWarranty` tinyint(1) NOT NULL DEFAULT '0',
   `BillingType` enum('Chargeable','Free of Cost','Split Bill') NOT NULL DEFAULT 'Chargeable',
+  `FolderLink` varchar(512) DEFAULT NULL,
   PRIMARY KEY (`JobNumber`),
   KEY `fk_sr_asset` (`AssetId`),
   KEY `fk_sr_customer` (`CustomerId`),

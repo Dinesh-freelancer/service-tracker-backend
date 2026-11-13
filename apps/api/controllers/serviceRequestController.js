@@ -4,6 +4,15 @@ const partsUsedModel = require('../models/partsUsedModel');
 const documentModel = require('../models/documentModel');
 const { logAudit } = require('../utils/auditLogger');
 const { filterServiceRequest, filterServiceRequestList } = require('../utils/responseFilter');
+
+function isValidHttpUrl(value) {
+    try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
 const { AUTH_ROLE_CUSTOMER } = require('../utils/constants');
 const { getPagination, getPaginationData } = require('../utils/paginationHelper');
 const { buildSearchFilters } = require('../utils/queryHelper');
@@ -135,6 +144,19 @@ async function createServiceRequest(req, res, next) {
         const { NewAsset, ...jobData } = req.body;
         let assetId = jobData.AssetId;
 
+        // Only Owner/Admin may set FolderLink
+        let folderLink = null;
+        if (jobData.FolderLink !== undefined && jobData.FolderLink !== null && String(jobData.FolderLink).trim() !== '') {
+            if (req.user && !['Owner', 'Admin'].includes(req.user.Role)) {
+                return res.status(403).json({ error: 'Access denied: Only Owner or Admin can set FolderLink.' });
+            }
+            const trimmedFolderLink = String(jobData.FolderLink).trim();
+            if (trimmedFolderLink.length > 512 || !isValidHttpUrl(trimmedFolderLink)) {
+                return res.status(400).json({ error: 'FolderLink must be a valid http(s) URL (max 512 characters).' });
+            }
+            folderLink = trimmedFolderLink;
+        }
+
         connection = await pool.getConnection();
         await connection.beginTransaction();
 
@@ -188,7 +210,8 @@ async function createServiceRequest(req, res, next) {
                 ResolutionType: null,
                 Notes: jobData.Notes || '',
                 IsWarranty: jobData.IsWarranty ? 1 : 0,
-                BillingType: jobData.BillingType || 'Chargeable'
+                BillingType: jobData.BillingType || 'Chargeable',
+                FolderLink: folderLink
             };
 
             const serviceRequest = await serviceRequestModel.addServiceRequest(finalJobData, connection);
@@ -237,11 +260,23 @@ async function updateServiceRequest(req, res, next) {
         // IDOR and Security Check for Customer Role
 
         if (req.user && req.user.Role === 'Worker') {
-            const forbiddenKeys = ['BilledAmount', 'PaymentStatus', 'EstimatedAmount'];
+            const forbiddenKeys = ['BilledAmount', 'PaymentStatus', 'EstimatedAmount', 'FolderLink'];
             for (const key of forbiddenKeys) {
                 if (updates[key] !== undefined) {
                     return res.status(403).json({ error: `Access denied: Workers cannot update field: ${key}` });
                 }
+            }
+        }
+
+        if (updates.FolderLink !== undefined) {
+            if (updates.FolderLink === null || String(updates.FolderLink).trim() === '') {
+                updates.FolderLink = null;
+            } else {
+                const trimmedFolderLink = String(updates.FolderLink).trim();
+                if (trimmedFolderLink.length > 512 || !isValidHttpUrl(trimmedFolderLink)) {
+                    return res.status(400).json({ error: 'FolderLink must be a valid http(s) URL (max 512 characters).' });
+                }
+                updates.FolderLink = trimmedFolderLink;
             }
         }
 

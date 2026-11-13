@@ -49,7 +49,13 @@ const createServiceRequestValidators = [
     // Optional because we might pass AssetId OR NewAsset object
     body('AssetId').optional().isInt(),
     // Validate NewAsset object if present? Handled in controller logic or custom validator here.
-    body('DateReceived').notEmpty().isISO8601().toDate().withMessage('Valid Date Received is required')
+    body('DateReceived').notEmpty().isISO8601().toDate().withMessage('Valid Date Received is required'),
+    body('FolderLink')
+        .optional({ values: 'falsy' })
+        .isURL({ protocols: ['http', 'https'], require_protocol: true })
+        .withMessage('FolderLink must be a valid http(s) URL')
+        .isLength({ max: 512 })
+        .withMessage('FolderLink must be at most 512 characters')
 ];
 
 const validateAsset = [

@@ -89,6 +89,7 @@ function filterServiceRequest(job, role) {
         filtered.IsWarranty = job.IsWarranty;
         filtered.BillingType = job.BillingType;
         filtered.PaymentStatus = job.PaymentStatus;
+        filtered.FolderLink = job.FolderLink || null;
     } else {
         filtered.EstimatedAmount = STRING_HIDDEN;
         filtered.BilledAmount = STRING_HIDDEN;

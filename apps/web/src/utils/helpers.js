@@ -88,3 +88,28 @@ export const getDirectImageUrl = (url) => {
     // return null so the caller shows an iframe instead.
     return null;
 };
+
+/**
+ * Extracts a Google Drive folder ID from a Drive folder URL.
+ * Supports /drive/folders/<ID>, /drive/u/0/folders/<ID>, and embeddedfolderview?id=<ID>.
+ */
+export const extractDriveFolderId = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    const folderMatch = trimmed.match(/drive\.google\.com\/(?:drive\/(?:u\/\d+\/)?)?folders\/([a-zA-Z0-9_-]+)/);
+    if (folderMatch && folderMatch[1]) return folderMatch[1];
+    const embedMatch = trimmed.match(/drive\.google\.com\/embeddedfolderview\?[^#]*\bid=([a-zA-Z0-9_-]+)/);
+    if (embedMatch && embedMatch[1]) return embedMatch[1];
+    return null;
+};
+
+/**
+ * Returns an embeddable Google Drive folder URL (embeddedfolderview) for
+ * folders shared as "Anyone with the link can view", or null if not a Drive folder URL.
+ */
+export const getDriveFolderEmbedUrl = (url, view = 'grid') => {
+    const folderId = extractDriveFolderId(url);
+    if (!folderId) return null;
+    const safeView = view === 'list' ? 'list' : 'grid';
+    return `https://drive.google.com/embeddedfolderview?id=${folderId}#${safeView}`;
+};

@@ -24,13 +24,17 @@ import {
   Grid,
   ChevronDown,
   ChevronUp,
+  FolderOpen,
+  ExternalLink,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import WindingDetails from "../../components/jobs/WindingDetails";
 import PaymentsTab from "../../components/jobs/PaymentsTab";
 import WarrantyClaimTab from "./WarrantyClaimTab";
 import QuoteTab from "../../components/jobs/QuoteTab";
-import { extractUrlFromEmbed, isDirectImageLink, getDirectImageUrl } from "../../utils/helpers";
+import { extractUrlFromEmbed, isDirectImageLink, getDirectImageUrl, getDriveFolderEmbedUrl } from "../../utils/helpers";
 import ImageViewer from "../../components/jobs/ImageViewer";
 import {
   DndContext,
@@ -163,6 +167,14 @@ const JobDetails = () => {
   const role = localStorage.getItem("role"); // Assuming role is stored or decoded from token
   const isCustomer = role === "Customer";
   const isWorker = role === "Worker";
+  const isOwnerOrAdmin = role === "Owner" || role === "Admin";
+
+  // Drive Folder Link state (Owner/Admin only)
+  const [editingFolderLink, setEditingFolderLink] = useState(false);
+  const [folderLinkInput, setFolderLinkInput] = useState("");
+  const [savingFolderLink, setSavingFolderLink] = useState(false);
+  const [showFolderPreview, setShowFolderPreview] = useState(false);
+  const [folderPreviewMode, setFolderPreviewMode] = useState("grid");
 
   const [editingJobInfo, setEditingJobInfo] = useState(false);
   const [jobInfoForm, setJobInfoForm] = useState({
@@ -426,6 +438,7 @@ const JobDetails = () => {
     }
   };
 
+
   const handleDeleteDoc = async (docId) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
     try {
@@ -443,6 +456,7 @@ const JobDetails = () => {
       toast.error(err.message);
     }
   };
+
 
   const handleEditAssetClick = () => {
     setEditAssetData({
@@ -494,6 +508,7 @@ const JobDetails = () => {
     }
   };
 
+
   const handleUpdatePartQty = async () => {
     if (!editingPart || editPartQty <= 0) return;
     try {
@@ -516,6 +531,7 @@ const JobDetails = () => {
       toast.error(err.message);
     }
   };
+
 
   const handleAddPart = async () => {
     if (!selectedPart) return;
@@ -552,6 +568,7 @@ const JobDetails = () => {
     }
   };
 
+
   const handleAddDoc = async () => {
     if (!docLink) return;
     try {
@@ -586,6 +603,50 @@ const JobDetails = () => {
       toast.error(err.message);
     }
   };
+
+  const handleSaveFolderLink = async (linkValue) => {
+    const trimmed = (linkValue ?? "").trim();
+    if (trimmed) {
+      try {
+        const parsed = new URL(trimmed);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          toast.error("Please enter a valid http(s) URL");
+          return;
+        }
+      } catch {
+        toast.error("Please enter a valid URL");
+        return;
+      }
+    }
+
+    setSavingFolderLink(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${apiUrl}/jobs/${jobNumber}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ FolderLink: trimmed || null }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to update folder link");
+      }
+
+      toast.success(trimmed ? "Drive folder link saved" : "Drive folder link removed");
+      setEditingFolderLink(false);
+      if (!trimmed) setShowFolderPreview(false);
+      fetchJob();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSavingFolderLink(false);
+    }
+  };
+
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
   if (!job) return null;
@@ -1165,6 +1226,160 @@ const JobDetails = () => {
               {/* Job Docs View */}
               {activeTab === "job-docs" && (
                 <div className="space-y-4">
+                  {/* Google Drive Folder Card (Owner/Admin only) */}
+                  {isOwnerOrAdmin && (
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shrink-0">
+                            <FolderOpen size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                              Google Drive Folder
+                            </h4>
+                            {job.FolderLink && !editingFolderLink ? (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-md">
+                                {job.FolderLink}
+                              </p>
+                            ) : (
+                              !editingFolderLink && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  No Drive folder linked to this job yet.
+                                </p>
+                              )
+                            )}
+                          </div>
+                        </div>
+
+                        {!editingFolderLink && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            {job.FolderLink ? (
+                              <>
+                                <a
+                                  href={job.FolderLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                                >
+                                  <ExternalLink size={14} />
+                                  Open Drive Folder
+                                </a>
+                                {getDriveFolderEmbedUrl(job.FolderLink, folderPreviewMode) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowFolderPreview((prev) => !prev)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                  >
+                                    {showFolderPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    {showFolderPreview ? "Hide Preview" : "Preview Folder"}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFolderLinkInput(job.FolderLink || "");
+                                    setEditingFolderLink(true);
+                                  }}
+                                  className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition-colors"
+                                  title="Edit Folder Link"
+                                >
+                                  <Edit size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm("Remove the Google Drive folder link from this job?")) {
+                                      handleSaveFolderLink("");
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition-colors"
+                                  title="Remove Folder Link"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFolderLinkInput("");
+                                  setEditingFolderLink(true);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                              >
+                                <Plus size={14} />
+                                Add Drive Folder Link
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {editingFolderLink && (
+                        <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                          <input
+                            type="url"
+                            placeholder="https://drive.google.com/drive/folders/..."
+                            value={folderLinkInput}
+                            onChange={(e) => setFolderLinkInput(e.target.value)}
+                            className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={savingFolderLink}
+                              onClick={() => handleSaveFolderLink(folderLinkInput)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                            >
+                              <Save size={14} />
+                              {savingFolderLink ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={savingFolderLink}
+                              onClick={() => setEditingFolderLink(false)}
+                              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {showFolderPreview && job.FolderLink && getDriveFolderEmbedUrl(job.FolderLink, folderPreviewMode) && (
+                        <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              Inline preview requires the folder to be shared as &ldquo;Anyone with the link can view&rdquo;. Use &ldquo;Open Drive Folder&rdquo; for private folders.
+                            </span>
+                            <div className="flex bg-slate-200/70 dark:bg-slate-700 rounded-lg p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => setFolderPreviewMode("grid")}
+                                className={`px-2 py-1 text-xs rounded-md transition-colors ${folderPreviewMode === "grid" ? "bg-white dark:bg-slate-800 shadow-sm text-blue-600 font-medium" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                              >
+                                Grid
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setFolderPreviewMode("list")}
+                                className={`px-2 py-1 text-xs rounded-md transition-colors ${folderPreviewMode === "list" ? "bg-white dark:bg-slate-800 shadow-sm text-blue-600 font-medium" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                              >
+                                List
+                              </button>
+                            </div>
+                          </div>
+                          <iframe
+                            src={getDriveFolderEmbedUrl(job.FolderLink, folderPreviewMode)}
+                            title="Google Drive Folder Preview"
+                            className="w-full h-96 rounded-lg border border-slate-200 dark:border-slate-700 bg-white"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium text-slate-900 dark:text-white">
                       Documents
