@@ -5,8 +5,8 @@ import toast from 'react-hot-toast';
 const SlotTurnsBuilder = ({ title, data, onChange }) => {
     // Initial state setup. Only initialize once if data is present.
     const [rows, setRows] = useState(() => {
-        if (data && Object.keys(data).length > 0) {
-            return Object.entries(data).map(([pitch, turns]) => ({ pitch, turns }));
+        if (Array.isArray(data) && data.length > 0) {
+            return data.map(item => ({ pitch: item.pitch ?? '', turns: item.turns ?? '' }));
         }
         return [{ pitch: '', turns: '' }];
     });
@@ -16,8 +16,8 @@ const SlotTurnsBuilder = ({ title, data, onChange }) => {
 
     useEffect(() => {
         // Sync internal state ONLY on first meaningful data load to prevent overwriting active typing
-        if (!initialized && data && Object.keys(data).length > 0) {
-             setRows(Object.entries(data).map(([pitch, turns]) => ({ pitch, turns })));
+        if (!initialized && Array.isArray(data) && data.length > 0) {
+             setRows(data.map(item => ({ pitch: item.pitch ?? '', turns: item.turns ?? '' })));
              setInitialized(true);
         }
     }, [data, initialized]);
@@ -46,18 +46,15 @@ const SlotTurnsBuilder = ({ title, data, onChange }) => {
     };
 
     const updateParent = (currentRows) => {
-        const jsonObj = {};
-        currentRows.forEach(row => {
-            // Safely handle values, ensure they are strings before trimming
-            const safePitch = String(row.pitch || '').trim();
-            const safeTurns = String(row.turns || '').trim();
+        const validRows = currentRows
+            .map(row => ({
+                pitch: String(row.pitch || '').trim(),
+                turns: String(row.turns || '').trim()
+            }))
+            // Only add fully formed pairs to the final JSON to avoid empty pitch or turns
+            .filter(row => row.pitch !== '' && row.turns !== '');
 
-            // Only add fully formed pairs to the final JSON to avoid {"": "50"} or {"1-8": ""}
-            if (safePitch !== '' && safeTurns !== '') {
-                jsonObj[safePitch] = safeTurns;
-            }
-        });
-        onChange(jsonObj);
+        onChange(validRows);
     };
 
     return (
@@ -117,7 +114,7 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
         wire_id_start: '', wire_od_start: '',
         wire_id_3phase: '', wire_od_3phase: '',
         turns_run: '', turns_start: '', turns_3phase: '',
-        slot_turns_run: {}, slot_turns_start: {}, slot_turns_3phase: {},
+        slot_turns_run: [], slot_turns_start: [], slot_turns_3phase: [],
         weight: '', weight_run: '', weight_start: '',
         notes: ''
     });
@@ -148,10 +145,10 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                             weight: data.weight ?? '',
                             weight_run: data.weight_run ?? '',
                             weight_start: data.weight_start ?? '',
-                            // Ensure JSON fields are objects even if null from DB
-                            slot_turns_run: data.slot_turns_run || {},
-                            slot_turns_start: data.slot_turns_start || {},
-                            slot_turns_3phase: data.slot_turns_3phase || {},
+                            // Ensure JSON fields are arrays even if null from DB
+                            slot_turns_run: Array.isArray(data.slot_turns_run) ? data.slot_turns_run : [],
+                            slot_turns_start: Array.isArray(data.slot_turns_start) ? data.slot_turns_start : [],
+                            slot_turns_3phase: Array.isArray(data.slot_turns_3phase) ? data.slot_turns_3phase : [],
                         }));
                     }
                 }
@@ -226,9 +223,9 @@ const WindingDetails = ({ assetId, phase, defaultHp }) => {
                     weight: updatedData.weight ?? '',
                     weight_run: updatedData.weight_run ?? '',
                     weight_start: updatedData.weight_start ?? '',
-                    slot_turns_run: updatedData.slot_turns_run || {},
-                    slot_turns_start: updatedData.slot_turns_start || {},
-                    slot_turns_3phase: updatedData.slot_turns_3phase || {},
+                    slot_turns_run: Array.isArray(updatedData.slot_turns_run) ? updatedData.slot_turns_run : [],
+                    slot_turns_start: Array.isArray(updatedData.slot_turns_start) ? updatedData.slot_turns_start : [],
+                    slot_turns_3phase: Array.isArray(updatedData.slot_turns_3phase) ? updatedData.slot_turns_3phase : [],
                 }));
             }
 

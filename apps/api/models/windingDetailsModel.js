@@ -23,7 +23,15 @@ async function getWindingDetailsByAssetId(assetId) {
         `SELECT * FROM windingdetails WHERE AssetId = ?`,
          [assetId]
     );
-    return rows.length > 0 ? rows[0] : null;
+    if (rows.length === 0) return null;
+
+    const details = rows[0];
+    JSON_COLUMNS.forEach(field => {
+        if (typeof details[field] === 'string') {
+            try { details[field] = JSON.parse(details[field]); } catch (e) {}
+        }
+    });
+    return details;
 }
 
 // Upsert winding details (Insert or Update if exists)
