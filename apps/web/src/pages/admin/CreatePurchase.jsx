@@ -12,6 +12,11 @@ import Modal from '../../components/ui/Modal';
 const itemSchema = z.object({
   PartId: z.number().min(1, 'Part is required'),
   PartName: z.string().min(1, 'Part Name is required'),
+  Make: z.string().optional(),
+  Size: z.string().optional(),
+  LocationId: z.string().optional(),
+  PackType: z.string().optional(),
+  UnitsPerPack: z.number().min(0.01).optional(),
   Qty: z.number().min(0.01, 'Quantity must be greater than 0'),
   UnitPrice: z.number().min(0, 'Unit Price must be 0 or greater')
 });
@@ -35,6 +40,7 @@ const CreatePurchase = () => {
   const navigate = useNavigate();
   const [suppliers, setSuppliers] = useState([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
+  const [locations, setLocations] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // New Supplier Modal logic
@@ -80,7 +86,22 @@ const CreatePurchase = () => {
 
   useEffect(() => {
     fetchSuppliers();
+    fetchLocations();
   }, []);
+
+  const fetchLocations = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/locations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLocations(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchSuppliers = async () => {
     try {
@@ -169,6 +190,11 @@ const CreatePurchase = () => {
        append({
          PartId: part.PartId,
          PartName: part.PartName,
+         Make: part.Make || '',
+         Size: part.Size || '',
+         LocationId: locations[0]?.LocationId ? String(locations[0].LocationId) : '',
+         PackType: 'Loose',
+         UnitsPerPack: 1,
          Qty: 1,
          UnitPrice: parseFloat(part.DefaultCostPrice) || 0
        });
@@ -194,7 +220,12 @@ const CreatePurchase = () => {
         items: data.items.map(item => ({
           PartId: item.PartId,
           Qty: item.Qty,
-          UnitPrice: item.UnitPrice
+          UnitPrice: item.UnitPrice,
+          ...(item.LocationId ? {
+            LocationId: parseInt(item.LocationId, 10),
+            PackType: item.PackType || 'Loose',
+            UnitsPerPack: item.UnitsPerPack || 1
+          } : {})
         }))
       };
 
@@ -340,8 +371,15 @@ const CreatePurchase = () => {
                                 className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex justify-between items-center border-b border-slate-100 dark:border-slate-700 last:border-0"
                             >
                                 <div>
-                                    <div className="font-medium text-slate-900 dark:text-white">{part.PartName}</div>
-                                    <div className="text-xs text-slate-500">Current Stock: {part.QuantityInStock}</div>
+                                    <div className="font-medium text-slate-900 dark:text-white">
+                                        {part.PartName}
+                                        {(part.Make || part.Size) && (
+                                            <span className="text-xs font-normal text-slate-500 ml-2">
+                                                ({[part.Make, part.Size].filter(Boolean).join(' / ')})
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="text-xs text-slate-500">Current Stock: {part.QuantityInStock} {part.Unit}</div>
                                 </div>
                                 <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
                                     <Plus size={14} /> Add
@@ -358,6 +396,9 @@ const CreatePurchase = () => {
                     <thead>
                         <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">
                             <th className="p-3 font-semibold rounded-tl-lg">Part Name</th>
+                            <th className="p-3 font-semibold w-44">Location</th>
+                            <th className="p-3 font-semibold w-28">Pack</th>
+                            <th className="p-3 font-semibold w-24">Units/Pack</th>
                             <th className="p-3 font-semibold w-24">Qty</th>
                             <th className="p-3 font-semibold w-32">Unit Price (Cost)</th>
                             <th className="p-3 font-semibold w-32 text-right">Total</th>
@@ -367,7 +408,7 @@ const CreatePurchase = () => {
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                         {fields.length === 0 ? (
                              <tr>
-                                <td colSpan="5" className="p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                                <td colSpan="8" className="p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                                     No items added yet. Search above to add parts.
                                 </td>
                              </tr>
@@ -376,8 +417,40 @@ const CreatePurchase = () => {
                                 <tr key={field.id} className="group">
                                     <td className="p-3">
                                         <div className="font-medium text-slate-900 dark:text-white text-sm">{field.PartName}</div>
+                                        {(field.Make || field.Size) && (
+                                            <div className="text-xs text-slate-500">{[field.Make, field.Size].filter(Boolean).join(' • ')}</div>
+                                        )}
                                         <input type="hidden" {...register(`items.${index}.PartId`, { valueAsNumber: true })} />
                                         <input type="hidden" {...register(`items.${index}.PartName`)} />
+                                    </td>
+                                    <td className="p-3">
+                                        <select
+                                            {...register(`items.${index}.LocationId`)}
+                                            className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                                        >
+                                            <option value="">No Location</option>
+                                            {locations.map(loc => (
+                                                <option key={loc.LocationId} value={loc.LocationId}>{loc.FullPath || loc.Name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="p-3">
+                                        <select
+                                            {...register(`items.${index}.PackType`)}
+                                            className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                                        >
+                                            {['Loose', 'Packet', 'Box', 'Carton', 'Roll', 'Set'].map(p => (
+                                                <option key={p} value={p}>{p}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="p-3">
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            {...register(`items.${index}.UnitsPerPack`, { valueAsNumber: true })}
+                                            className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                                        />
                                     </td>
                                     <td className="p-3">
                                         <input
