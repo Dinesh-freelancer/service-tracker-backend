@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   `PartName` varchar(100) NOT NULL,
   `Make` varchar(100) NOT NULL DEFAULT '',
   `Size` varchar(100) NOT NULL DEFAULT '',
+  `Attributes` json DEFAULT NULL,
   `Unit` varchar(10) DEFAULT 'Nos',
   `HSNCode` varchar(20) DEFAULT NULL,
   `DefaultCostPrice` decimal(10,2) DEFAULT NULL,

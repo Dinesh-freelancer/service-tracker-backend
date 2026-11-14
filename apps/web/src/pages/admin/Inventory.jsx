@@ -67,6 +67,10 @@ const Inventory = () => {
   const [itemTagSuggestions, setItemTagSuggestions] = useState([]);
   const itemTagTimeoutRef = useRef(null);
 
+  // Item Modal Attributes (key/value rows)
+  const [itemAttrs, setItemAttrs] = useState([]);
+  const [attrKeySuggestions, setAttrKeySuggestions] = useState([]);
+
   // Stock Locations Modal (per part)
   const [stockModalItem, setStockModalItem] = useState(null);
   const [partStockRows, setPartStockRows] = useState([]);
@@ -127,7 +131,28 @@ const Inventory = () => {
 
   useEffect(() => {
     fetchLocations();
+    (async () => {
+      try {
+        const res = await fetch(`${apiUrl}/inventory/attribute-keys`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) setAttrKeySuggestions(await res.json());
+      } catch (err) {
+        console.error(err);
+      }
+    })();
   }, []);
+
+  const attrsToPayload = () => {
+    const obj = {};
+    itemAttrs.forEach(({ key, value }) => {
+      if (key.trim() && String(value).trim()) obj[key.trim()] = String(value).trim();
+    });
+    return obj;
+  };
+
+  const errMsg = (result, fallback) =>
+    (typeof result?.error === 'string' ? result.error : result?.error?.message) || result?.message || fallback;
 
   // Fetch Inventory
   const fetchInventory = async () => {
@@ -147,7 +172,7 @@ const Inventory = () => {
       if (!res.ok) throw new Error('Failed to load inventory');
       const data = await res.json();
       setItems(data.data || []);
-      setTotalPages(data.totalPages || 1);
+      setTotalPages(data.pagination?.totalPages || data.totalPages || 1);
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -250,6 +275,7 @@ const Inventory = () => {
       Supplier: ''
     });
     setItemTags([]);
+    setItemAttrs([]);
     setItemTagInput('');
     setItemTagSuggestions([]);
     setIsAddOpen(true);
@@ -257,7 +283,7 @@ const Inventory = () => {
 
   const onSubmitAdd = async (data) => {
     try {
-      const payload = { ...data, Tags: itemTags };
+      const payload = { ...data, Tags: itemTags, Attributes: attrsToPayload() };
       const res = await fetch(`${apiUrl}/inventory`, {
         method: 'POST',
         headers: {
@@ -268,7 +294,7 @@ const Inventory = () => {
       });
 
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Failed to add item');
+      if (!res.ok) throw new Error(errMsg(result, 'Failed to add item'));
 
       toast.success('Item added successfully');
       setIsAddOpen(false);
@@ -291,6 +317,7 @@ const Inventory = () => {
     setValue('DefaultSellingPrice', String(item.DefaultSellingPrice || 0));
     setValue('Supplier', item.Supplier || '');
     setItemTags((item.Tags || []).map(t => t.TagName || t));
+    setItemAttrs(Object.entries(item.Attributes || {}).map(([key, value]) => ({ key, value: String(value) })));
     setItemTagInput('');
     setItemTagSuggestions([]);
     setIsEditOpen(true);
@@ -298,7 +325,7 @@ const Inventory = () => {
 
   const onSubmitEdit = async (data) => {
     try {
-      const payload = { ...data, Tags: itemTags };
+      const payload = { ...data, Tags: itemTags, Attributes: attrsToPayload() };
       const res = await fetch(`${apiUrl}/inventory/${selectedItem.PartId}`, {
         method: 'PUT',
         headers: {
@@ -310,7 +337,7 @@ const Inventory = () => {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || errData.message || 'Failed to update item');
+        throw new Error(errMsg(errData, 'Failed to update item'));
       }
 
       toast.success('Item updated');
@@ -575,6 +602,15 @@ const Inventory = () => {
                         {item.Supplier || 'No Supplier'}
                         {item.LastUpdated && ` • Updated ${new Date(item.LastUpdated).toLocaleDateString()}`}
                       </div>
+                      {Object.keys(item.Attributes || {}).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {Object.entries(item.Attributes).map(([k, v]) => (
+                            <span key={k} className="px-1.5 py-0.5 rounded text-[11px] font-normal bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800">
+                              {k}: {v}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
 
                     <td className="p-4">
@@ -762,6 +798,55 @@ const Inventory = () => {
                       <X size={12} />
                     </button>
                   </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Attributes (flat key/value specs) */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Attributes (specs)
+              </label>
+              <button
+                type="button"
+                onClick={() => setItemAttrs(prev => [...prev, { key: '', value: '' }])}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              >
+                <Plus size={12} /> Add attribute
+              </button>
+            </div>
+            <datalist id="attr-key-suggestions">
+              {attrKeySuggestions.map(k => <option key={k} value={k} />)}
+            </datalist>
+            {itemAttrs.length === 0 ? (
+              <p className="text-xs text-slate-400">e.g. voltage = 440V, bore = 20mm, material = SS304</p>
+            ) : (
+              <div className="space-y-2">
+                {itemAttrs.map((attr, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      list="attr-key-suggestions"
+                      placeholder="key"
+                      value={attr.key}
+                      onChange={(e) => setItemAttrs(prev => prev.map((a, i) => i === idx ? { ...a, key: e.target.value } : a))}
+                      className="w-2/5 px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      placeholder="value"
+                      value={attr.value}
+                      onChange={(e) => setItemAttrs(prev => prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a))}
+                      className="flex-1 px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setItemAttrs(prev => prev.filter((_, i) => i !== idx))}
+                      className="p-1.5 text-slate-400 hover:text-red-500"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

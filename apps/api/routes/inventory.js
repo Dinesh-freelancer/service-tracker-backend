@@ -53,6 +53,10 @@ router.get('/tags',
     authorize(...WORKER_ALLOWED),
     inventoryController.searchTags);
 
+router.get('/attribute-keys',
+    authorize(...WORKER_ALLOWED),
+    inventoryController.getAttributeKeys);
+
 /**
  * @swagger
  * /inventory/{partId}:

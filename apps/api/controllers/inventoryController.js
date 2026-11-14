@@ -14,10 +14,14 @@ async function listInventory(req, res, next) {
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
-        const searchableFields = ['PartName', 'Make', 'Size'];
-        const filters = buildSearchFilters(req.query, searchableFields);
-        if (req.query.tagIds) filters.tagIds = req.query.tagIds;
-        if (req.query.tags) filters.tags = req.query.tags;
+        // NOTE: buildSearchFilters returns { sql, params } (used by other modules), not a
+        // filters object, so it must not be used here. The model builds its own WHERE clause.
+        const filters = {
+            search: typeof req.query.search === 'string' ? req.query.search.trim() : '',
+            lowStock: req.query.lowStock === 'true' || req.query.lowStock === '1',
+            tagIds: req.query.tagIds,
+            tags: req.query.tags
+        };
 
         const { rows, totalCount } = await inventoryModel.getAllInventory(filters, limit, offset);
 
@@ -127,9 +131,19 @@ async function upsertPartStock(req, res, next) {
     }
 }
 
+// Distinct attribute keys already in use (UI suggestions)
+async function getAttributeKeys(req, res, next) {
+    try {
+        res.json(await inventoryModel.getAttributeKeys());
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listInventory,
     searchTags,
+    getAttributeKeys,
     getInventoryItem,
     createInventoryItem,
     updateInventoryItem,

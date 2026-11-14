@@ -108,7 +108,66 @@ async function attachTagsAndStock(rows) {
 }
 
 /**
- * Get all inventory items with pagination, search (PartName, Make, Size, Tags), and tag filters.
+ * Validate/normalize attributes into a flat { key: string } object.
+ * Accepts an object or an array of {key,value}/{Key,Value}. Returns null when empty.
+ * Keys are trimmed + lowercased (so "Voltage" and "voltage" can't both exist).
+ */
+function normalizeAttributes(input) {
+    if (input === undefined || input === null || input === '') return null;
+
+    let entries;
+    if (Array.isArray(input)) {
+        entries = input.map(e => [e && (e.key ?? e.Key), e && (e.value ?? e.Value)]);
+    } else if (typeof input === 'object') {
+        entries = Object.entries(input);
+    } else {
+        const err = new Error('Attributes must be an object of key/value pairs');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const result = {};
+    for (const [rawKey, rawValue] of entries) {
+        const key = String(rawKey ?? '').trim().toLowerCase();
+        if (!key) continue;
+        if (key.length > 50) {
+            const err = new Error(`Attribute key too long: ${key.slice(0, 20)}...`);
+            err.statusCode = 400;
+            throw err;
+        }
+        if (rawValue !== null && typeof rawValue === 'object') {
+            const err = new Error(`Attribute "${key}" must be a simple value`);
+            err.statusCode = 400;
+            throw err;
+        }
+        const value = String(rawValue ?? '').trim();
+        if (!value) continue;
+        if (value.length > 200) {
+            const err = new Error(`Attribute "${key}" value too long`);
+            err.statusCode = 400;
+            throw err;
+        }
+        result[key] = value;
+    }
+    return Object.keys(result).length > 0 ? result : null;
+}
+
+/**
+ * Distinct attribute keys already in use (for UI suggestions).
+ */
+async function getAttributeKeys() {
+    const [rows] = await pool.query(
+        `SELECT DISTINCT jt.k AS AttributeKey
+         FROM inventory i,
+              JSON_TABLE(JSON_KEYS(i.Attributes), '$[*]' COLUMNS (k VARCHAR(100) PATH '$')) jt
+         WHERE i.Attributes IS NOT NULL
+         ORDER BY jt.k ASC`
+    );
+    return rows.map(r => r.AttributeKey);
+}
+
+/**
+ * Get all inventory items with pagination, search (PartName, Make, Size, Tags, Attributes), and tag filters.
  */
 async function getAllInventory(filters = {}, limit = 10, offset = 0) {
     let query = 'SELECT * FROM inventory i';
@@ -121,15 +180,22 @@ async function getAllInventory(filters = {}, limit = 10, offset = 0) {
     }
 
     if (filters.search) {
-        const term = `%${filters.search}%`;
-        whereClauses.push(
-            `(i.PartName LIKE ? OR i.Make LIKE ? OR i.Size LIKE ? OR EXISTS (
-                SELECT 1 FROM inventory_tags it
-                JOIN tags t ON it.TagId = t.TagId
-                WHERE it.PartId = i.PartId AND t.TagName LIKE ?
-            ))`
-        );
-        params.push(term, term, term, term);
+        // Multi-word search: every word must match PartName, Make, Size or a Tag
+        // (e.g. "ball bearing 6204" or "skf 6204").
+        const words = String(filters.search).split(/\s+/).filter(Boolean);
+        for (const word of words) {
+            const term = `%${word.replace(/[\\%_]/g, '\\$&')}%`;
+            whereClauses.push(
+                `(i.PartName LIKE ? OR i.Make LIKE ? OR i.Size LIKE ?
+                  OR LOWER(CAST(i.Attributes AS CHAR)) LIKE LOWER(?)
+                  OR EXISTS (
+                    SELECT 1 FROM inventory_tags it
+                    JOIN tags t ON it.TagId = t.TagId
+                    WHERE it.PartId = i.PartId AND t.TagName LIKE ?
+                ))`
+            );
+            params.push(term, term, term, term, term);
+        }
     }
 
     if (filters.tagIds) {
@@ -191,6 +257,10 @@ async function addInventory(itemData) {
         Make: rest.Make !== undefined && rest.Make !== null ? String(rest.Make).trim() : '',
         Size: rest.Size !== undefined && rest.Size !== null ? String(rest.Size).trim() : ''
     };
+    if ('Attributes' in data) {
+        const attrs = normalizeAttributes(data.Attributes);
+        data.Attributes = attrs ? JSON.stringify(attrs) : null;
+    }
 
     const connection = await pool.getConnection();
     try {
@@ -242,6 +312,10 @@ async function updateInventory(partId, itemData) {
     }
     if ('Size' in data) {
         data.Size = data.Size !== null && data.Size !== undefined ? String(data.Size).trim() : '';
+    }
+    if ('Attributes' in data) {
+        const attrs = normalizeAttributes(data.Attributes);
+        data.Attributes = attrs ? JSON.stringify(attrs) : null;
     }
 
     const connection = await pool.getConnection();
@@ -508,6 +582,8 @@ async function restorePartFIFO(connection, partId, returnedQty, costPrice, { ski
 
 module.exports = {
     searchTags,
+    getAttributeKeys,
+    normalizeAttributes,
     syncPartTags,
     getAllInventory,
     getInventoryById,

@@ -259,7 +259,7 @@ const JobDetails = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          `${apiUrl}/inventory?search=${partSearch}&limit=20`,
+          `${apiUrl}/inventory?search=${encodeURIComponent(partSearch)}&limit=20`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },

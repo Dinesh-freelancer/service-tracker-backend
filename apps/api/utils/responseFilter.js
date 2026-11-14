@@ -166,6 +166,7 @@ function filterInventory(item, role) {
         PartName: item.PartName,
         Make: item.Make || '',
         Size: item.Size || '',
+        Attributes: item.Attributes || {},
         Unit: item.Unit,
         HSNCode: item.HSNCode,
         QuantityInStock: item.QuantityInStock,
