@@ -14,8 +14,10 @@ async function listInventory(req, res, next) {
         const role = req.user ? req.user.Role : null;
         const { page, limit, offset } = getPagination(req);
 
-        const searchableFields = ['PartName'];
+        const searchableFields = ['PartName', 'Make', 'Size'];
         const filters = buildSearchFilters(req.query, searchableFields);
+        if (req.query.tagIds) filters.tagIds = req.query.tagIds;
+        if (req.query.tags) filters.tags = req.query.tags;
 
         const { rows, totalCount } = await inventoryModel.getAllInventory(filters, limit, offset);
 
@@ -23,6 +25,18 @@ async function listInventory(req, res, next) {
         const response = getPaginationData(filteredInventory, page, limit, totalCount);
 
         res.json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Autocomplete search for tags
+async function searchTags(req, res, next) {
+    try {
+        const q = req.query.q || '';
+        const limit = req.query.limit || 20;
+        const tags = await inventoryModel.searchTags(q, limit);
+        res.json(tags);
     } catch (err) {
         next(err);
     }
@@ -50,6 +64,9 @@ async function createInventoryItem(req, res, next) {
         const item = await inventoryModel.addInventory(req.body);
         res.status(201).json(item);
     } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'An inventory item with this PartName, Make, and Size already exists' });
+        }
         next(err);
     }
 }
@@ -61,6 +78,9 @@ async function updateInventoryItem(req, res, next) {
         if (!item) return res.status(404).json({ error: 'Item not found' });
         res.json(item);
     } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'An inventory item with this PartName, Make, and Size already exists' });
+        }
         next(err);
     }
 }
@@ -75,10 +95,45 @@ async function deleteInventoryItem(req, res, next) {
     }
 }
 
+// Get stock locations & pack sizes for a part (Loose with stock ordered first for autofill)
+async function getPartStock(req, res, next) {
+    try {
+        const stock = await inventoryModel.getStockByPartId(req.params.partId);
+        res.json(stock);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Add or adjust stock at a specific Location + PackType + UnitsPerPack
+async function upsertPartStock(req, res, next) {
+    try {
+        const partId = parseInt(req.params.partId, 10);
+        const { LocationId, PackType, UnitsPerPack, QuantityDelta, SetQuantity } = req.body;
+        if (!LocationId) {
+            return res.status(400).json({ error: 'LocationId is required' });
+        }
+        const stock = await inventoryModel.upsertStock(null, {
+            PartId: partId,
+            LocationId,
+            PackType: PackType || 'Loose',
+            UnitsPerPack: UnitsPerPack || 1,
+            QuantityDelta: QuantityDelta !== undefined ? QuantityDelta : 0,
+            SetQuantity: SetQuantity !== undefined ? SetQuantity : null
+        });
+        res.json(stock);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listInventory,
+    searchTags,
     getInventoryItem,
     createInventoryItem,
     updateInventoryItem,
-    deleteInventoryItem
+    deleteInventoryItem,
+    getPartStock,
+    upsertPartStock
 };

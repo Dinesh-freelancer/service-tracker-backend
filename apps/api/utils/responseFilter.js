@@ -164,12 +164,18 @@ function filterInventory(item, role) {
     const filtered = {
         PartId: item.PartId,
         PartName: item.PartName,
+        Make: item.Make || '',
+        Size: item.Size || '',
         Unit: item.Unit,
+        HSNCode: item.HSNCode,
         QuantityInStock: item.QuantityInStock,
         LowStockThreshold: item.LowStockThreshold,
-        // Supplier visible to Admin? Maybe.
         Supplier: item.Supplier,
-        DefaultSellingPrice: item.DefaultSellingPrice
+        DefaultSellingPrice: item.DefaultSellingPrice,
+        Notes: item.Notes,
+        LastUpdated: item.LastUpdated,
+        Tags: item.Tags || [],
+        StockLocations: item.StockLocations || []
     };
 
     if (canSeeCost) {

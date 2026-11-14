@@ -81,7 +81,8 @@ async function createPurchase(purchaseData, items) {
         const inventoryModel = require('./inventoryModel');
 
         // Insert Items
-        for (const item of items) {
+        for (const rawItem of items) {
+            const { LocationId, PackType, UnitsPerPack, ...item } = rawItem;
             item.PurchaseId = purchaseId;
             const iFields = Object.keys(item);
             const iValues = Object.values(item);
@@ -92,8 +93,28 @@ async function createPurchase(purchaseData, items) {
                 iValues
             );
 
-            // Update Inventory Stock via new FIFO Batch system
-            await inventoryModel.createBatch(connection, item.PartId, item.UnitPrice, item.Qty, 'Purchase', purchaseId);
+            if (LocationId) {
+                await inventoryModel.createBatch(
+                    connection,
+                    item.PartId,
+                    item.UnitPrice,
+                    item.Qty,
+                    'Purchase',
+                    purchaseId,
+                    { skipMasterUpdate: true }
+                );
+                await inventoryModel.upsertStock(connection, {
+                    PartId: item.PartId,
+                    LocationId,
+                    PackType: PackType || 'Loose',
+                    UnitsPerPack: UnitsPerPack || 1,
+                    QuantityDelta: item.Qty,
+                    syncMaster: true
+                });
+            } else {
+                // Fallback when no LocationId is provided
+                await inventoryModel.createBatch(connection, item.PartId, item.UnitPrice, item.Qty, 'Purchase', purchaseId);
+            }
         }
 
         await connection.commit();

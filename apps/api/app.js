@@ -107,6 +107,9 @@ app.use('/api/partsused', partsUsedRoutes);
 const inventoryRoutes = require('./routes/inventory');
 app.use('/api/inventory', inventoryRoutes);
 
+const locationRoutes = require('./routes/locations');
+app.use('/api/locations', locationRoutes);
+
 const auditRoutes = require('./routes/audit');
 app.use('/api/audit', auditRoutes);
 

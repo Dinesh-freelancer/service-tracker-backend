@@ -33,22 +33,25 @@ async function getPartUsedById(partUsedId) {
 const inventoryModel = require('./inventoryModel');
 
 async function addPartUsed(partData) {
-    let { JobNumber, PartId, PartName, Qty, CostPrice, SellingPrice } = partData;
+    let { JobNumber, PartId, StockId, PartName, Qty, CostPrice, SellingPrice } = partData;
 
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
-        // Calculate actual FIFO cost if PartId is provided
+        let usedStockId = StockId || null;
+
+        // Calculate actual FIFO cost and deduct from secondary stock if PartId is provided
         if (PartId) {
-            const totalCost = await inventoryModel.consumePartFIFO(connection, PartId, Qty);
-            CostPrice = totalCost / Qty; // Convert back to average unit cost price for this row
+            const totalCost = await inventoryModel.consumePartFIFO(connection, PartId, Qty, { skipMasterUpdate: true });
+            CostPrice = totalCost; // Average unit cost returned by consumePartFIFO
+            usedStockId = await inventoryModel.deductStock(connection, PartId, Qty, usedStockId, { syncMaster: true });
         }
 
         const [result] = await connection.query(
-            `INSERT INTO partsused (JobNumber, PartId, PartName, Qty, CostPrice, SellingPrice)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [JobNumber, PartId, PartName, Qty, CostPrice, SellingPrice]
+            `INSERT INTO partsused (JobNumber, PartId, StockId, PartName, Qty, CostPrice, SellingPrice)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [JobNumber, PartId, usedStockId, PartName, Qty, CostPrice, SellingPrice]
         );
 
         await connection.commit();
@@ -82,14 +85,14 @@ async function updatePartUsedQuantity(partUsedId, newQty) {
         if (diffQty !== 0 && partUsed.PartId) {
             if (diffQty > 0) {
                 // We need more parts, consume them
-                const additionalCost = await inventoryModel.consumePartFIFO(connection, partUsed.PartId, diffQty);
-                // Calculate new average cost price (additionalCost is the total cost of the diffQty)
-                newCostPrice = ((oldQty * partUsed.CostPrice) + additionalCost) / newQty;
+                const additionalUnitCost = await inventoryModel.consumePartFIFO(connection, partUsed.PartId, diffQty, { skipMasterUpdate: true });
+                await inventoryModel.deductStock(connection, partUsed.PartId, diffQty, partUsed.StockId || null, { syncMaster: true });
+                newCostPrice = ((oldQty * partUsed.CostPrice) + (additionalUnitCost * diffQty)) / newQty;
             } else {
                 // We are reducing parts, restore them
                 const returnedQty = Math.abs(diffQty);
-                await inventoryModel.restorePartFIFO(connection, partUsed.PartId, returnedQty, partUsed.CostPrice);
-                // Cost price per unit remains the same for the remaining parts
+                await inventoryModel.restorePartFIFO(connection, partUsed.PartId, returnedQty, partUsed.CostPrice, { skipMasterUpdate: true });
+                await inventoryModel.restoreStock(connection, partUsed.PartId, returnedQty, partUsed.StockId || null, { syncMaster: true });
             }
         }
 
@@ -121,7 +124,8 @@ async function deletePartUsed(partUsedId) {
         if (rows.length > 0) {
             const partUsed = rows[0];
             if (partUsed.PartId) {
-                await inventoryModel.restorePartFIFO(connection, partUsed.PartId, partUsed.Qty, partUsed.CostPrice);
+                await inventoryModel.restorePartFIFO(connection, partUsed.PartId, partUsed.Qty, partUsed.CostPrice, { skipMasterUpdate: true });
+                await inventoryModel.restoreStock(connection, partUsed.PartId, partUsed.Qty, partUsed.StockId || null, { syncMaster: true });
             }
         }
 

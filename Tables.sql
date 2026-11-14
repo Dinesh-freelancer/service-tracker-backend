@@ -80,6 +80,8 @@ CREATE TABLE IF NOT EXISTS `inventory` (
 
   `PartId` int NOT NULL AUTO_INCREMENT,
   `PartName` varchar(100) NOT NULL,
+  `Make` varchar(100) NOT NULL DEFAULT '',
+  `Size` varchar(100) NOT NULL DEFAULT '',
   `Unit` varchar(10) DEFAULT 'Nos',
   `HSNCode` varchar(20) DEFAULT NULL,
   `DefaultCostPrice` decimal(10,2) DEFAULT NULL,
@@ -88,8 +90,61 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   `QuantityInStock` decimal(10,2) DEFAULT '0.00',
   `LowStockThreshold` decimal(10,2) DEFAULT '0.00',
   `Notes` text,
+  `LastUpdated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`PartId`),
-  UNIQUE KEY `PartName` (`PartName`)
+  UNIQUE KEY `uq_part_make_size` (`PartName`, `Make`, `Size`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `tags` (
+
+  `TagId` int NOT NULL AUTO_INCREMENT,
+  `TagName` varchar(100) NOT NULL,
+  PRIMARY KEY (`TagId`),
+  UNIQUE KEY `uq_tag_name` (`TagName`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `inventory_tags` (
+
+  `PartId` int NOT NULL,
+  `TagId` int NOT NULL,
+  PRIMARY KEY (`PartId`, `TagId`),
+  KEY `idx_tag_part` (`TagId`, `PartId`),
+  CONSTRAINT `fk_it_inventory` FOREIGN KEY (`PartId`) REFERENCES `inventory` (`PartId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_it_tag` FOREIGN KEY (`TagId`) REFERENCES `tags` (`TagId`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `locations` (
+
+  `LocationId` int NOT NULL AUTO_INCREMENT,
+  `Name` varchar(100) NOT NULL,
+  `LocationType` enum('Warehouse','Zone','Aisle','Rack','Shelf','Bin') NOT NULL DEFAULT 'Bin',
+  `ParentLocationId` int NOT NULL DEFAULT '0',
+  `FullPath` varchar(500) NOT NULL DEFAULT '',
+  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`LocationId`),
+  UNIQUE KEY `uq_parent_name` (`ParentLocationId`, `Name`),
+  KEY `idx_parent_location` (`ParentLocationId`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `inventory_stock` (
+
+  `StockId` int NOT NULL AUTO_INCREMENT,
+  `PartId` int NOT NULL,
+  `LocationId` int NOT NULL,
+  `PackType` varchar(50) NOT NULL DEFAULT 'Loose',
+  `UnitsPerPack` decimal(10,2) NOT NULL DEFAULT '1.00',
+  `Quantity` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `LastUpdated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`StockId`),
+  UNIQUE KEY `uq_part_loc_pack` (`PartId`, `LocationId`, `PackType`, `UnitsPerPack`),
+  KEY `idx_stock_location` (`LocationId`),
+  CONSTRAINT `fk_stock_inventory` FOREIGN KEY (`PartId`) REFERENCES `inventory` (`PartId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_stock_location` FOREIGN KEY (`LocationId`) REFERENCES `locations` (`LocationId`) ON DELETE RESTRICT
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -286,6 +341,7 @@ CREATE TABLE IF NOT EXISTS `partsused` (
   `PartUsedId` int NOT NULL AUTO_INCREMENT,
   `JobNumber` varchar(50) NOT NULL,
   `PartId` int DEFAULT NULL,
+  `StockId` int DEFAULT NULL,
   `PartName` varchar(100) NOT NULL,
   `Qty` decimal(10,2) DEFAULT '1.00',
   `CostPrice` decimal(10,2) NOT NULL,
@@ -294,8 +350,10 @@ CREATE TABLE IF NOT EXISTS `partsused` (
   PRIMARY KEY (`PartUsedId`),
   KEY `fk_parts_job` (`JobNumber`),
   KEY `fk_parts_inventory` (`PartId`),
+  KEY `fk_parts_stock` (`StockId`),
   CONSTRAINT `fk_parts_inventory` FOREIGN KEY (`PartId`) REFERENCES `inventory` (`PartId`) ON DELETE SET NULL,
-  CONSTRAINT `fk_parts_job` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE
+  CONSTRAINT `fk_parts_job` FOREIGN KEY (`JobNumber`) REFERENCES `servicerequest` (`JobNumber`) ON DELETE CASCADE,
+  CONSTRAINT `fk_parts_stock` FOREIGN KEY (`StockId`) REFERENCES `inventory_stock` (`StockId`) ON DELETE SET NULL
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

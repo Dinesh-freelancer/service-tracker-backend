@@ -49,6 +49,10 @@ router.get('/',
     authorize(...WORKER_ALLOWED),
     inventoryController.listInventory);
 
+router.get('/tags',
+    authorize(...WORKER_ALLOWED),
+    inventoryController.searchTags);
+
 /**
  * @swagger
  * /inventory/{partId}:
@@ -73,6 +77,14 @@ router.get('/',
 router.get('/:partId',
     authorize(...WORKER_ALLOWED),
     inventoryController.getInventoryItem);
+
+router.get('/:partId/stock',
+    authorize(...WORKER_ALLOWED),
+    inventoryController.getPartStock);
+
+router.post('/:partId/stock',
+    authorize(...ADMIN_OWNER),
+    inventoryController.upsertPartStock);
 
 /**
  * @swagger
