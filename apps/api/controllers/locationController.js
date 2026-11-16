@@ -54,9 +54,21 @@ async function deleteLocation(req, res, next) {
     }
 }
 
+async function getLocationStock(req, res, next) {
+    try {
+        const includeChildren = req.query.includeChildren !== 'false';
+        const result = await locationModel.getLocationStock(req.params.locationId, { includeChildren });
+        if (!result) return res.status(404).json({ error: 'Location not found' });
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     listLocations,
     getLocation,
+    getLocationStock,
     createLocation,
     updateLocation,
     deleteLocation

@@ -10,6 +10,7 @@ const ADMIN_OWNER = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER];
 const WORKER_ALLOWED = [constants.AUTH_ROLE_ADMIN, constants.AUTH_ROLE_OWNER, constants.AUTH_ROLE_WORKER];
 
 router.get('/', authorize(...WORKER_ALLOWED), locationController.listLocations);
+router.get('/:locationId/stock', authorize(...WORKER_ALLOWED), locationController.getLocationStock);
 router.get('/:locationId', authorize(...WORKER_ALLOWED), locationController.getLocation);
 router.post('/', authorize(...ADMIN_OWNER), locationController.createLocation);
 router.put('/:locationId', authorize(...ADMIN_OWNER), locationController.updateLocation);

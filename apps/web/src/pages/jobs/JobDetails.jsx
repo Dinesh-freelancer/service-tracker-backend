@@ -138,6 +138,7 @@ const JobDetails = () => {
   const [inventoryResults, setInventoryResults] = useState([]);
   const [selectedPart, setSelectedPart] = useState(null);
   const [selectedStockId, setSelectedStockId] = useState("");
+  const [partQtyMode, setPartQtyMode] = useState("units"); // "units" | "packs"
   const [partQty, setPartQty] = useState(1);
   const [searchingParts, setSearchingParts] = useState(false);
 
@@ -523,7 +524,14 @@ const JobDetails = () => {
         body: JSON.stringify({ Qty: parseFloat(editPartQty) }),
       });
 
-      if (!res.ok) throw new Error("Failed to update part quantity");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          (typeof errData.error === "string"
+            ? errData.error
+            : errData.error?.message) || "Failed to update part quantity",
+        );
+      }
 
       toast.success("Part quantity updated successfully");
       setEditingPart(null);
@@ -538,12 +546,26 @@ const JobDetails = () => {
     if (!selectedPart) return;
     try {
       const token = localStorage.getItem("token");
+      // Stock is tracked in base units. If the user entered a pack count, convert it.
+      const stockRow = (selectedPart.StockLocations || []).find(
+        (l) => String(l.StockId) === String(selectedStockId),
+      );
+      const unitsPerPack = stockRow ? parseFloat(stockRow.UnitsPerPack) || 1 : 1;
+      const enteredQty = parseFloat(partQty);
+      const baseQty =
+        partQtyMode === "packs" ? enteredQty * unitsPerPack : enteredQty;
+      if (!baseQty || baseQty <= 0) throw new Error("Enter a valid quantity");
+      if (stockRow && baseQty > parseFloat(stockRow.Quantity)) {
+        throw new Error(
+          `Only ${stockRow.Quantity} ${selectedPart.Unit} available in the selected location/pack`,
+        );
+      }
       const payload = {
         JobNumber: job.JobNumber,
         PartId: selectedPart.PartId,
         StockId: selectedStockId ? parseInt(selectedStockId, 10) : undefined,
         PartName: selectedPart.PartName,
-        Qty: parseFloat(partQty),
+        Qty: baseQty,
         CostPrice: selectedPart.DefaultCostPrice || 0,
         SellingPrice: selectedPart.DefaultSellingPrice || 0,
       };
@@ -557,12 +579,20 @@ const JobDetails = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to add part");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          (typeof errData.error === "string"
+            ? errData.error
+            : errData.error?.message) || "Failed to add part",
+        );
+      }
 
       toast.success("Part added to job");
       setShowPartModal(false);
       setSelectedPart(null);
       setSelectedStockId("");
+      setPartQtyMode("units");
       setPartSearch("");
       setPartQty(1);
       fetchJob();
@@ -2544,7 +2574,10 @@ const JobDetails = () => {
                       </label>
                       <select
                         value={selectedStockId}
-                        onChange={(e) => setSelectedStockId(e.target.value)}
+                        onChange={(e) => {
+                          setSelectedStockId(e.target.value);
+                          setPartQtyMode("units");
+                        }}
                         className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
                       >
                         {selectedPart.StockLocations.map((loc) => (
@@ -2558,19 +2591,60 @@ const JobDetails = () => {
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-slate-300">
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  min="0.1"
-                  step="0.1"
-                  className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
-                  value={partQty}
-                  onChange={(e) => setPartQty(e.target.value)}
-                />
-              </div>
+              {(() => {
+                const row = (selectedPart?.StockLocations || []).find(
+                  (l) => String(l.StockId) === String(selectedStockId),
+                );
+                const upp = row ? parseFloat(row.UnitsPerPack) || 1 : 1;
+                const isPack = upp > 1;
+                const base =
+                  partQtyMode === "packs"
+                    ? (parseFloat(partQty) || 0) * upp
+                    : parseFloat(partQty) || 0;
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium dark:text-slate-300">
+                        Quantity
+                      </label>
+                      {isPack && (
+                        <div className="flex text-xs border rounded overflow-hidden dark:border-slate-600">
+                          {["units", "packs"].map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setPartQtyMode(m)}
+                              className={`px-2 py-0.5 ${
+                                partQtyMode === m
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                              }`}
+                            >
+                              {m === "units"
+                                ? selectedPart?.Unit || "Units"
+                                : `${row.PackType}s`}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step={partQtyMode === "packs" ? "1" : "0.1"}
+                      className="w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+                      value={partQty}
+                      onChange={(e) => setPartQty(e.target.value)}
+                    />
+                    {isPack && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        {row.PackType} = {upp} {selectedPart?.Unit}. Deducting{" "}
+                        <b>{base}</b> {selectedPart?.Unit} (available {row.Quantity}).
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex justify-end gap-2 mt-6">
                 <button

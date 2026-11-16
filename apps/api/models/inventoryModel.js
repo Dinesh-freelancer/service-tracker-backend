@@ -407,6 +407,11 @@ async function upsertStock(connection, {
         const packUnits = parseFloat(UnitsPerPack) || 1;
 
         if (SetQuantity !== null && SetQuantity !== undefined) {
+            if (parseFloat(SetQuantity) < 0) {
+                const err = new Error('Quantity cannot be negative');
+                err.statusCode = 400;
+                throw err;
+            }
             await conn.query(
                 `INSERT INTO inventory_stock (PartId, LocationId, PackType, UnitsPerPack, Quantity)
                  VALUES (?, ?, ?, ?, ?)
@@ -414,6 +419,19 @@ async function upsertStock(connection, {
                 [PartId, LocationId, cleanPackType, packUnits, SetQuantity]
             );
         } else {
+            if (parseFloat(QuantityDelta) < 0) {
+                const [cur] = await conn.query(
+                    `SELECT Quantity FROM inventory_stock
+                     WHERE PartId = ? AND LocationId = ? AND PackType = ? AND UnitsPerPack = ? FOR UPDATE`,
+                    [PartId, LocationId, cleanPackType, packUnits]
+                );
+                const available = cur.length > 0 ? parseFloat(cur[0].Quantity) : 0;
+                if (available + parseFloat(QuantityDelta) < 0) {
+                    const err = new Error(`Cannot remove ${Math.abs(QuantityDelta)}; only ${available} available at this location/pack`);
+                    err.statusCode = 400;
+                    throw err;
+                }
+            }
             await conn.query(
                 `INSERT INTO inventory_stock (PartId, LocationId, PackType, UnitsPerPack, Quantity)
                  VALUES (?, ?, ?, ?, ?)
@@ -451,17 +469,33 @@ async function deductStock(connection, partId, qty, stockId = null, { syncMaster
             throw err;
         }
         targetRow = rows[0];
+        if (parseFloat(targetRow.Quantity) < parseFloat(qty)) {
+            const err = new Error(
+                `Insufficient stock in selected location/pack (available ${targetRow.Quantity}, required ${qty})`
+            );
+            err.statusCode = 400;
+            throw err;
+        }
     } else {
-        // Default to Loose pack with stock first
+        // Default: prefer a Loose row that can cover the qty, then any row that can
         const [rows] = await db.query(
             `SELECT * FROM inventory_stock
-             WHERE PartId = ? AND Quantity > 0
+             WHERE PartId = ? AND Quantity >= ?
              ORDER BY (PackType = 'Loose') DESC, Quantity DESC
              LIMIT 1 FOR UPDATE`,
-            [partId]
+            [partId, qty]
         );
         if (rows.length > 0) {
             targetRow = rows[0];
+        } else {
+            // Part tracks location stock but no single row can cover it -> refuse (avoids negative stock / drift).
+            // Legacy parts with no stock rows at all still fall through to master-only deduction.
+            const [cnt] = await db.query('SELECT COUNT(*) AS c FROM inventory_stock WHERE PartId = ?', [partId]);
+            if (cnt[0].c > 0) {
+                const err = new Error('No single location/pack has enough stock. Please pick a location/pack or reduce the quantity.');
+                err.statusCode = 400;
+                throw err;
+            }
         }
     }
 

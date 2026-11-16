@@ -15,7 +15,9 @@ import {
   Tag,
   MapPin,
   X,
-  Layers
+  Layers,
+  Boxes,
+  ArrowLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
@@ -79,8 +81,19 @@ const Inventory = () => {
     LocationId: '',
     PackType: 'Loose',
     UnitsPerPack: '1',
-    QuantityDelta: '0'
+    QuantityDelta: '0',
+    Mode: 'add'
   });
+  const [quickLoc, setQuickLoc] = useState(null); // inline "new location" form inside stock modal
+
+  // Items-in-a-location modal
+  const [locItems, setLocItems] = useState(null); // { location, items }
+  const [loadingLocItems, setLoadingLocItems] = useState(false);
+  const [includeChildren, setIncludeChildren] = useState(true);
+  const [locStockForm, setLocStockForm] = useState({
+    search: '', part: null, results: [], PackType: 'Loose', UnitsPerPack: '1', Qty: '', Mode: 'add'
+  });
+  const locSearchTimeoutRef = useRef(null);
 
   // Locations Manager Modal
   const [isLocationsOpen, setIsLocationsOpen] = useState(false);
@@ -371,8 +384,10 @@ const Inventory = () => {
       LocationId: locations[0]?.LocationId ? String(locations[0].LocationId) : '',
       PackType: 'Loose',
       UnitsPerPack: '1',
-      QuantityDelta: '0'
+      QuantityDelta: '0',
+      Mode: 'add'
     });
+    setQuickLoc(null);
     setLoadingPartStock(true);
     try {
       const res = await fetch(`${apiUrl}/inventory/${item.PartId}/stock`, {
@@ -386,6 +401,13 @@ const Inventory = () => {
     } finally {
       setLoadingPartStock(false);
     }
+  };
+
+  // Build the API body for add / remove / set-exact modes
+  const stockBody = (mode, qty) => {
+    const q = parseFloat(qty) || 0;
+    if (mode === 'set') return { SetQuantity: q };
+    return { QuantityDelta: mode === 'remove' ? -q : q };
   };
 
   const handleUpsertStock = async (e) => {
@@ -405,18 +427,133 @@ const Inventory = () => {
           LocationId: parseInt(stockForm.LocationId, 10),
           PackType: stockForm.PackType,
           UnitsPerPack: parseFloat(stockForm.UnitsPerPack) || 1,
-          QuantityDelta: parseFloat(stockForm.QuantityDelta) || 0
+          ...stockBody(stockForm.Mode, stockForm.QuantityDelta)
         })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update stock');
+      if (!res.ok) throw new Error(errMsg(data, 'Failed to update stock'));
       setPartStockRows(Array.isArray(data) ? data : []);
       setStockForm(prev => ({ ...prev, QuantityDelta: '0' }));
-      toast.success('Stock location updated');
+      toast.success('Stock updated');
       fetchInventory();
     } catch (err) {
       toast.error(err.message);
     }
+  };
+
+  // Create a new location inline from the stock modal and select it
+  const handleQuickCreateLocation = async () => {
+    if (!quickLoc?.Name?.trim()) {
+      toast.error('Location name is required');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiUrl}/locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          Name: quickLoc.Name.trim(),
+          LocationType: quickLoc.LocationType,
+          ParentLocationId: parseInt(quickLoc.ParentLocationId, 10) || 0
+        })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(errMsg(result, 'Failed to create location'));
+      await fetchLocations();
+      setStockForm(prev => ({ ...prev, LocationId: String(result.LocationId) }));
+      setQuickLoc(null);
+      toast.success(`Location "${result.FullPath}" created`);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // ---- Items in a location ----
+  const loadLocationItems = async (location, inc = includeChildren) => {
+    setLoadingLocItems(true);
+    try {
+      const res = await fetch(
+        `${apiUrl}/locations/${location.LocationId}/stock?includeChildren=${inc}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(errMsg(data, 'Failed to load location items'));
+      setLocItems(data);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoadingLocItems(false);
+    }
+  };
+
+  const openLocationItems = (loc) => {
+    setIsLocationsOpen(false);
+    setEditingLocation(null);
+    setLocStockForm({ search: '', part: null, results: [], PackType: 'Loose', UnitsPerPack: '1', Qty: '', Mode: 'add' });
+    setLocItems({ location: loc, items: [] });
+    loadLocationItems(loc, includeChildren);
+  };
+
+  const handleLocPartSearch = (val) => {
+    setLocStockForm(prev => ({ ...prev, search: val, part: null }));
+    if (locSearchTimeoutRef.current) clearTimeout(locSearchTimeoutRef.current);
+    if (val.trim().length < 2) {
+      setLocStockForm(prev => ({ ...prev, results: [] }));
+      return;
+    }
+    locSearchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${apiUrl}/inventory?search=${encodeURIComponent(val.trim())}&limit=8`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setLocStockForm(prev => ({ ...prev, results: data.data || [] }));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
+  };
+
+  const handleLocStockSubmit = async (e) => {
+    e.preventDefault();
+    const { part, PackType, UnitsPerPack, Qty, Mode } = locStockForm;
+    if (!part) { toast.error('Select a part'); return; }
+    if (Qty === '' || isNaN(parseFloat(Qty))) { toast.error('Enter a quantity'); return; }
+    try {
+      const res = await fetch(`${apiUrl}/inventory/${part.PartId}/stock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          LocationId: locItems.location.LocationId,
+          PackType,
+          UnitsPerPack: parseFloat(UnitsPerPack) || 1,
+          ...stockBody(Mode, Qty)
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(errMsg(data, 'Failed to update stock'));
+      toast.success('Stock updated');
+      setLocStockForm(prev => ({ ...prev, search: '', part: null, results: [], Qty: '' }));
+      loadLocationItems(locItems.location);
+      fetchInventory();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Prefill the form to edit an existing row (set exact quantity)
+  const editLocStockRow = (row) => {
+    setLocStockForm({
+      search: `${row.PartName}${row.Make ? ' / ' + row.Make : ''}${row.Size ? ' / ' + row.Size : ''}`,
+      part: { PartId: row.PartId, PartName: row.PartName, Unit: row.Unit },
+      results: [],
+      PackType: row.PackType,
+      UnitsPerPack: String(row.UnitsPerPack),
+      Qty: String(row.Quantity),
+      Mode: 'set'
+    });
   };
 
   // Locations Manager Handlers
@@ -906,7 +1043,48 @@ const Inventory = () => {
           <form onSubmit={handleUpsertStock} className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg space-y-3">
             <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Add / Adjust Stock at Location</h4>
             <div>
-              <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Location *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">Location *</label>
+                <button
+                  type="button"
+                  onClick={() => setQuickLoc(quickLoc ? null : { Name: '', LocationType: 'Rack', ParentLocationId: '0' })}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                >
+                  <Plus size={12} /> New location
+                </button>
+              </div>
+              {quickLoc && (
+                <div className="mb-2 p-2 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      placeholder="Name (e.g. Rack 2)"
+                      value={quickLoc.Name}
+                      onChange={(e) => setQuickLoc(prev => ({ ...prev, Name: e.target.value }))}
+                      className="px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                    />
+                    <select
+                      value={quickLoc.LocationType}
+                      onChange={(e) => setQuickLoc(prev => ({ ...prev, LocationType: e.target.value }))}
+                      className="px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                    >
+                      {LOCATION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <select
+                    value={quickLoc.ParentLocationId}
+                    onChange={(e) => setQuickLoc(prev => ({ ...prev, ParentLocationId: e.target.value }))}
+                    className="w-full px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                  >
+                    <option value="0">(Root / Top-Level)</option>
+                    {locations.map(loc => (
+                      <option key={loc.LocationId} value={loc.LocationId}>{loc.FullPath || loc.Name}</option>
+                    ))}
+                  </select>
+                  <div className="flex justify-end">
+                    <Button type="button" size="sm" onClick={handleQuickCreateLocation}>Create & select</Button>
+                  </div>
+                </div>
+              )}
               <select
                 value={stockForm.LocationId}
                 onChange={(e) => setStockForm(prev => ({ ...prev, LocationId: e.target.value }))}
@@ -921,7 +1099,19 @@ const Inventory = () => {
               </select>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
+              <div>
+                <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Action</label>
+                <select
+                  value={stockForm.Mode}
+                  onChange={(e) => setStockForm(prev => ({ ...prev, Mode: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                >
+                  <option value="add">Add</option>
+                  <option value="remove">Remove</option>
+                  <option value="set">Set exact</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Pack Type</label>
                 <select
@@ -940,7 +1130,7 @@ const Inventory = () => {
                 onChange={(e) => setStockForm(prev => ({ ...prev, UnitsPerPack: e.target.value }))}
               />
               <Input
-                label={`Qty Delta (${stockModalItem?.Unit || 'Nos'})`}
+                label={`Qty (${stockModalItem?.Unit || 'Nos'})`}
                 type="number"
                 step="0.01"
                 value={stockForm.QuantityDelta}
@@ -949,7 +1139,7 @@ const Inventory = () => {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" size="sm">Update Stock</Button>
+              <Button type="submit" size="sm">Apply</Button>
             </div>
           </form>
         </div>
@@ -1042,6 +1232,14 @@ const Inventory = () => {
                         <div className="flex justify-end gap-1">
                           <button
                             type="button"
+                            title="View / add items in this location"
+                            onClick={() => openLocationItems(loc)}
+                            className="p-1 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                          >
+                            <Boxes size={14} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => {
                               setEditingLocation(loc);
                               setLocationForm({
@@ -1070,6 +1268,167 @@ const Inventory = () => {
             )}
           </div>
         </div>
+      </Modal>
+
+      {/* Items in a Location Modal */}
+      <Modal
+        isOpen={!!locItems}
+        onClose={() => setLocItems(null)}
+        title={locItems ? `Items in ${locItems.location.FullPath || locItems.location.Name}` : 'Location items'}
+      >
+        {locItems && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => { setLocItems(null); setIsLocationsOpen(true); }}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              >
+                <ArrowLeft size={12} /> Back to locations
+              </button>
+              <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={includeChildren}
+                  onChange={(e) => {
+                    setIncludeChildren(e.target.checked);
+                    loadLocationItems(locItems.location, e.target.checked);
+                  }}
+                />
+                Include sub-locations
+              </label>
+            </div>
+
+            <div className="max-h-64 overflow-y-auto border rounded-lg dark:border-slate-700">
+              {loadingLocItems ? (
+                <div className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></div>
+              ) : locItems.items.length === 0 ? (
+                <div className="p-6 text-center text-sm text-slate-500">No items stored here yet.</div>
+              ) : (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 sticky top-0">
+                    <tr>
+                      <th className="p-2.5">Part</th>
+                      {includeChildren && <th className="p-2.5">Location</th>}
+                      <th className="p-2.5">Pack</th>
+                      <th className="p-2.5 text-right">Qty</th>
+                      <th className="p-2.5"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {locItems.items.map(row => (
+                      <tr key={row.StockId}>
+                        <td className="p-2.5 font-medium text-slate-800 dark:text-slate-200">
+                          {row.PartName}
+                          {(row.Make || row.Size) && (
+                            <span className="text-slate-400 font-normal"> ({[row.Make, row.Size].filter(Boolean).join(' / ')})</span>
+                          )}
+                        </td>
+                        {includeChildren && <td className="p-2.5 text-slate-500">{row.FullPath}</td>}
+                        <td className="p-2.5 text-slate-600 dark:text-slate-300">{row.PackType} ({row.UnitsPerPack}/pack)</td>
+                        <td className="p-2.5 text-right font-semibold text-slate-900 dark:text-white">{row.Quantity} {row.Unit}</td>
+                        <td className="p-2.5 text-right">
+                          {canEdit && row.LocationId === locItems.location.LocationId && (
+                            <button
+                              type="button"
+                              onClick={() => editLocStockRow(row)}
+                              className="p-1 text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                              title="Edit quantity"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {canEdit && (
+              <form onSubmit={handleLocStockSubmit} className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Add / update stock in {locItems.location.Name}
+                </h4>
+                <div className="relative">
+                  <input
+                    placeholder="Search part (name, make, size, tag)..."
+                    value={locStockForm.search}
+                    onChange={(e) => handleLocPartSearch(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                  />
+                  {locStockForm.results.length > 0 && !locStockForm.part && (
+                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                      {locStockForm.results.map(p => (
+                        <button
+                          key={p.PartId}
+                          type="button"
+                          onClick={() => setLocStockForm(prev => ({
+                            ...prev,
+                            part: p,
+                            results: [],
+                            search: `${p.PartName}${p.Make ? ' / ' + p.Make : ''}${p.Size ? ' / ' + p.Size : ''}`
+                          }))}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+                        >
+                          {p.PartName}
+                          {(p.Make || p.Size) && (
+                            <span className="text-xs text-slate-500"> ({[p.Make, p.Size].filter(Boolean).join(' / ')})</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Action</label>
+                    <select
+                      value={locStockForm.Mode}
+                      onChange={(e) => setLocStockForm(prev => ({ ...prev, Mode: e.target.value }))}
+                      className="w-full px-2 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                    >
+                      <option value="add">Add</option>
+                      <option value="remove">Remove</option>
+                      <option value="set">Set exact</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Pack</label>
+                    <select
+                      value={locStockForm.PackType}
+                      onChange={(e) => setLocStockForm(prev => ({ ...prev, PackType: e.target.value }))}
+                      className="w-full px-2 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                    >
+                      {PACK_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <Input
+                    label="Units/Pack"
+                    type="number"
+                    step="0.01"
+                    value={locStockForm.UnitsPerPack}
+                    onChange={(e) => setLocStockForm(prev => ({ ...prev, UnitsPerPack: e.target.value }))}
+                  />
+                  <Input
+                    label={`Qty${locStockForm.part?.Unit ? ` (${locStockForm.part.Unit})` : ''}`}
+                    type="number"
+                    step="0.01"
+                    value={locStockForm.Qty}
+                    onChange={(e) => setLocStockForm(prev => ({ ...prev, Qty: e.target.value }))}
+                  />
+                </div>
+                <p className="text-xs text-slate-500">
+                  Quantity is in base units (e.g. a Box of 100 holding 3 boxes = 300). Master stock updates automatically.
+                </p>
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm">Apply</Button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

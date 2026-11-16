@@ -180,9 +180,40 @@ async function deleteLocation(locationId) {
     return result.affectedRows > 0;
 }
 
+/**
+ * All inventory items stored at a location (optionally including everything under it,
+ * e.g. an Aisle includes all its Racks/Shelves/Bins).
+ */
+async function getLocationStock(locationId, { includeChildren = true } = {}) {
+    const location = await getLocationById(locationId);
+    if (!location) return null;
+
+    let where = 's.LocationId = ?';
+    const params = [location.LocationId];
+    if (includeChildren) {
+        const escaped = String(location.FullPath).replace(/[\\%_]/g, '\\$&');
+        where = '(l.LocationId = ? OR l.FullPath LIKE ?)';
+        params.push(`${escaped} > %`);
+    }
+
+    const [rows] = await pool.query(
+        `SELECT s.StockId, s.PartId, s.LocationId, s.PackType, s.UnitsPerPack, s.Quantity, s.LastUpdated,
+                l.Name AS LocationName, l.LocationType, l.FullPath,
+                i.PartName, i.Make, i.Size, i.Unit
+         FROM inventory_stock s
+         JOIN locations l ON s.LocationId = l.LocationId
+         JOIN inventory i ON s.PartId = i.PartId
+         WHERE ${where}
+         ORDER BY l.FullPath ASC, i.PartName ASC, i.Make ASC, i.Size ASC`,
+        params
+    );
+    return { location, items: rows };
+}
+
 module.exports = {
     getAllLocations,
     getLocationById,
+    getLocationStock,
     createLocation,
     updateLocation,
     deleteLocation
