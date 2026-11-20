@@ -188,6 +188,8 @@ const Purchases = () => {
                                     <thead className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                                         <tr>
                                             <th className="p-3 font-semibold">Part Name</th>
+                                            <th className="p-3 font-semibold">Make</th>
+                                            <th className="p-3 font-semibold">Size</th>
                                             <th className="p-3 font-semibold text-right">Qty</th>
                                             <th className="p-3 font-semibold text-right">Unit Price</th>
                                             <th className="p-3 font-semibold text-right">Total</th>
@@ -197,6 +199,8 @@ const Purchases = () => {
                                         {purchaseDetails.Items.map(item => (
                                             <tr key={item.PurchaseItemId}>
                                                 <td className="p-3 font-medium text-slate-900 dark:text-white">{item.PartName}</td>
+                                                <td className="p-3 text-slate-600 dark:text-slate-400">{item.Make || '—'}</td>
+                                                <td className="p-3 text-slate-600 dark:text-slate-400">{item.Size || '—'}</td>
                                                 <td className="p-3 text-right text-slate-600 dark:text-slate-400">{item.Qty} {item.Unit || 'Units'}</td>
                                                 <td className="p-3 text-right text-slate-600 dark:text-slate-400">₹{parseFloat(item.UnitPrice).toLocaleString()}</td>
                                                 <td className="p-3 text-right font-medium text-slate-900 dark:text-white">₹{parseFloat(item.TotalPrice).toLocaleString()}</td>

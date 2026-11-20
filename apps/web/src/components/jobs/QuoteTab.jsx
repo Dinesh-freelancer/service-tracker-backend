@@ -117,17 +117,23 @@ const QuoteTab = ({ job }) => {
     }
   }, [job?.JobNumber]);
 
+  const formatPartLabel = (p) => {
+    const details = [p.Make, p.Size].filter(Boolean).join(' / ');
+    return details ? `${p.PartName} (${details})` : p.PartName;
+  };
+
   // Pre-populate items based on Job's Parts Used or Services Needed
   const handleOpenCreateModal = () => {
     const initialItems = [];
 
     // 1. Pre-fill parts if job has parts used
-    if (job.partsUsed && job.partsUsed.length > 0) {
-      job.partsUsed.forEach((p) => {
+    const jobParts = job.Parts || job.partsUsed || [];
+    if (jobParts.length > 0) {
+      jobParts.forEach((p) => {
         initialItems.push({
           ItemType: 'Part',
           ReferenceId: p.PartId || null,
-          Description: p.PartName,
+          Description: formatPartLabel(p),
           HSNSAC: p.HSNCode || '8413',
           Qty: Number(p.Qty) || 1,
           UnitPrice: Number(p.SellingPrice || p.CostPrice || 0),
@@ -192,7 +198,7 @@ const QuoteTab = ({ job }) => {
       if (updated[index].ItemType === 'Part') {
         const selected = partsList.find((p) => p.PartId === Number(value));
         if (selected) {
-          updated[index].Description = selected.PartName;
+          updated[index].Description = formatPartLabel(selected);
           updated[index].UnitPrice = Number(selected.DefaultSellingPrice || selected.DefaultCostPrice || 0);
           updated[index].HSNSAC = selected.HSNCode || '8413';
         }
@@ -589,7 +595,7 @@ const QuoteTab = ({ job }) => {
                       <option value="">-- Select Inventory Part --</option>
                       {partsList.map((p) => (
                         <option key={p.PartId} value={p.PartId}>
-                          {p.PartName} (₹{p.DefaultSellingPrice || p.DefaultCostPrice})
+                          {formatPartLabel(p)} (₹{p.DefaultSellingPrice || p.DefaultCostPrice})
                         </option>
                       ))}
                     </select>

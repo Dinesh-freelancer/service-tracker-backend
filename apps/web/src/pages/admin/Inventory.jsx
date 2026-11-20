@@ -17,7 +17,9 @@ import {
   X,
   Layers,
   Boxes,
-  ArrowLeft
+  ArrowLeft,
+  ArrowRightLeft,
+  History
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
@@ -46,6 +48,7 @@ const Inventory = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [lowStockOnly, setLowStockOnly] = useState(false);
 
   // Tag Filter Autocomplete
   const [tagFilterInput, setTagFilterInput] = useState('');
@@ -75,6 +78,7 @@ const Inventory = () => {
 
   // Stock Locations Modal (per part)
   const [stockModalItem, setStockModalItem] = useState(null);
+  const [stockModalTab, setStockModalTab] = useState('adjust'); // 'adjust' | 'transfer' | 'history'
   const [partStockRows, setPartStockRows] = useState([]);
   const [loadingPartStock, setLoadingPartStock] = useState(false);
   const [stockForm, setStockForm] = useState({
@@ -82,8 +86,20 @@ const Inventory = () => {
     PackType: 'Loose',
     UnitsPerPack: '1',
     QuantityDelta: '0',
-    Mode: 'add'
+    Mode: 'add',
+    Notes: ''
   });
+  const [transferForm, setTransferForm] = useState({
+    FromStockId: '',
+    ToLocationId: '',
+    ToPackType: 'Loose',
+    ToUnitsPerPack: '1',
+    Quantity: '',
+    QtyMode: 'units',
+    Notes: ''
+  });
+  const [partMovements, setPartMovements] = useState([]);
+  const [loadingMovements, setLoadingMovements] = useState(false);
   const [quickLoc, setQuickLoc] = useState(null); // inline "new location" form inside stock modal
 
   // Items-in-a-location modal
@@ -179,6 +195,9 @@ const Inventory = () => {
       if (selectedFilterTags.length > 0) {
         query.set('tagIds', selectedFilterTags.map(t => t.TagId).join(','));
       }
+      if (lowStockOnly) {
+        query.set('lowStock', 'true');
+      }
       const res = await fetch(`${apiUrl}/inventory?${query.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -198,7 +217,7 @@ const Inventory = () => {
       fetchInventory();
     }, 400);
     return () => clearTimeout(delay);
-  }, [page, searchQuery, selectedFilterTags]);
+  }, [page, searchQuery, selectedFilterTags, lowStockOnly]);
 
   // Tag Autocomplete for Search Filter
   const handleTagFilterInput = (val) => {
@@ -377,17 +396,36 @@ const Inventory = () => {
     }
   };
 
+  const fetchPartMovements = async (partId) => {
+    setLoadingMovements(true);
+    try {
+      const res = await fetch(`${apiUrl}/inventory/${partId}/movements?limit=50`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to load stock history');
+      const data = await res.json();
+      setPartMovements(Array.isArray(data) ? data : []);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoadingMovements(false);
+    }
+  };
+
   // Per-Part Stock Locations Modal
-  const openStockModal = async (item) => {
+  const openStockModal = async (item, initialTab = 'adjust') => {
     setStockModalItem(item);
+    setStockModalTab(initialTab);
     setStockForm({
       LocationId: locations[0]?.LocationId ? String(locations[0].LocationId) : '',
       PackType: 'Loose',
       UnitsPerPack: '1',
       QuantityDelta: '0',
-      Mode: 'add'
+      Mode: 'add',
+      Notes: ''
     });
     setQuickLoc(null);
+    setPartMovements([]);
     setLoadingPartStock(true);
     try {
       const res = await fetch(`${apiUrl}/inventory/${item.PartId}/stock`, {
@@ -395,11 +433,66 @@ const Inventory = () => {
       });
       if (!res.ok) throw new Error('Failed to load stock locations');
       const data = await res.json();
-      setPartStockRows(Array.isArray(data) ? data : []);
+      const rows = Array.isArray(data) ? data : [];
+      setPartStockRows(rows);
+      const defaultSrc = rows.find(r => parseFloat(r.Quantity) > 0) || rows[0];
+      setTransferForm({
+        FromStockId: defaultSrc ? String(defaultSrc.StockId) : '',
+        ToLocationId: defaultSrc ? String(defaultSrc.LocationId) : (locations[0]?.LocationId ? String(locations[0].LocationId) : ''),
+        ToPackType: 'Loose',
+        ToUnitsPerPack: '1',
+        Quantity: '',
+        QtyMode: 'units',
+        Notes: ''
+      });
     } catch (err) {
       toast.error(err.message);
     } finally {
       setLoadingPartStock(false);
+    }
+    if (initialTab === 'history') {
+      fetchPartMovements(item.PartId);
+    }
+  };
+
+  const handleTransferStock = async (e) => {
+    e.preventDefault();
+    if (!transferForm.FromStockId || !transferForm.ToLocationId) {
+      toast.error('Select both source and destination');
+      return;
+    }
+    const srcRow = partStockRows.find(r => String(r.StockId) === String(transferForm.FromStockId));
+    const upp = srcRow ? parseFloat(srcRow.UnitsPerPack) || 1 : 1;
+    const entered = parseFloat(transferForm.Quantity);
+    const baseQty = transferForm.QtyMode === 'packs' ? entered * upp : entered;
+    if (!baseQty || baseQty <= 0) {
+      toast.error('Enter a valid quantity to transfer');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiUrl}/inventory/${stockModalItem.PartId}/stock/transfer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          FromStockId: parseInt(transferForm.FromStockId, 10),
+          ToLocationId: parseInt(transferForm.ToLocationId, 10),
+          ToPackType: transferForm.ToPackType,
+          ToUnitsPerPack: parseFloat(transferForm.ToUnitsPerPack) || 1,
+          Quantity: baseQty,
+          Notes: transferForm.Notes || undefined
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(errMsg(data, 'Failed to transfer stock'));
+      setPartStockRows(Array.isArray(data) ? data : []);
+      setTransferForm(prev => ({ ...prev, Quantity: '', Notes: '' }));
+      toast.success('Stock transferred / unboxed');
+      fetchInventory();
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
@@ -427,13 +520,14 @@ const Inventory = () => {
           LocationId: parseInt(stockForm.LocationId, 10),
           PackType: stockForm.PackType,
           UnitsPerPack: parseFloat(stockForm.UnitsPerPack) || 1,
+          Notes: stockForm.Notes || undefined,
           ...stockBody(stockForm.Mode, stockForm.QuantityDelta)
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(errMsg(data, 'Failed to update stock'));
       setPartStockRows(Array.isArray(data) ? data : []);
-      setStockForm(prev => ({ ...prev, QuantityDelta: '0' }));
+      setStockForm(prev => ({ ...prev, QuantityDelta: '0', Notes: '' }));
       toast.success('Stock updated');
       fetchInventory();
     } catch (err) {
@@ -685,6 +779,19 @@ const Inventory = () => {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => { setLowStockOnly(prev => !prev); setPage(1); }}
+            className={`px-3.5 py-2 rounded-lg border text-sm font-medium flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors ${
+              lowStockOnly
+                ? 'bg-red-50 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-600'
+            }`}
+          >
+            <AlertTriangle size={15} />
+            Low Stock Only
+          </button>
         </div>
 
         {selectedFilterTags.length > 0 && (
@@ -1010,138 +1117,358 @@ const Inventory = () => {
       <Modal
         isOpen={!!stockModalItem}
         onClose={() => setStockModalItem(null)}
-        title={stockModalItem ? `Stock Locations — ${stockModalItem.PartName}` : 'Stock Locations'}
+        title={stockModalItem ? `Stock & History — ${stockModalItem.PartName}` : 'Stock Locations'}
       >
         <div className="space-y-4">
-          {loadingPartStock ? (
-            <div className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></div>
-          ) : partStockRows.length === 0 ? (
-            <p className="text-sm text-slate-500">No location/pack stock entries yet.</p>
-          ) : (
-            <div className="border rounded-lg dark:border-slate-700 overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300">
-                  <tr>
-                    <th className="p-2.5">Location</th>
-                    <th className="p-2.5">Pack</th>
-                    <th className="p-2.5 text-right">Qty ({stockModalItem?.Unit})</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                  {partStockRows.map(row => (
-                    <tr key={row.StockId}>
-                      <td className="p-2.5 font-medium text-slate-800 dark:text-slate-200">{row.FullPath || row.LocationName}</td>
-                      <td className="p-2.5 text-slate-600 dark:text-slate-300">{row.PackType} ({row.UnitsPerPack}/pack)</td>
-                      <td className="p-2.5 text-right font-semibold text-slate-900 dark:text-white">{row.Quantity}</td>
+          {/* Tabs */}
+          <div className="flex border-b border-slate-200 dark:border-slate-700 text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setStockModalTab('adjust')}
+              className={`px-3 py-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+                stockModalTab === 'adjust'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+              }`}
+            >
+              <Layers size={14} /> Adjust Stock
+            </button>
+            <button
+              type="button"
+              onClick={() => setStockModalTab('transfer')}
+              className={`px-3 py-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+                stockModalTab === 'transfer'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+              }`}
+            >
+              <ArrowRightLeft size={14} /> Transfer / Unbox
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStockModalTab('history');
+                if (stockModalItem) fetchPartMovements(stockModalItem.PartId);
+              }}
+              className={`px-3 py-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+                stockModalTab === 'history'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+              }`}
+            >
+              <History size={14} /> History
+            </button>
+          </div>
+
+          {stockModalTab !== 'history' && (
+            loadingPartStock ? (
+              <div className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></div>
+            ) : partStockRows.length === 0 ? (
+              <p className="text-sm text-slate-500">No location/pack stock entries yet.</p>
+            ) : (
+              <div className="border rounded-lg dark:border-slate-700 overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300">
+                    <tr>
+                      <th className="p-2.5">Location</th>
+                      <th className="p-2.5">Pack</th>
+                      <th className="p-2.5 text-right">Qty ({stockModalItem?.Unit})</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {partStockRows.map(row => (
+                      <tr key={row.StockId}>
+                        <td className="p-2.5 font-medium text-slate-800 dark:text-slate-200">{row.FullPath || row.LocationName}</td>
+                        <td className="p-2.5 text-slate-600 dark:text-slate-300">{row.PackType} ({row.UnitsPerPack}/pack)</td>
+                        <td className="p-2.5 text-right font-semibold text-slate-900 dark:text-white">{row.Quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
 
-          <form onSubmit={handleUpsertStock} className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg space-y-3">
-            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Add / Adjust Stock at Location</h4>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">Location *</label>
-                <button
-                  type="button"
-                  onClick={() => setQuickLoc(quickLoc ? null : { Name: '', LocationType: 'Rack', ParentLocationId: '0' })}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                >
-                  <Plus size={12} /> New location
-                </button>
-              </div>
-              {quickLoc && (
-                <div className="mb-2 p-2 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      placeholder="Name (e.g. Rack 2)"
-                      value={quickLoc.Name}
-                      onChange={(e) => setQuickLoc(prev => ({ ...prev, Name: e.target.value }))}
-                      className="px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
-                    />
+          {stockModalTab === 'adjust' && (
+            <form onSubmit={handleUpsertStock} className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg space-y-3">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Add / Adjust Stock at Location</h4>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">Location *</label>
+                  <button
+                    type="button"
+                    onClick={() => setQuickLoc(quickLoc ? null : { Name: '', LocationType: 'Rack', ParentLocationId: '0' })}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    <Plus size={12} /> New location
+                  </button>
+                </div>
+                {quickLoc && (
+                  <div className="mb-2 p-2 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        placeholder="Name (e.g. Rack 2)"
+                        value={quickLoc.Name}
+                        onChange={(e) => setQuickLoc(prev => ({ ...prev, Name: e.target.value }))}
+                        className="px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                      />
+                      <select
+                        value={quickLoc.LocationType}
+                        onChange={(e) => setQuickLoc(prev => ({ ...prev, LocationType: e.target.value }))}
+                        className="px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                      >
+                        {LOCATION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
                     <select
-                      value={quickLoc.LocationType}
-                      onChange={(e) => setQuickLoc(prev => ({ ...prev, LocationType: e.target.value }))}
-                      className="px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                      value={quickLoc.ParentLocationId}
+                      onChange={(e) => setQuickLoc(prev => ({ ...prev, ParentLocationId: e.target.value }))}
+                      className="w-full px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
                     >
-                      {LOCATION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      <option value="0">(Root / Top-Level)</option>
+                      {locations.map(loc => (
+                        <option key={loc.LocationId} value={loc.LocationId}>{loc.FullPath || loc.Name}</option>
+                      ))}
+                    </select>
+                    <div className="flex justify-end">
+                      <Button type="button" size="sm" onClick={handleQuickCreateLocation}>Create & select</Button>
+                    </div>
+                  </div>
+                )}
+                <select
+                  value={stockForm.LocationId}
+                  onChange={(e) => setStockForm(prev => ({ ...prev, LocationId: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                >
+                  <option value="">Select Location</option>
+                  {locations.map(loc => (
+                    <option key={loc.LocationId} value={loc.LocationId}>
+                      {loc.FullPath || loc.Name} ({loc.LocationType})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Action</label>
+                  <select
+                    value={stockForm.Mode}
+                    onChange={(e) => setStockForm(prev => ({ ...prev, Mode: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                  >
+                    <option value="add">Add</option>
+                    <option value="remove">Remove</option>
+                    <option value="set">Set exact</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Pack Type</label>
+                  <select
+                    value={stockForm.PackType}
+                    onChange={(e) => setStockForm(prev => ({ ...prev, PackType: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                  >
+                    {PACK_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <Input
+                  label="Units/Pack"
+                  type="number"
+                  step="0.01"
+                  value={stockForm.UnitsPerPack}
+                  onChange={(e) => setStockForm(prev => ({ ...prev, UnitsPerPack: e.target.value }))}
+                />
+                <Input
+                  label={`Qty (${stockModalItem?.Unit || 'Nos'})`}
+                  type="number"
+                  step="0.01"
+                  value={stockForm.QuantityDelta}
+                  onChange={(e) => setStockForm(prev => ({ ...prev, QuantityDelta: e.target.value }))}
+                />
+              </div>
+
+              <Input
+                label="Notes (optional)"
+                placeholder="e.g. Stock count correction"
+                value={stockForm.Notes}
+                onChange={(e) => setStockForm(prev => ({ ...prev, Notes: e.target.value }))}
+              />
+
+              <div className="flex justify-end">
+                <Button type="submit" size="sm">Apply</Button>
+              </div>
+            </form>
+          )}
+
+          {stockModalTab === 'transfer' && (
+            <form onSubmit={handleTransferStock} className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg space-y-3">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Transfer / Unbox Stock</h4>
+              {partStockRows.length === 0 ? (
+                <p className="text-xs text-slate-500">Add stock to a location first before transferring or unboxing.</p>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">From (Source) *</label>
+                    <select
+                      value={transferForm.FromStockId}
+                      onChange={(e) => {
+                        const sid = e.target.value;
+                        const row = partStockRows.find(r => String(r.StockId) === sid);
+                        setTransferForm(prev => ({
+                          ...prev,
+                          FromStockId: sid,
+                          ToLocationId: row ? String(row.LocationId) : prev.ToLocationId,
+                          QtyMode: 'units'
+                        }));
+                      }}
+                      className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                    >
+                      <option value="">Select Source</option>
+                      {partStockRows.map(row => (
+                        <option key={row.StockId} value={row.StockId}>
+                          {row.FullPath || row.LocationName} — {row.PackType} ({row.UnitsPerPack}/pack) — {row.Quantity} {stockModalItem?.Unit}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                  <select
-                    value={quickLoc.ParentLocationId}
-                    onChange={(e) => setQuickLoc(prev => ({ ...prev, ParentLocationId: e.target.value }))}
-                    className="w-full px-3 py-1.5 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
-                  >
-                    <option value="0">(Root / Top-Level)</option>
-                    {locations.map(loc => (
-                      <option key={loc.LocationId} value={loc.LocationId}>{loc.FullPath || loc.Name}</option>
-                    ))}
-                  </select>
-                  <div className="flex justify-end">
-                    <Button type="button" size="sm" onClick={handleQuickCreateLocation}>Create & select</Button>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">To Location *</label>
+                    <select
+                      value={transferForm.ToLocationId}
+                      onChange={(e) => setTransferForm(prev => ({ ...prev, ToLocationId: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                    >
+                      <option value="">Select Destination Location</option>
+                      {locations.map(loc => (
+                        <option key={loc.LocationId} value={loc.LocationId}>
+                          {loc.FullPath || loc.Name} ({loc.LocationType})
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">To Pack</label>
+                      <select
+                        value={transferForm.ToPackType}
+                        onChange={(e) => setTransferForm(prev => ({
+                          ...prev,
+                          ToPackType: e.target.value,
+                          ToUnitsPerPack: e.target.value === 'Loose' ? '1' : prev.ToUnitsPerPack
+                        }))}
+                        className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                      >
+                        {PACK_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <Input
+                      label="To Units/Pack"
+                      type="number"
+                      step="0.01"
+                      value={transferForm.ToUnitsPerPack}
+                      onChange={(e) => setTransferForm(prev => ({ ...prev, ToUnitsPerPack: e.target.value }))}
+                    />
+                    {(() => {
+                      const srcRow = partStockRows.find(r => String(r.StockId) === String(transferForm.FromStockId));
+                      const upp = srcRow ? parseFloat(srcRow.UnitsPerPack) || 1 : 1;
+                      const isPack = upp > 1;
+                      return (
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">Qty *</label>
+                            {isPack && (
+                              <button
+                                type="button"
+                                onClick={() => setTransferForm(prev => ({ ...prev, QtyMode: prev.QtyMode === 'units' ? 'packs' : 'units' }))}
+                                className="text-[11px] text-blue-600 hover:underline"
+                              >
+                                {transferForm.QtyMode === 'units' ? stockModalItem?.Unit || 'Units' : `${srcRow.PackType}s`}
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={transferForm.Quantity}
+                            onChange={(e) => setTransferForm(prev => ({ ...prev, Quantity: e.target.value }))}
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
+                          />
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <Input
+                    label="Notes (optional)"
+                    placeholder="e.g. Opened 1 box into Loose bin"
+                    value={transferForm.Notes}
+                    onChange={(e) => setTransferForm(prev => ({ ...prev, Notes: e.target.value }))}
+                  />
+
+                  <div className="flex justify-end">
+                    <Button type="submit" size="sm">Transfer / Unbox</Button>
+                  </div>
+                </>
               )}
-              <select
-                value={stockForm.LocationId}
-                onChange={(e) => setStockForm(prev => ({ ...prev, LocationId: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
-              >
-                <option value="">Select Location</option>
-                {locations.map(loc => (
-                  <option key={loc.LocationId} value={loc.LocationId}>
-                    {loc.FullPath || loc.Name} ({loc.LocationType})
-                  </option>
-                ))}
-              </select>
-            </div>
+            </form>
+          )}
 
-            <div className="grid grid-cols-4 gap-2">
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Action</label>
-                <select
-                  value={stockForm.Mode}
-                  onChange={(e) => setStockForm(prev => ({ ...prev, Mode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
-                >
-                  <option value="add">Add</option>
-                  <option value="remove">Remove</option>
-                  <option value="set">Set exact</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Pack Type</label>
-                <select
-                  value={stockForm.PackType}
-                  onChange={(e) => setStockForm(prev => ({ ...prev, PackType: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 text-sm"
-                >
-                  {PACK_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              <Input
-                label="Units/Pack"
-                type="number"
-                step="0.01"
-                value={stockForm.UnitsPerPack}
-                onChange={(e) => setStockForm(prev => ({ ...prev, UnitsPerPack: e.target.value }))}
-              />
-              <Input
-                label={`Qty (${stockModalItem?.Unit || 'Nos'})`}
-                type="number"
-                step="0.01"
-                value={stockForm.QuantityDelta}
-                onChange={(e) => setStockForm(prev => ({ ...prev, QuantityDelta: e.target.value }))}
-              />
+          {stockModalTab === 'history' && (
+            <div className="max-h-72 overflow-y-auto border rounded-lg dark:border-slate-700">
+              {loadingMovements ? (
+                <div className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></div>
+              ) : partMovements.length === 0 ? (
+                <div className="p-6 text-center text-sm text-slate-500">No stock movements recorded yet.</div>
+              ) : (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 sticky top-0">
+                    <tr>
+                      <th className="p-2">Date</th>
+                      <th className="p-2">Type</th>
+                      <th className="p-2">Location / Pack</th>
+                      <th className="p-2 text-right">Delta</th>
+                      <th className="p-2">Ref / Notes</th>
+                      <th className="p-2">By</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {partMovements.map(m => (
+                      <tr key={m.MovementId}>
+                        <td className="p-2 text-slate-500 whitespace-nowrap">
+                          {new Date(m.CreatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                        </td>
+                        <td className="p-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${
+                            parseFloat(m.QuantityDelta) > 0
+                              ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                              : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                          }`}>
+                            {m.MovementType}
+                          </span>
+                        </td>
+                        <td className="p-2 text-slate-700 dark:text-slate-300">
+                          {m.LocationPath || m.LocationName || '—'}
+                          {m.PackType ? ` (${m.PackType})` : ''}
+                        </td>
+                        <td className={`p-2 text-right font-semibold ${
+                          parseFloat(m.QuantityDelta) > 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {parseFloat(m.QuantityDelta) > 0 ? `+${m.QuantityDelta}` : m.QuantityDelta}
+                        </td>
+                        <td className="p-2 text-slate-500">
+                          {[m.ReferenceId, m.Notes].filter(Boolean).join(' — ') || '—'}
+                        </td>
+                        <td className="p-2 text-slate-500">{m.CreatedByName || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-
-            <div className="flex justify-end">
-              <Button type="submit" size="sm">Apply</Button>
-            </div>
-          </form>
+          )}
         </div>
       </Modal>
 

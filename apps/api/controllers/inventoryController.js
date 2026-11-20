@@ -113,7 +113,7 @@ async function getPartStock(req, res, next) {
 async function upsertPartStock(req, res, next) {
     try {
         const partId = parseInt(req.params.partId, 10);
-        const { LocationId, PackType, UnitsPerPack, QuantityDelta, SetQuantity } = req.body;
+        const { LocationId, PackType, UnitsPerPack, QuantityDelta, SetQuantity, Notes } = req.body;
         if (!LocationId) {
             return res.status(400).json({ error: 'LocationId is required' });
         }
@@ -123,9 +123,47 @@ async function upsertPartStock(req, res, next) {
             PackType: PackType || 'Loose',
             UnitsPerPack: UnitsPerPack || 1,
             QuantityDelta: QuantityDelta !== undefined ? QuantityDelta : 0,
-            SetQuantity: SetQuantity !== undefined ? SetQuantity : null
+            SetQuantity: SetQuantity !== undefined ? SetQuantity : null,
+            movementMeta: {
+                MovementType: 'Adjustment',
+                ReferenceType: 'Manual',
+                Notes: Notes || null,
+                CreatedBy: req.user ? req.user.UserId : null
+            }
         });
         res.json(stock);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Transfer or unbox stock between locations/packs
+async function transferPartStock(req, res, next) {
+    try {
+        const partId = parseInt(req.params.partId, 10);
+        const { FromStockId, ToLocationId, ToPackType, ToUnitsPerPack, Quantity, Notes } = req.body;
+        const stock = await inventoryModel.transferStock(partId, {
+            FromStockId,
+            ToLocationId,
+            ToPackType: ToPackType || 'Loose',
+            ToUnitsPerPack: ToUnitsPerPack || 1,
+            Quantity,
+            Notes: Notes || null,
+            CreatedBy: req.user ? req.user.UserId : null
+        });
+        res.json(stock);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Get stock movement history for a part
+async function getPartMovements(req, res, next) {
+    try {
+        const partId = parseInt(req.params.partId, 10);
+        const limit = req.query.limit || 50;
+        const movements = await inventoryModel.getMovementsByPartId(partId, limit);
+        res.json(movements);
     } catch (err) {
         next(err);
     }
@@ -149,5 +187,7 @@ module.exports = {
     updateInventoryItem,
     deleteInventoryItem,
     getPartStock,
-    upsertPartStock
+    upsertPartStock,
+    transferPartStock,
+    getPartMovements
 };

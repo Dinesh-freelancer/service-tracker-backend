@@ -51,7 +51,7 @@ async function getPurchaseById(purchaseId) {
 
     // Get items
     const [items] = await pool.query(
-        `SELECT pi.*, i.PartName, i.Unit
+        `SELECT pi.*, i.PartName, COALESCE(i.Make, '') AS Make, COALESCE(i.Size, '') AS Size, i.Unit
      FROM purchaseitems pi
      LEFT JOIN inventory i ON pi.PartId = i.PartId
      WHERE pi.PurchaseId = ?`,
@@ -109,11 +109,25 @@ async function createPurchase(purchaseData, items) {
                     PackType: PackType || 'Loose',
                     UnitsPerPack: UnitsPerPack || 1,
                     QuantityDelta: item.Qty,
-                    syncMaster: true
+                    syncMaster: true,
+                    movementMeta: {
+                        MovementType: 'Purchase',
+                        ReferenceType: 'Purchase',
+                        ReferenceId: `PO-${purchaseId}`,
+                        CreatedBy: purchaseData.PurchasedBy || null
+                    }
                 });
             } else {
                 // Fallback when no LocationId is provided
                 await inventoryModel.createBatch(connection, item.PartId, item.UnitPrice, item.Qty, 'Purchase', purchaseId);
+                await inventoryModel.recordMovement(connection, {
+                    PartId: item.PartId,
+                    QuantityDelta: item.Qty,
+                    MovementType: 'Purchase',
+                    ReferenceType: 'Purchase',
+                    ReferenceId: `PO-${purchaseId}`,
+                    CreatedBy: purchaseData.PurchasedBy || null
+                });
             }
         }
 

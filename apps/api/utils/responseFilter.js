@@ -199,13 +199,24 @@ function filterWorkLog(log, role) {
 function filterPartsUsed(part, role) {
     const canSeeCost = (role === AUTH_ROLE_OWNER);
     const canSeePrice = (role === AUTH_ROLE_OWNER || role === AUTH_ROLE_ADMIN);
+    const isStaff = role !== AUTH_ROLE_CUSTOMER;
 
     const filtered = {
         PartUsedId: part.PartUsedId,
         JobNumber: part.JobNumber,
+        PartId: part.PartId,
         PartName: part.PartName,
+        Make: part.Make || '',
+        Size: part.Size || '',
+        Unit: part.Unit || '',
         Qty: part.Qty
     };
+
+    if (isStaff) {
+        filtered.StockId = part.StockId || null;
+        filtered.PackType = part.PackType || null;
+        filtered.LocationPath = part.LocationPath || null;
+    }
 
     if (canSeePrice) {
         filtered.SellingPrice = part.SellingPrice;

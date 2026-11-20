@@ -90,6 +90,14 @@ router.post('/:partId/stock',
     authorize(...ADMIN_OWNER),
     inventoryController.upsertPartStock);
 
+router.post('/:partId/stock/transfer',
+    authorize(...ADMIN_OWNER),
+    inventoryController.transferPartStock);
+
+router.get('/:partId/movements',
+    authorize(...WORKER_ALLOWED),
+    inventoryController.getPartMovements);
+
 /**
  * @swagger
  * /inventory:

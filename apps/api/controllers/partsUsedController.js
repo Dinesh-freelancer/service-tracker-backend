@@ -36,7 +36,10 @@ async function getPartUsed(req, res, next) {
 // Add new parts used record
 async function createPartUsed(req, res, next) {
     try {
-        const partUsed = await partsUsedModel.addPartUsed(req.body);
+        const partUsed = await partsUsedModel.addPartUsed({
+            ...req.body,
+            CreatedBy: req.user ? req.user.UserId : null
+        });
 
         // Check for Low Stock
         if (req.body.PartId) {
@@ -66,7 +69,8 @@ async function updatePartUsed(req, res, next) {
         }
 
         const role = req.user ? req.user.Role : null;
-        let partUsed = await partsUsedModel.updatePartUsedQuantity(req.params.partUsedId, Qty);
+        const userId = req.user ? req.user.UserId : null;
+        let partUsed = await partsUsedModel.updatePartUsedQuantity(req.params.partUsedId, Qty, userId);
 
         partUsed = filterPartsUsed(partUsed, role);
 

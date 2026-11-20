@@ -387,6 +387,56 @@ async function recalculateMasterStock(connection, partId) {
     return totalQty;
 }
 
+async function recordMovement(connection, {
+    PartId,
+    StockId = null,
+    LocationId = null,
+    PackType = null,
+    QuantityDelta,
+    QuantityAfter = null,
+    MovementType,
+    ReferenceType = null,
+    ReferenceId = null,
+    Notes = null,
+    CreatedBy = null
+}) {
+    if (!QuantityDelta || parseFloat(QuantityDelta) === 0) return;
+    const db = connection || pool;
+    await db.query(
+        `INSERT INTO inventory_movements
+         (PartId, StockId, LocationId, PackType, QuantityDelta, QuantityAfter, MovementType, ReferenceType, ReferenceId, Notes, CreatedBy)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            PartId,
+            StockId,
+            LocationId,
+            PackType,
+            QuantityDelta,
+            QuantityAfter,
+            MovementType,
+            ReferenceType,
+            ReferenceId !== null && ReferenceId !== undefined ? String(ReferenceId) : null,
+            Notes,
+            CreatedBy
+        ]
+    );
+}
+
+async function getMovementsByPartId(partId, limit = 50) {
+    const maxLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
+    const [rows] = await pool.query(
+        `SELECT m.*, l.FullPath AS LocationPath, l.Name AS LocationName, u.Username AS CreatedByName
+         FROM inventory_movements m
+         LEFT JOIN locations l ON m.LocationId = l.LocationId
+         LEFT JOIN users u ON m.CreatedBy = u.UserId
+         WHERE m.PartId = ?
+         ORDER BY m.CreatedAt DESC, m.MovementId DESC
+         LIMIT ?`,
+        [partId, maxLimit]
+    );
+    return rows;
+}
+
 async function upsertStock(connection, {
     PartId,
     LocationId,
@@ -394,7 +444,8 @@ async function upsertStock(connection, {
     UnitsPerPack = 1,
     QuantityDelta = 0,
     SetQuantity = null,
-    syncMaster = true
+    syncMaster = true,
+    movementMeta = null
 }) {
     const db = connection || pool;
     const ownConnection = !connection;
@@ -406,38 +457,68 @@ async function upsertStock(connection, {
         const cleanPackType = String(PackType || 'Loose').trim() || 'Loose';
         const packUnits = parseFloat(UnitsPerPack) || 1;
 
+        const [existingRows] = await conn.query(
+            `SELECT StockId, Quantity FROM inventory_stock
+             WHERE PartId = ? AND LocationId = ? AND PackType = ? AND UnitsPerPack = ? FOR UPDATE`,
+            [PartId, LocationId, cleanPackType, packUnits]
+        );
+        const beforeQty = existingRows.length > 0 ? parseFloat(existingRows[0].Quantity) : 0;
+        let actualDelta = 0;
+        let afterQty = beforeQty;
+
         if (SetQuantity !== null && SetQuantity !== undefined) {
-            if (parseFloat(SetQuantity) < 0) {
+            const targetQty = parseFloat(SetQuantity);
+            if (targetQty < 0) {
                 const err = new Error('Quantity cannot be negative');
                 err.statusCode = 400;
                 throw err;
             }
+            actualDelta = targetQty - beforeQty;
+            afterQty = targetQty;
             await conn.query(
                 `INSERT INTO inventory_stock (PartId, LocationId, PackType, UnitsPerPack, Quantity)
                  VALUES (?, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE Quantity = VALUES(Quantity), LastUpdated = CURRENT_TIMESTAMP`,
-                [PartId, LocationId, cleanPackType, packUnits, SetQuantity]
+                [PartId, LocationId, cleanPackType, packUnits, targetQty]
             );
         } else {
-            if (parseFloat(QuantityDelta) < 0) {
-                const [cur] = await conn.query(
-                    `SELECT Quantity FROM inventory_stock
-                     WHERE PartId = ? AND LocationId = ? AND PackType = ? AND UnitsPerPack = ? FOR UPDATE`,
-                    [PartId, LocationId, cleanPackType, packUnits]
-                );
-                const available = cur.length > 0 ? parseFloat(cur[0].Quantity) : 0;
-                if (available + parseFloat(QuantityDelta) < 0) {
-                    const err = new Error(`Cannot remove ${Math.abs(QuantityDelta)}; only ${available} available at this location/pack`);
-                    err.statusCode = 400;
-                    throw err;
-                }
+            const delta = parseFloat(QuantityDelta) || 0;
+            if (delta < 0 && beforeQty + delta < 0) {
+                const err = new Error(`Cannot remove ${Math.abs(delta)}; only ${beforeQty} available at this location/pack`);
+                err.statusCode = 400;
+                throw err;
             }
+            actualDelta = delta;
+            afterQty = beforeQty + delta;
             await conn.query(
                 `INSERT INTO inventory_stock (PartId, LocationId, PackType, UnitsPerPack, Quantity)
                  VALUES (?, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE Quantity = Quantity + VALUES(Quantity), LastUpdated = CURRENT_TIMESTAMP`,
-                [PartId, LocationId, cleanPackType, packUnits, QuantityDelta]
+                [PartId, LocationId, cleanPackType, packUnits, delta]
             );
+        }
+
+        const [afterRows] = await conn.query(
+            `SELECT StockId, Quantity FROM inventory_stock
+             WHERE PartId = ? AND LocationId = ? AND PackType = ? AND UnitsPerPack = ?`,
+            [PartId, LocationId, cleanPackType, packUnits]
+        );
+        const stockId = afterRows.length > 0 ? afterRows[0].StockId : null;
+
+        if (actualDelta !== 0) {
+            await recordMovement(conn, {
+                PartId,
+                StockId: stockId,
+                LocationId,
+                PackType: cleanPackType,
+                QuantityDelta: actualDelta,
+                QuantityAfter: afterQty,
+                MovementType: movementMeta?.MovementType || 'Adjustment',
+                ReferenceType: movementMeta?.ReferenceType || null,
+                ReferenceId: movementMeta?.ReferenceId || null,
+                Notes: movementMeta?.Notes || null,
+                CreatedBy: movementMeta?.CreatedBy || null
+            });
         }
 
         if (syncMaster) {
@@ -454,7 +535,128 @@ async function upsertStock(connection, {
     }
 }
 
-async function deductStock(connection, partId, qty, stockId = null, { syncMaster = true } = {}) {
+/**
+ * Transfer or unbox stock between locations/packs inside one transaction.
+ */
+async function transferStock(partId, {
+    FromStockId,
+    ToLocationId,
+    ToPackType = 'Loose',
+    ToUnitsPerPack = 1,
+    Quantity,
+    Notes = null,
+    CreatedBy = null
+}) {
+    const qty = parseFloat(Quantity);
+    if (!qty || qty <= 0) {
+        const err = new Error('Transfer quantity must be greater than 0');
+        err.statusCode = 400;
+        throw err;
+    }
+    if (!FromStockId || !ToLocationId) {
+        const err = new Error('Source stock row and destination location are required');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const cleanToPack = String(ToPackType || 'Loose').trim() || 'Loose';
+    const toUnits = parseFloat(ToUnitsPerPack) || 1;
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const [srcRows] = await connection.query(
+            'SELECT * FROM inventory_stock WHERE StockId = ? AND PartId = ? FOR UPDATE',
+            [FromStockId, partId]
+        );
+        if (srcRows.length === 0) {
+            const err = new Error('Source stock location/pack not found');
+            err.statusCode = 404;
+            throw err;
+        }
+        const src = srcRows[0];
+        const srcQty = parseFloat(src.Quantity);
+
+        if (srcQty < qty) {
+            const err = new Error(`Insufficient stock to transfer (available ${srcQty}, requested ${qty})`);
+            err.statusCode = 400;
+            throw err;
+        }
+
+        if (
+            parseInt(src.LocationId, 10) === parseInt(ToLocationId, 10) &&
+            src.PackType === cleanToPack &&
+            parseFloat(src.UnitsPerPack) === toUnits
+        ) {
+            const err = new Error('Source and destination location/pack must be different');
+            err.statusCode = 400;
+            throw err;
+        }
+
+        // Deduct from source
+        const srcAfter = srcQty - qty;
+        await connection.query(
+            'UPDATE inventory_stock SET Quantity = ?, LastUpdated = CURRENT_TIMESTAMP WHERE StockId = ?',
+            [srcAfter, src.StockId]
+        );
+
+        // Add to destination
+        await connection.query(
+            `INSERT INTO inventory_stock (PartId, LocationId, PackType, UnitsPerPack, Quantity)
+             VALUES (?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE Quantity = Quantity + VALUES(Quantity), LastUpdated = CURRENT_TIMESTAMP`,
+            [partId, ToLocationId, cleanToPack, toUnits, qty]
+        );
+
+        const [dstRows] = await connection.query(
+            `SELECT StockId, Quantity FROM inventory_stock
+             WHERE PartId = ? AND LocationId = ? AND PackType = ? AND UnitsPerPack = ?`,
+            [partId, ToLocationId, cleanToPack, toUnits]
+        );
+        const dst = dstRows[0];
+
+        await recordMovement(connection, {
+            PartId: partId,
+            StockId: src.StockId,
+            LocationId: src.LocationId,
+            PackType: src.PackType,
+            QuantityDelta: -qty,
+            QuantityAfter: srcAfter,
+            MovementType: 'TransferOut',
+            ReferenceType: 'Transfer',
+            ReferenceId: dst ? String(dst.StockId) : null,
+            Notes: Notes || `Transferred to ${cleanToPack}`,
+            CreatedBy
+        });
+
+        await recordMovement(connection, {
+            PartId: partId,
+            StockId: dst ? dst.StockId : null,
+            LocationId: ToLocationId,
+            PackType: cleanToPack,
+            QuantityDelta: qty,
+            QuantityAfter: dst ? parseFloat(dst.Quantity) : qty,
+            MovementType: 'TransferIn',
+            ReferenceType: 'Transfer',
+            ReferenceId: String(src.StockId),
+            Notes: Notes || `Transferred from ${src.PackType}`,
+            CreatedBy
+        });
+
+        await recalculateMasterStock(connection, partId);
+
+        await connection.commit();
+        return getStockByPartId(partId);
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+}
+
+async function deductStock(connection, partId, qty, stockId = null, { syncMaster = true, movementMeta = null } = {}) {
     const db = connection || pool;
     let targetRow = null;
 
@@ -477,7 +679,6 @@ async function deductStock(connection, partId, qty, stockId = null, { syncMaster
             throw err;
         }
     } else {
-        // Default: prefer a Loose row that can cover the qty, then any row that can
         const [rows] = await db.query(
             `SELECT * FROM inventory_stock
              WHERE PartId = ? AND Quantity >= ?
@@ -488,8 +689,6 @@ async function deductStock(connection, partId, qty, stockId = null, { syncMaster
         if (rows.length > 0) {
             targetRow = rows[0];
         } else {
-            // Part tracks location stock but no single row can cover it -> refuse (avoids negative stock / drift).
-            // Legacy parts with no stock rows at all still fall through to master-only deduction.
             const [cnt] = await db.query('SELECT COUNT(*) AS c FROM inventory_stock WHERE PartId = ?', [partId]);
             if (cnt[0].c > 0) {
                 const err = new Error('No single location/pack has enough stock. Please pick a location/pack or reduce the quantity.');
@@ -500,10 +699,34 @@ async function deductStock(connection, partId, qty, stockId = null, { syncMaster
     }
 
     if (targetRow) {
+        const afterQty = parseFloat(targetRow.Quantity) - parseFloat(qty);
         await db.query(
             'UPDATE inventory_stock SET Quantity = Quantity - ?, LastUpdated = CURRENT_TIMESTAMP WHERE StockId = ?',
             [qty, targetRow.StockId]
         );
+        await recordMovement(db, {
+            PartId: partId,
+            StockId: targetRow.StockId,
+            LocationId: targetRow.LocationId,
+            PackType: targetRow.PackType,
+            QuantityDelta: -parseFloat(qty),
+            QuantityAfter: afterQty,
+            MovementType: movementMeta?.MovementType || 'JobUsed',
+            ReferenceType: movementMeta?.ReferenceType || 'Job',
+            ReferenceId: movementMeta?.ReferenceId || null,
+            Notes: movementMeta?.Notes || null,
+            CreatedBy: movementMeta?.CreatedBy || null
+        });
+    } else if (movementMeta) {
+        await recordMovement(db, {
+            PartId: partId,
+            QuantityDelta: -parseFloat(qty),
+            MovementType: movementMeta.MovementType || 'JobUsed',
+            ReferenceType: movementMeta.ReferenceType || 'Job',
+            ReferenceId: movementMeta.ReferenceId || null,
+            Notes: movementMeta.Notes || null,
+            CreatedBy: movementMeta.CreatedBy || null
+        });
     }
 
     if (syncMaster) {
@@ -516,28 +739,56 @@ async function deductStock(connection, partId, qty, stockId = null, { syncMaster
     return targetRow ? targetRow.StockId : null;
 }
 
-async function restoreStock(connection, partId, qty, stockId = null, { syncMaster = true } = {}) {
+async function restoreStock(connection, partId, qty, stockId = null, { syncMaster = true, movementMeta = null } = {}) {
     const db = connection || pool;
-    let targetStockId = stockId;
+    let targetRow = null;
 
-    if (!targetStockId) {
+    if (stockId) {
         const [rows] = await db.query(
-            `SELECT StockId FROM inventory_stock
+            'SELECT * FROM inventory_stock WHERE StockId = ? AND PartId = ? FOR UPDATE',
+            [stockId, partId]
+        );
+        if (rows.length > 0) targetRow = rows[0];
+    } else {
+        const [rows] = await db.query(
+            `SELECT * FROM inventory_stock
              WHERE PartId = ?
              ORDER BY (PackType = 'Loose') DESC, StockId ASC
              LIMIT 1 FOR UPDATE`,
             [partId]
         );
-        if (rows.length > 0) {
-            targetStockId = rows[0].StockId;
-        }
+        if (rows.length > 0) targetRow = rows[0];
     }
 
-    if (targetStockId) {
+    if (targetRow) {
+        const afterQty = parseFloat(targetRow.Quantity) + parseFloat(qty);
         await db.query(
             'UPDATE inventory_stock SET Quantity = Quantity + ?, LastUpdated = CURRENT_TIMESTAMP WHERE StockId = ?',
-            [qty, targetStockId]
+            [qty, targetRow.StockId]
         );
+        await recordMovement(db, {
+            PartId: partId,
+            StockId: targetRow.StockId,
+            LocationId: targetRow.LocationId,
+            PackType: targetRow.PackType,
+            QuantityDelta: parseFloat(qty),
+            QuantityAfter: afterQty,
+            MovementType: movementMeta?.MovementType || 'JobReturn',
+            ReferenceType: movementMeta?.ReferenceType || 'Job',
+            ReferenceId: movementMeta?.ReferenceId || null,
+            Notes: movementMeta?.Notes || null,
+            CreatedBy: movementMeta?.CreatedBy || null
+        });
+    } else if (movementMeta) {
+        await recordMovement(db, {
+            PartId: partId,
+            QuantityDelta: parseFloat(qty),
+            MovementType: movementMeta.MovementType || 'JobReturn',
+            ReferenceType: movementMeta.ReferenceType || 'Job',
+            ReferenceId: movementMeta.ReferenceId || null,
+            Notes: movementMeta.Notes || null,
+            CreatedBy: movementMeta.CreatedBy || null
+        });
     }
 
     if (syncMaster) {
@@ -626,7 +877,10 @@ module.exports = {
     deleteInventory,
     getStockByPartId,
     recalculateMasterStock,
+    recordMovement,
+    getMovementsByPartId,
     upsertStock,
+    transferStock,
     deductStock,
     restoreStock,
     createBatch,
