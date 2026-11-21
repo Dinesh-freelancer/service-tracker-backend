@@ -26,5 +26,16 @@ describe('queryHelper', () => {
             expect(result.sql).toContain('a.Brand = ?');
             expect(result.params).toContain('Kirloskar');
         });
+
+        it('should normalize case-insensitive aliased parameters', () => {
+            const query = {
+                status: 'In Progress',
+                brand: 'Kirloskar'
+            };
+            const result = buildSearchFilters(query);
+            expect(result.sql).toContain('sr.Status = ?');
+            expect(result.sql).toContain('a.Brand = ?');
+            expect(result.params).toEqual(['In Progress', 'Kirloskar']);
+        });
     });
 });

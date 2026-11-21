@@ -27,15 +27,21 @@ function buildSearchFilters(query, searchableFields = []) {
     // We explicitly exclude reserved keys like page, limit, search, sortBy, sortOrder
     const reservedKeys = ['page', 'limit', 'search', 'sortBy', 'sortOrder', 'hideSensitive', 'customerId', 'organizationId', 'path'];
 
+    const columnAliasMap = {
+        status: 'sr.Status',
+        jobnumber: 'sr.JobNumber',
+        internaltag: 'a.InternalTag',
+        brand: 'a.Brand',
+        assettype: 'a.AssetType',
+        customername: 'c.CustomerName',
+    };
+
     Object.keys(query).forEach(key => {
         if (!reservedKeys.includes(key)) {
             // Basic SQL injection prevention
             if (/^[a-zA-Z0-9_]+$/.test(key)) {
-                // Determine table alias for common fields to avoid ambiguity
-                let column = key;
-                if (key === 'Status' || key === 'JobNumber') column = `sr.${key}`;
-                else if (key === 'InternalTag' || key === 'Brand' || key === 'AssetType') column = `a.${key}`;
-                else if (key === 'CustomerName') column = `c.${key}`;
+                // Determine table alias for common fields (case-insensitive) to avoid ambiguity
+                const column = columnAliasMap[key.toLowerCase()] || key;
 
                 sqlParts.push(`${column} = ?`);
                 params.push(query[key]);

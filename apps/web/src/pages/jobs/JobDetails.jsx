@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   FileText,
@@ -103,6 +103,8 @@ const SortableServiceItem = ({
 const JobDetails = () => {
   const { jobNumber } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = location.state?.from || "/dashboard/jobs";
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("job-docs");
@@ -239,13 +241,24 @@ const JobDetails = () => {
       setNewStatus(data.Status);
     } catch (err) {
       toast.error("Failed to load job details");
-      navigate("/dashboard/jobs");
+      navigate(backTo);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    setLoading(true);
+    setActiveTab("job-docs");
+    setExpandedDocId(null);
+    setShowStatusModal(false);
+    setShowPartModal(false);
+    setShowDocModal(false);
+    setEditingAsset(false);
+    setEditingJobInfo(false);
+    setEditingFolderLink(false);
+    setShowFolderPreview(false);
+    window.scrollTo(0, 0);
     fetchJob();
   }, [jobNumber, navigate]);
 
@@ -713,7 +726,7 @@ const JobDetails = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigate("/dashboard/jobs")}
+            onClick={() => navigate(backTo)}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
           >
             <ArrowLeft
@@ -1993,8 +2006,8 @@ const JobDetails = () => {
                                   onClick={() => {
                                     navigate(
                                       `/dashboard/jobs/${assetJob.JobNumber}`,
+                                      { state: location.state },
                                     );
-                                    window.location.reload(); // Force full reload to reset state for new job
                                   }}
                                   className="mt-3 text-xs text-purple-600 hover:text-purple-700 font-medium"
                                 >

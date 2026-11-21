@@ -28,10 +28,11 @@ async function getAllServiceRequests(filters = {}, limit = 10, offset = 0) {
         params = [...(filters.params || [])];
     }
 
+    const orderDirection = filters.sortOrder === 'asc' ? 'ASC' : 'DESC';
     if (filters.sortBy === 'JobNumber') {
-        query += ` ORDER BY sr.JobNumber ${filters.sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+        query += ` ORDER BY sr.JobNumber ${orderDirection}`;
     } else {
-        query += ` ORDER BY sr.DateReceived DESC`;
+        query += ` ORDER BY sr.DateReceived ${orderDirection}`;
     }
 
     query += ` LIMIT ? OFFSET ?`;
