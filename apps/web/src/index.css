@@ -7,7 +7,56 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply bg-gray-50 text-gray-900;
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes hydro-flow {
+  0% {
+    stroke-dashoffset: 48;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-hydro-flow {
+  animation: hydro-flow 1.4s linear infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
 }
