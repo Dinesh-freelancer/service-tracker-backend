@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
 import { ArrowRight, PhoneCall, ShieldCheck, Droplets } from 'lucide-react';
 import PickupForm from './PickupForm';
-import HydraulicSchematic from './HydraulicSchematic';
 
 const stats = [
   { label: 'Years of Legacy', end: 20, suffix: '+' },
@@ -89,7 +88,7 @@ const HeroSection = () => {
               </Link>
 
               <a
-                href="tel:+919876543210"
+                href="tel:+919382222797"
                 className="bg-white/5 hover:bg-white/15 border border-cyan-400/30 backdrop-blur-md text-white font-semibold py-3.5 px-7 rounded-xl transition-all flex items-center gap-2"
               >
                 <PhoneCall size={18} className="text-cyan-300" />
@@ -101,9 +100,6 @@ const HeroSection = () => {
                 Service Warranty Included
               </span>
             </motion.div>
-
-            {/* Animated SVG Pump & Hydraulic Flow Schematic */}
-            <HydraulicSchematic />
           </div>
 
           {/* Right Column: Floating Glass Pickup Form */}

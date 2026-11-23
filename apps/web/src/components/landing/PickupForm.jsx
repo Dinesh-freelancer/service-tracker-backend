@@ -94,7 +94,7 @@ const PickupForm = () => {
             <div>
               <p className="font-semibold text-emerald-100">Pickup request received!</p>
               <p className="text-xs text-emerald-200/85 mt-0.5">
-                Our Guindy service team will call you shortly to confirm dispatch.
+                Our Mannady service team will call you shortly to confirm dispatch.
               </p>
             </div>
           </motion.div>

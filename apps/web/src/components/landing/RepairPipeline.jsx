@@ -71,11 +71,11 @@ const steps = [
     glow: 'shadow-emerald-500/25',
     badge: 'Service Warranty Included',
     details:
-      'Once final QA passes, your status updates automatically in the Customer Portal. We deliver back to your site or prepare your unit for quick truck loading at our Guindy workshop.',
+      'Once final QA passes, your status updates automatically in the Customer Portal. We deliver back to your site or prepare your unit for quick truck loading at our Mannady workshop.',
     checklist: [
       'Final QA sign-off & service warranty coverage',
       'Digital invoice & test records in Customer Portal',
-      'Scheduled delivery or easy Guindy pickup',
+      'Scheduled delivery or easy Mannady pickup',
     ],
   },
 ];

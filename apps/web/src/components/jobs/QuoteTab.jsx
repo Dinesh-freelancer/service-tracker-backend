@@ -411,7 +411,7 @@ const QuoteTab = ({ job }) => {
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                         {companySettings.CompanyAddress || 'Coimbatore, Tamil Nadu'} <br />
-                        Phone: {companySettings.CompanyPhone || '+91-9876543210'} | Email: {companySettings.CompanyEmail || 'support@srivaripumps.com'}
+                        Phone: {companySettings.CompanyPhone || '+91-9382222797'} | Email: {companySettings.CompanyEmail || 'rassiksb2007@gmail.com'}
                       </p>
                     </div>
                     <div className="text-right">

@@ -9,12 +9,14 @@ const SEOHead = () => {
     "description": "Expert Pump Repair & Service in Chennai with over 20 years of experience.",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Chennai",
+      "streetAddress": "Krishnan Koil Street, Mannady",
+    "addressLocality": "Chennai",
+    "postalCode": "600001",
       "addressRegion": "TN",
       "addressCountry": "IN"
     },
     "openingHours": "Mo-Sa 09:00-18:00",
-    "telephone": "+919876543210",
+    "telephone": "+919382222797",
     "priceRange": "$$"
   };
 

@@ -270,7 +270,7 @@ const Login = () => {
                 </div>
             </div>
             <p className="text-slate-600 dark:text-slate-300 text-sm">
-                Please visit the service center or call our support line at <strong>+91-9876543210</strong> to request a password reset.
+                Please visit the service center or call our support line at <strong>+91-9382222797</strong> to request a password reset.
             </p>
             <div className="pt-2">
                 <Button onClick={() => setIsModalOpen(false)} variant="outline" className="w-full">

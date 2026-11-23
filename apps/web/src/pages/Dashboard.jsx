@@ -193,7 +193,7 @@ const Dashboard = () => {
 
                     {role === 'Customer' && (
                         <>
-                            <QuickActionBtn icon={MessageCircle} label="WhatsApp" onClick={() => window.open('https://wa.me/919876543210', '_blank')} colorClass="bg-green-50 text-green-600 hover:bg-green-100" />
+                            <QuickActionBtn icon={MessageCircle} label="WhatsApp" onClick={() => window.open('https://wa.me/919382222797', '_blank')} colorClass="bg-green-50 text-green-600 hover:bg-green-100" />
                         </>
                     )}
                 </div>

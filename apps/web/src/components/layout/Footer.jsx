@@ -90,7 +90,7 @@ const Footer = () => {
                   className="inline-flex items-center gap-1.5 hover:text-cyan-300 transition-colors"
                 >
                   <ArrowRight size={14} className="text-cyan-400" />
-                  Visit Guindy Workshop
+                  Visit Mannady Workshop
                 </a>
               </li>
             </ul>
@@ -104,21 +104,21 @@ const Footer = () => {
             <div className="space-y-3 text-sm text-slate-300">
               <p className="flex items-center gap-2.5">
                 <MapPin size={17} className="text-cyan-400 shrink-0" />
-                Guindy Industrial Estate, Chennai
+                Krishnan Koil Street, Mannady, Chennai - 600001
               </p>
               <a
-                href="tel:+919876543210"
+                href="tel:+919382222797"
                 className="flex items-center gap-2.5 hover:text-cyan-300 transition-colors"
               >
                 <Phone size={17} className="text-cyan-400 shrink-0" />
-                +91 98765 43210
+                +91 93822 22797
               </a>
               <a
-                href="mailto:info@rassicompany.com"
+                href="mailto:rassiksb2007@gmail.com"
                 className="flex items-center gap-2.5 hover:text-cyan-300 transition-colors"
               >
                 <Mail size={17} className="text-cyan-400 shrink-0" />
-                info@rassicompany.com
+                rassiksb2007@gmail.com
               </a>
             </div>
 
@@ -128,7 +128,7 @@ const Footer = () => {
                 Careers: We are hiring!
               </div>
               <p className="text-xs text-slate-300">
-                Skilled Motor Winders & Pump Technicians needed. Call or visit our Guindy workshop to apply.
+                Skilled Motor Winders & Pump Technicians needed. Call or visit our Mannady workshop to apply.
               </p>
             </div>
           </div>

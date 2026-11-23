@@ -4,7 +4,7 @@ import { MapPin, Navigation, Clock, ExternalLink, Truck } from 'lucide-react';
 
 const MapPlaceholder = () => (
   <div className="w-full h-full bg-slate-900/80 flex items-center justify-center text-slate-400 rounded-2xl">
-    <span className="text-sm font-mono">Loading Guindy Workshop Map...</span>
+    <span className="text-sm font-mono">Loading Mannady Workshop Map...</span>
   </div>
 );
 
@@ -29,12 +29,12 @@ const LocationSection = () => {
             <div>
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest text-cyan-300 bg-cyan-500/10 border border-cyan-400/25 mb-4">
                 <MapPin size={13} />
-                Chennai Industrial Hub
+                North Chennai
               </span>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
                 Visit Our{' '}
                 <span className="bg-gradient-to-r from-cyan-300 to-sky-400 bg-clip-text text-transparent">
-                  Guindy Workshop
+                  Mannady Workshop
                 </span>
               </h2>
               <p className="text-slate-300 text-base">
@@ -49,10 +49,10 @@ const LocationSection = () => {
                 </div>
                 <div>
                   <h4 className="text-base font-bold text-white mb-1">
-                    Easy Heavy-Truck Access
+                    Easy to Reach, Central Location
                   </h4>
                   <p className="text-sm text-slate-300/85 leading-relaxed">
-                    Located near Guindy Industrial Estate with convenient truck loading and unloading for heavy industrial pumps.
+                    Located in Mannady, North Chennai, with convenient access for pump and motor drop-offs and pickups from across the city.
                   </p>
                 </div>
               </div>
@@ -66,7 +66,7 @@ const LocationSection = () => {
                     Wide Service Radius
                   </h4>
                   <p className="text-sm text-slate-300/85 leading-relaxed">
-                    Proudly serving Guindy, Ambattur, Sriperumbudur, Oragadam, and surrounding Chennai industrial corridors.
+                    Proudly serving Mannady and customers across Chennai and the surrounding areas.
                   </p>
                 </div>
               </div>
@@ -99,10 +99,10 @@ const LocationSection = () => {
               <div className="flex items-center justify-between px-3 py-2 mb-1">
                 <div className="flex items-center gap-2 text-xs font-mono text-cyan-200">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Guindy, Chennai, Tamil Nadu
+                  Rassi &amp; Company, Chennai
                 </div>
                 <a
-                  href="https://maps.google.com/?q=Guindy,Chennai,Tamil+Nadu"
+                  href="https://www.google.com/maps/search/?api=1&query=RASSI+%26+COMPANY+13.0983686,80.2898626"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-cyan-200 transition-colors"
@@ -114,13 +114,13 @@ const LocationSection = () => {
               <div className="h-[380px] sm:h-[420px] rounded-xl overflow-hidden border border-white/10">
                 <Suspense fallback={<MapPlaceholder />}>
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62194.26767675107!2d80.1772596486328!3d13.006763!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a52670dd5555555%3A0x5555555555555555!2sGuindy%2C%20Chennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1699999999999!5m2!1sen!2sin"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.012904394334!2d80.28986257588818!3d13.09836861208491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a526f3f2b0e1b63%3A0xee436e2fd7334802!2sRASSI%20%26%20COMPANY!5e0!3m2!1sen!2sin!4v1795439408028!5m2!1sen!2sin"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     allowFullScreen=""
                     loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     title="Rassi & Company Location"
                   />
                 </Suspense>
